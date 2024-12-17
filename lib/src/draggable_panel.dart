@@ -30,7 +30,6 @@ class DraggablePanel extends StatefulWidget {
     this.borderRadius,
     this.initialPanelState,
     this.panelAnimDuration = 600,
-    this.contentColor,
     this.dockType = DockType.inside,
     this.dockOffset = 10.0,
     this.dockAnimDuration = 300,
@@ -64,9 +63,6 @@ class DraggablePanel extends StatefulWidget {
 
   /// The background color of the panel.
   final Color? backgroundColor;
-
-  /// The color of the content of the panel.
-  final Color? contentColor;
 
   /// The initial state of the panel.
   /// `PanelState.open` will open the panel when the widget is initialized.
