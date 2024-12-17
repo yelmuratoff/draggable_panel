@@ -1,8 +1,8 @@
 name: draggable_panel
 description: "A versatile and customizable Draggable Panel"
-version: 0.0.2
-homepage: https://github.com/yelmuratoff/ispect.git
-issue_tracker: https://github.com/yelmuratoff/ispect/issues
+version: 0.0.3
+homepage: https://github.com/yelmuratoff/draggable_panel.git
+issue_tracker: https://github.com/yelmuratoff/draggable_panel/issues
 
 topics:
   - draggable-panel

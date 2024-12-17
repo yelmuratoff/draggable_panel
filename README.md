@@ -46,7 +46,7 @@ Follow these steps to use this package
 
 ```yaml
 dependencies:
-  draggable_panel: ^0.0.2
+  draggable_panel: ^0.0.3
 ```
 
 ### Add import package
