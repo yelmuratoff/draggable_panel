@@ -5,7 +5,8 @@ homepage: https://github.com/yelmuratoff/ispect.git
 issue_tracker: https://github.com/yelmuratoff/ispect/issues
 
 environment:
-  sdk: ">=3.0.0"
+  sdk: ^3.2.0
+  flutter: "any"
 
 dependencies:
   flutter:
