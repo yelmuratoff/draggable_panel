@@ -14,7 +14,7 @@ DraggablePanel is a versatile and interactive widget for Flutter that allows you
 Your feedback is highly valued as it will help shape future updates and ensure the package remains relevant and useful. 😊
 
    <br>
-   <span style="font-size: 0.9em"> Show some ❤️ and <a href="https://github.com/yelmuratoff/ispect.git">star the repo</a> to support the project! </span>
+   <span style="font-size: 0.9em"> Show some ❤️ and <a href="https://github.com/yelmuratoff/draggable_panel.git">star the repo</a> to support the project! </span>
 </p>
 
 <p align="center">
@@ -46,7 +46,7 @@ Follow these steps to use this package
 
 ```yaml
 dependencies:
-  draggable_panel: ^0.0.1
+  draggable_panel: ^0.0.2
 ```
 
 ### Add import package
