@@ -1,7 +1,7 @@
 <div align="center">
 <p align="center">
-    <a href="https://github.com/yelmuratoff/ispect" align="center">
-        <img src="https://github.com/yelmuratoff/packages_assets/blob/main/assets/ispect/ispect.png?raw=true" width="400px">
+    <a href="https://github.com/yelmuratoff/draggable_panel" align="center">
+        <img src="https://github.com/yelmuratoff/draggable_panel/blob/main/assets/draggable_panel.png?raw=true" width="400px">
     </a>
 </p>
 </div>
