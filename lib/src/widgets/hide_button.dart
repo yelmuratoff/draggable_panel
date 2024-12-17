@@ -38,7 +38,8 @@ class _HidePanel extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if ((_positionLeft.value + _panOffsetLeft.value) < pageWidth / 2) ...[
+                    if ((_positionLeft.value + _panOffsetLeft.value) <
+                        pageWidth / 2) ...[
                       const Flexible(
                         flex: 2,
                         child: Icon(
@@ -62,7 +63,8 @@ class _HidePanel extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if ((_positionLeft.value + _panOffsetLeft.value) > pageWidth / 2) ...[
+                    if ((_positionLeft.value + _panOffsetLeft.value) >
+                        pageWidth / 2) ...[
                       const Flexible(
                         child: SizedBox(
                           width: 12,
