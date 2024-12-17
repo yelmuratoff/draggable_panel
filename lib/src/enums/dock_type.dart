@@ -1,0 +1,4 @@
+enum DockType {
+  inside,
+  outside,
+}
