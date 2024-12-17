@@ -54,7 +54,6 @@ class App extends StatelessWidget {
             ),
           ],
           child: child!,
-          // backgroundColor: Colors.blue,
         );
       },
     );
