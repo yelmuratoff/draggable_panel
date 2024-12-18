@@ -1,3 +1,7 @@
+## 0.0.5
+
+* Now `child` is nullable in `DraggablePanel` widget. This is useful when you want to use `DraggablePanel` inside other stack widgets.
+
 ## 0.0.4
 
 * The `DraggablePanelItem` and `DraggablePanelButton` models were removed and replaced with `Record`.

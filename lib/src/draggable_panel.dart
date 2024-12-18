@@ -36,7 +36,7 @@ class DraggablePanel extends StatefulWidget {
   });
 
   /// The child widget that will be used as the main content of the screen.
-  final Widget child;
+  final Widget? child;
 
   /// The icon in the draggable button that will be used to drag the panel around
   /// the screen.
@@ -198,7 +198,7 @@ class _DraggablePanelState extends State<DraggablePanel> {
         final isInRightSide = _draggablePositionLeft.value > pageWidth / 2;
         return Stack(
           children: [
-            widget.child,
+            if (widget.child != null) widget.child!,
             AnimatedPositioned(
               key: const ValueKey('draggable_panel_button'),
               duration: Duration(
