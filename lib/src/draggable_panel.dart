@@ -2,8 +2,6 @@
 
 import 'package:draggable_panel/src/enums/dock_type.dart';
 import 'package:draggable_panel/src/enums/panel_state.dart';
-import 'package:draggable_panel/src/models/panel_button.dart';
-import 'package:draggable_panel/src/models/panel_item.dart';
 import 'package:draggable_panel/src/utils/colors.dart';
 import 'package:draggable_panel/src/widgets/curve_line_paint.dart';
 import 'package:draggable_panel/src/widgets/multi_value_listenable.dart';
@@ -85,10 +83,20 @@ class DraggablePanel extends StatefulWidget {
   final int? dockAnimDuration;
 
   /// The list of items that will be displayed in the panel.
-  final List<DraggablePanelItem> items;
+  final List<
+      ({
+        IconData icon,
+        bool enableBadge,
+        void Function(BuildContext context) onTap,
+      })> items;
 
   /// The list of buttons that will be displayed in the panel.
-  final List<DraggablePanelButton> buttons;
+  final List<
+      ({
+        IconData icon,
+        String label,
+        void Function(BuildContext context) onTap,
+      })> buttons;
 
   /// The initial position of the panel.
   final ({double x, double y})? initialPosition;

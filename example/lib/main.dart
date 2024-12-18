@@ -29,25 +29,29 @@ class App extends StatelessWidget {
       builder: (context, child) {
         return DraggablePanel(
           items: [
-            DraggablePanelItem(
+            (
+              enableBadge: false,
               icon: Icons.list,
               onTap: (context) {},
             ),
-            DraggablePanelItem(
+            (
+              enableBadge: false,
               icon: Icons.color_lens,
               onTap: (context) {},
             ),
-            DraggablePanelItem(
+            (
+              enableBadge: false,
               icon: Icons.zoom_in,
               onTap: (context) {},
             ),
-            DraggablePanelItem(
+            (
+              enableBadge: false,
               icon: Icons.token,
               onTap: (context) {},
             ),
           ],
           buttons: [
-            DraggablePanelButton(
+            (
               icon: Icons.copy,
               onTap: (context) {},
               label: 'Push token',

@@ -46,7 +46,7 @@ Follow these steps to use this package
 
 ```yaml
 dependencies:
-  draggable_panel: ^0.0.3
+  draggable_panel: ^0.0.4
 ```
 
 ### Add import package
@@ -62,28 +62,32 @@ import 'package:draggable_panel/draggable_panel.dart';
 Simple add `DraggablePanel` to `MaterialApp`'s `builder`.
 
 ```dart
-   builder: (context, child) {
+builder: (context, child) {
         return DraggablePanel(
           items: [
-            DraggablePanelItem(
+            (
+              enableBadge: false,
               icon: Icons.list,
               onTap: (context) {},
             ),
-            DraggablePanelItem(
+            (
+              enableBadge: false,
               icon: Icons.color_lens,
               onTap: (context) {},
             ),
-            DraggablePanelItem(
+            (
+              enableBadge: false,
               icon: Icons.zoom_in,
               onTap: (context) {},
             ),
-            DraggablePanelItem(
+            (
+              enableBadge: false,
               icon: Icons.token,
               onTap: (context) {},
             ),
           ],
           buttons: [
-            DraggablePanelButton(
+            (
               icon: Icons.copy,
               onTap: (context) {},
               label: 'Push token',
