@@ -21,6 +21,7 @@ class _HidePanel extends StatelessWidget {
   Widget build(BuildContext context) => ConstrainedBox(
         constraints: const BoxConstraints(
           maxHeight: 45,
+          minHeight: 45,
         ),
         child: SizedBox(
           child: Padding(
@@ -38,8 +39,7 @@ class _HidePanel extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if ((_positionLeft.value + _panOffsetLeft.value) <
-                        pageWidth / 2) ...[
+                    if ((_positionLeft.value + _panOffsetLeft.value) < pageWidth / 2) ...[
                       const Flexible(
                         flex: 2,
                         child: Icon(
@@ -63,8 +63,7 @@ class _HidePanel extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if ((_positionLeft.value + _panOffsetLeft.value) >
-                        pageWidth / 2) ...[
+                    if ((_positionLeft.value + _panOffsetLeft.value) > pageWidth / 2) ...[
                       const Flexible(
                         child: SizedBox(
                           width: 12,

@@ -49,8 +49,28 @@ class App extends StatelessWidget {
               icon: Icons.token,
               onTap: (context) {},
             ),
+            (
+              enableBadge: false,
+              icon: Icons.token,
+              onTap: (context) {},
+            ),
+            (
+              enableBadge: false,
+              icon: Icons.token,
+              onTap: (context) {},
+            ),
           ],
           buttons: [
+            (
+              icon: Icons.copy,
+              onTap: (context) {},
+              label: 'Push token',
+            ),
+            (
+              icon: Icons.copy,
+              onTap: (context) {},
+              label: 'Push token',
+            ),
             (
               icon: Icons.copy,
               onTap: (context) {},

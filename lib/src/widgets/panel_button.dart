@@ -19,6 +19,7 @@ class _PanelButton extends StatelessWidget {
   Widget build(BuildContext context) => ConstrainedBox(
         constraints: const BoxConstraints(
           maxHeight: 45,
+          minHeight: 45,
           minWidth: double.infinity,
         ),
         child: Padding(
