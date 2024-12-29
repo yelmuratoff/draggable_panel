@@ -1,3 +1,6 @@
+## 0.0.7
+- The panel size calculation has been changed.
+
 ## 0.0.6
 - Added web support with essential configuration for PWA functionality.  
 - Improved draggable panel logic by introducing better state management and optimizing boundary checks.  

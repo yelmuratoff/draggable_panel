@@ -16,54 +16,44 @@ class _PanelButton extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) => ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxHeight: 45,
-          minHeight: 45,
-          minWidth: double.infinity,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.only(
-            top: 4,
-            left: 8,
-            right: 8,
+  Widget build(BuildContext context) => SizedBox(
+        height: 45,
+        width: double.maxFinite,
+        child: MaterialButton(
+          onPressed: onTap,
+          color: _itemColor,
+          highlightElevation: 0,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
           ),
-          child: MaterialButton(
-            onPressed: onTap,
-            color: _itemColor,
-            highlightElevation: 0,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(16)),
-            ),
-            elevation: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Icon(
-                    icon,
+          elevation: 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+              const Flexible(
+                child: SizedBox(
+                  width: 12,
+                ),
+              ),
+              Flexible(
+                flex: 6,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: const TextStyle(
                     color: Colors.white,
-                    size: 18,
                   ),
                 ),
-                const Flexible(
-                  child: SizedBox(
-                    width: 12,
-                  ),
-                ),
-                Flexible(
-                  flex: 6,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    style: const TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       );
