@@ -137,7 +137,7 @@ class _DraggablePanelState extends State<DraggablePanel> {
 
   final ValueNotifier<double> _buttonWidth = ValueNotifier(0.0);
 
-  static const double _panelWidth = 210;
+  static const double _panelWidth = 200;
 
   @override
   void initState() {
@@ -399,42 +399,43 @@ class _DraggablePanelState extends State<DraggablePanel> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Wrap(
+                                runSpacing: 8,
+                                spacing: 8,
+                                alignment: WrapAlignment.spaceBetween,
                                 children: List.generate(
                                   widget.items.length,
                                   (index) => Badge(
                                     isLabelVisible:
                                         widget.items[index].enableBadge,
+                                    padding: EdgeInsets.zero,
                                     smallSize: 12,
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: IconButton.filled(
-                                        icon: Icon(
-                                          widget.items[index].icon,
-                                          color: Colors.white,
-                                        ),
-                                        padding: EdgeInsets.zero,
-                                        style: ButtonStyle(
-                                          backgroundColor:
-                                              WidgetStateProperty.all<Color>(
-                                            _itemColor,
-                                          ),
-                                          shape: WidgetStateProperty.all<
-                                              RoundedRectangleBorder>(
-                                            const RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.all(
-                                                Radius.circular(16),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(12),
+                                      ),
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          child: Ink(
+                                            color: _itemColor,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(8),
+                                              child: Icon(
+                                                widget.items[index].icon,
+                                                color: Colors.white,
                                               ),
                                             ),
                                           ),
-                                        ),
-                                        onPressed: () {
-                                          widget.items[index].onTap
-                                              .call(context);
+                                          onTap: () {
+                                            widget.items[index].onTap
+                                                .call(context);
 
-                                          _panelState.value = PanelState.closed;
-                                          _forceDock(pageWidth);
-                                          _hidePanel(pageWidth);
-                                        },
+                                            _panelState.value =
+                                                PanelState.closed;
+                                            _forceDock(pageWidth);
+                                            _hidePanel(pageWidth);
+                                          },
+                                        ),
                                       ),
                                     ),
                                   ),

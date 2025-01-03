@@ -1,4 +1,4 @@
-## 0.0.7
+## 0.0.8
 - The panel size calculation has been changed.
 
 ## 0.0.6
