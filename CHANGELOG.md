@@ -1,3 +1,6 @@
+## 0.0.9
+- Added new optional param `panelHeight`. This param is used to set the height of the panel. If not set, the panel will take the height of the child widget based on item's and button's length.
+
 ## 0.0.8
 - The panel size calculation has been changed.
 

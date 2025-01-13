@@ -31,6 +31,7 @@ class DraggablePanel extends StatefulWidget {
     this.dockAnimDuration = 300,
     this.initialPosition,
     this.onPositionChanged,
+    this.panelHeight,
   });
 
   /// The child widget that will be used as the main content of the screen.
@@ -50,6 +51,9 @@ class DraggablePanel extends StatefulWidget {
 
   /// The width of the draggable button.
   final double buttonWidth;
+
+  /// The height of the panel.
+  final double? panelHeight;
 
   /// The height of the draggable button.
   final double buttonHeight;
@@ -396,7 +400,9 @@ class _DraggablePanelState extends State<DraggablePanel> {
                             direction: Axis.vertical,
                             spacing: 8,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: (widget.buttons.isNotEmpty)
+                                ? MainAxisAlignment.spaceBetween
+                                : MainAxisAlignment.center,
                             children: [
                               Wrap(
                                 runSpacing: 8,
@@ -441,24 +447,25 @@ class _DraggablePanelState extends State<DraggablePanel> {
                                   ),
                                 ),
                               ),
-                              Flexible(
-                                child: Wrap(
-                                  runSpacing: 6,
-                                  children: [
-                                    ...widget.buttons.map(
-                                      (button) => _PanelButton(
-                                        itemColor: _itemColor,
-                                        icon: button.icon,
-                                        label: button.label,
-                                        pageWidth: pageWidth,
-                                        onTap: () {
-                                          button.onTap.call(context);
-                                        },
+                              if (widget.buttons.isNotEmpty)
+                                Flexible(
+                                  child: Wrap(
+                                    runSpacing: 6,
+                                    children: [
+                                      ...widget.buttons.map(
+                                        (button) => _PanelButton(
+                                          itemColor: _itemColor,
+                                          icon: button.icon,
+                                          label: button.label,
+                                          pageWidth: pageWidth,
+                                          onTap: () {
+                                            button.onTap.call(context);
+                                          },
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                         )
@@ -540,8 +547,12 @@ class _DraggablePanelState extends State<DraggablePanel> {
 
 // Height of the panel according to its state;
   double get _panelHeight {
+    if (widget.panelHeight != null) {
+      return widget.panelHeight!;
+    }
+
     // Calculate the height based on the number of rows for `items`.
-    final itemsHeight = (widget.items.length / 4).ceil() * 50.0;
+    final itemsHeight = (widget.items.length / 4).ceil() * 45.0;
 
     // Calculate the height for buttons, if present.
     final buttonsHeight = widget.buttons.isNotEmpty
