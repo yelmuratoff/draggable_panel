@@ -1,3 +1,7 @@
+## 1.0.1
+- In this update, I added the `DraggablePanelController` to give you the ability to control the panel directly outside of this widget.
+Just create it and pass it to the `DraggablePanel` widget. See example.
+
 ## 1.0.0
 - Changed alignment of `Wrap` inside DraggablePanel.
 

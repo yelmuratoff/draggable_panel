@@ -7,9 +7,15 @@ void main() {
   );
 }
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   const App({super.key});
 
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  final DraggablePanelController controller = DraggablePanelController();
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -143,7 +149,10 @@ class App extends StatelessWidget {
           buttons: [
             (
               icon: Icons.copy,
-              onTap: (context) {},
+              onTap: (context) {
+                // Hide
+                controller.toggle(context);
+              },
               label: 'Push token',
             ),
             // (
@@ -162,6 +171,7 @@ class App extends StatelessWidget {
             //   label: 'Push token',
             // ),
           ],
+          controller: controller,
           child: child!,
         );
       },
