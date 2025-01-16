@@ -54,6 +54,11 @@ class App extends StatelessWidget {
               icon: Icons.list,
               onTap: (context) {},
             ),
+            (
+              enableBadge: false,
+              icon: Icons.list,
+              onTap: (context) {},
+            ),
             // (
             //   enableBadge: false,
             //   icon: Icons.color_lens,

@@ -1,3 +1,6 @@
+## 1.0.0
+- Changed alignment of `Wrap` inside DraggablePanel.
+
 ## 0.0.9
 - Added new optional param `panelHeight`. This param is used to set the height of the panel. If not set, the panel will take the height of the child widget based on item's and button's length.
 
