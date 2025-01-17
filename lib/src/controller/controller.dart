@@ -236,4 +236,17 @@ final class DraggablePanelController extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  /// Copy the current controller state.
+  /// Used to create a new instance of the controller.
+  DraggablePanelController copy() {
+    return DraggablePanelController(
+      initialPosition: (x: _draggablePositionLeft, y: _draggablePositionTop),
+      initialPanelState: _panelState,
+      panelAnimDuration: panelAnimDuration,
+      dockType: dockType,
+      dockOffset: dockOffset,
+      dockAnimDuration: dockAnimDuration,
+    );
+  }
 }

@@ -15,6 +15,7 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
+  bool isEnabled = true;
   final DraggablePanelController controller = DraggablePanelController();
   @override
   Widget build(BuildContext context) {
@@ -25,7 +26,11 @@ class _AppState extends State<App> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  setState(() {
+                    isEnabled = !isEnabled;
+                  });
+                },
                 child: const Text('Tap'),
               ),
             ],
@@ -33,146 +38,150 @@ class _AppState extends State<App> {
         ),
       ),
       builder: (context, child) {
-        return DraggablePanel(
-          items: [
-            (
-              enableBadge: false,
-              icon: Icons.list,
-              onTap: (context) {},
-            ),
-            (
-              enableBadge: false,
-              icon: Icons.color_lens,
-              onTap: (context) {},
-            ),
-            (
-              enableBadge: false,
-              icon: Icons.zoom_in,
-              onTap: (context) {},
-            ),
-            (
-              enableBadge: false,
-              icon: Icons.token,
-              onTap: (context) {},
-            ),
-            (
-              enableBadge: false,
-              icon: Icons.list,
-              onTap: (context) {},
-            ),
-            (
-              enableBadge: false,
-              icon: Icons.list,
-              onTap: (context) {},
-            ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.color_lens,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.zoom_in,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.token,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.list,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.zoom_in,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.token,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.list,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.zoom_in,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.token,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.list,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.zoom_in,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.token,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.list,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.zoom_in,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.token,
-            //   onTap: (context) {},
-            // ),
-            // (
-            //   enableBadge: false,
-            //   icon: Icons.list,
-            //   onTap: (context) {},
-            // ),
-          ],
-          buttons: [
-            (
-              icon: Icons.copy,
-              onTap: (context) {
-                // Hide
-                controller.toggle(context);
-              },
-              label: 'Push token',
-            ),
-            // (
-            //   icon: Icons.copy,
-            //   onTap: (context) {},
-            //   label: 'Push token',
-            // ),
-            // (
-            //   icon: Icons.copy,
-            //   onTap: (context) {},
-            //   label: 'Push token',
-            // ),
-            // (
-            //   icon: Icons.copy,
-            //   onTap: (context) {},
-            //   label: 'Push token',
-            // ),
-          ],
-          controller: controller,
-          child: child!,
+        return Visibility(
+          visible: isEnabled,
+          replacement: child!,
+          child: DraggablePanel(
+            items: [
+              (
+                enableBadge: false,
+                icon: Icons.list,
+                onTap: (context) {},
+              ),
+              (
+                enableBadge: false,
+                icon: Icons.color_lens,
+                onTap: (context) {},
+              ),
+              (
+                enableBadge: false,
+                icon: Icons.zoom_in,
+                onTap: (context) {},
+              ),
+              (
+                enableBadge: false,
+                icon: Icons.token,
+                onTap: (context) {},
+              ),
+              (
+                enableBadge: false,
+                icon: Icons.list,
+                onTap: (context) {},
+              ),
+              (
+                enableBadge: false,
+                icon: Icons.list,
+                onTap: (context) {},
+              ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.color_lens,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.zoom_in,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.token,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.list,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.zoom_in,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.token,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.list,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.zoom_in,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.token,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.list,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.zoom_in,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.token,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.list,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.zoom_in,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.token,
+              //   onTap: (context) {},
+              // ),
+              // (
+              //   enableBadge: false,
+              //   icon: Icons.list,
+              //   onTap: (context) {},
+              // ),
+            ],
+            buttons: [
+              (
+                icon: Icons.copy,
+                onTap: (context) {
+                  // Hide
+                  controller.toggle(context);
+                },
+                label: 'Push token',
+              ),
+              // (
+              //   icon: Icons.copy,
+              //   onTap: (context) {},
+              //   label: 'Push token',
+              // ),
+              // (
+              //   icon: Icons.copy,
+              //   onTap: (context) {},
+              //   label: 'Push token',
+              // ),
+              // (
+              //   icon: Icons.copy,
+              //   onTap: (context) {},
+              //   label: 'Push token',
+              // ),
+            ],
+            controller: controller,
+            child: child,
+          ),
         );
       },
     );

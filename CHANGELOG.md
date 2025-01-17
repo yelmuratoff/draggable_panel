@@ -1,3 +1,6 @@
+## 1.0.2
+- Added `copy` method to `DraggablePanelController`. It fixes the issue when you hide and re-show the panel.
+
 ## 1.0.1
 - In this update, I added the `DraggablePanelController` to give you the ability to control the panel directly outside of this widget.
 Just create it and pass it to the `DraggablePanel` widget. See example.
