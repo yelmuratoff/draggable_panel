@@ -17,6 +17,13 @@ class App extends StatefulWidget {
 class _AppState extends State<App> {
   bool isEnabled = true;
   final DraggablePanelController controller = DraggablePanelController();
+
+  @override
+  void dispose() {
+    super.dispose();
+    controller.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -73,86 +80,6 @@ class _AppState extends State<App> {
                 icon: Icons.list,
                 onTap: (context) {},
               ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.color_lens,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.zoom_in,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.token,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.list,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.zoom_in,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.token,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.list,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.zoom_in,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.token,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.list,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.zoom_in,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.token,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.list,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.zoom_in,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.token,
-              //   onTap: (context) {},
-              // ),
-              // (
-              //   enableBadge: false,
-              //   icon: Icons.list,
-              //   onTap: (context) {},
-              // ),
             ],
             buttons: [
               (

@@ -92,7 +92,7 @@ class _DraggablePanelState extends State<DraggablePanel> {
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller?.copy() ?? DraggablePanelController();
+    _controller = widget.controller ?? DraggablePanelController();
     _controller.draggablePositionTop = _controller.initialPosition?.y ?? 200;
     _controller.draggablePositionLeft = _controller.initialPosition?.x ?? 0;
     _controller.buttonWidth = widget.buttonWidth;
@@ -104,15 +104,14 @@ class _DraggablePanelState extends State<DraggablePanel> {
 
   @override
   void didChangeDependencies() {
-    // _controller.toggle(context);
-    // _controller.isDragging = false;
-    // _controller.panelState = PanelState.closed;
     super.didChangeDependencies();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
     super.dispose();
   }
 

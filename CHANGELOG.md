@@ -1,3 +1,7 @@
+## 1.0.3
+- Removed `copy` method from `DraggablePanelController`. It was not necessary.
+Issue was fixed by another way. Please if you use your own `DraggablePanelController` don't forget to dispose it.
+
 ## 1.0.2
 - Added `copy` method to `DraggablePanelController`. It fixes the issue when you hide and re-show the panel.
 
