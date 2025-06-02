@@ -21,8 +21,6 @@ class TooltipSnackBar {
   static const _kMaxLines = 2;
   static const _kAlphaBackground = 0.95;
   static const _kAlphaIconBackground = 0.2;
-  static const _kAlphaCloseButton = 0.7;
-  static const _kCloseLabel = '✕';
 
   /// Shows a tooltip snackbar with the given [message] and optional customization.
   ///
@@ -59,13 +57,6 @@ class TooltipSnackBar {
       duration: duration,
       elevation: 0,
       dismissDirection: DismissDirection.horizontal,
-      action: SnackBarAction(
-        label: _kCloseLabel,
-        textColor: resolvedTextColor.withValues(alpha: _kAlphaCloseButton),
-        onPressed: () {
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        },
-      ),
     );
 
     ScaffoldMessenger.of(context)
