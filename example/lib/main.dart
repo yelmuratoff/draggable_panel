@@ -50,45 +50,49 @@ class _AppState extends State<App> {
           replacement: child!,
           child: DraggablePanel(
             items: [
-              (
+              DraggablePanelItem(
                 enableBadge: false,
                 icon: Icons.list,
                 onTap: (context) {},
+                description: 'This is a list item',
               ),
-              (
+              DraggablePanelItem(
                 enableBadge: false,
                 icon: Icons.color_lens,
                 onTap: (context) {},
+                description: 'This is a color lens item',
               ),
-              (
+              DraggablePanelItem(
                 enableBadge: false,
                 icon: Icons.zoom_in,
                 onTap: (context) {},
+                description: 'This is a zoom in item',
               ),
-              (
+              DraggablePanelItem(
                 enableBadge: false,
                 icon: Icons.token,
                 onTap: (context) {},
               ),
-              (
+              DraggablePanelItem(
                 enableBadge: false,
                 icon: Icons.list,
                 onTap: (context) {},
               ),
-              (
+              DraggablePanelItem(
                 enableBadge: false,
                 icon: Icons.list,
                 onTap: (context) {},
               ),
             ],
             buttons: [
-              (
+              DraggablePanelButtonItem(
                 icon: Icons.copy,
                 onTap: (context) {
                   // Hide
                   controller.toggle(context);
                 },
                 label: 'Push token',
+                description: 'This is a push token button',
               ),
               // (
               //   icon: Icons.copy,

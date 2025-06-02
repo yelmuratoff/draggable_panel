@@ -3,8 +3,11 @@
 import 'package:draggable_panel/src/controller/controller.dart';
 import 'package:draggable_panel/src/enums/dock_type.dart';
 import 'package:draggable_panel/src/enums/panel_state.dart';
+import 'package:draggable_panel/src/models/panel_button.dart';
+import 'package:draggable_panel/src/models/panel_item.dart';
 import 'package:draggable_panel/src/utils/colors.dart';
 import 'package:draggable_panel/src/widgets/curve_line_paint.dart';
+import 'package:draggable_panel/src/widgets/tooltip_snackbar.dart';
 import 'package:flutter/material.dart';
 part 'widgets/panel_button.dart';
 
@@ -62,20 +65,10 @@ class DraggablePanel extends StatefulWidget {
   final Color? backgroundColor;
 
   /// The list of items that will be displayed in the panel.
-  final List<
-      ({
-        IconData icon,
-        bool enableBadge,
-        void Function(BuildContext context) onTap,
-      })> items;
+  final List<DraggablePanelItem> items;
 
   /// The list of buttons that will be displayed in the panel.
-  final List<
-      ({
-        IconData icon,
-        String label,
-        void Function(BuildContext context) onTap,
-      })> buttons;
+  final List<DraggablePanelButtonItem> buttons;
 
   /// The callback that will be called when the position of the panel is changed.
   /// You can use local storage to save the position of the panel and restore it
@@ -117,7 +110,6 @@ class _DraggablePanelState extends State<DraggablePanel> {
 
   @override
   Widget build(BuildContext context) {
-    // Width and height of page is required for the dragging the panel;
     final pageWidth = MediaQuery.sizeOf(context).width;
     final pageHeight = MediaQuery.sizeOf(context).height;
 
@@ -339,6 +331,37 @@ class _DraggablePanelState extends State<DraggablePanel> {
                                       child: Material(
                                         color: Colors.transparent,
                                         child: InkWell(
+                                          onTap: () {
+                                            widget.items[index].onTap
+                                                .call(context);
+
+                                            _controller.panelState =
+                                                PanelState.closed;
+                                            _controller.forceDock(pageWidth);
+                                            _controller.hidePanel(pageWidth);
+                                          },
+                                          onLongPress:
+                                              widget.items[index].description !=
+                                                          null &&
+                                                      widget
+                                                          .items[index]
+                                                          .description!
+                                                          .isNotEmpty
+                                                  ? () {
+                                                      TooltipSnackBar.show(
+                                                        context,
+                                                        message: widget
+                                                            .items[index]
+                                                            .description!,
+                                                        icon: widget
+                                                            .items[index].icon,
+                                                        backgroundColor: widget
+                                                                .backgroundColor ??
+                                                            Theme.of(context)
+                                                                .primaryColor,
+                                                      );
+                                                    }
+                                                  : null,
                                           child: Ink(
                                             color: _itemColor,
                                             child: Padding(
@@ -349,15 +372,6 @@ class _DraggablePanelState extends State<DraggablePanel> {
                                               ),
                                             ),
                                           ),
-                                          onTap: () {
-                                            widget.items[index].onTap
-                                                .call(context);
-
-                                            _controller.panelState =
-                                                PanelState.closed;
-                                            _controller.forceDock(pageWidth);
-                                            _controller.hidePanel(pageWidth);
-                                          },
                                         ),
                                       ),
                                     ),
