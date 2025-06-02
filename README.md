@@ -20,12 +20,10 @@ Your feedback is highly valued as it will help shape future updates and ensure t
 <p align="center">
   <a href="https://pub.dev/packages/draggable_panel"><img src="https://img.shields.io/pub/v/draggable_panel.svg" alt="Pub"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
-  <a href="https://github.com/yelmuratoff/draggable_panel"><img src="https://hits.dwyl.com/yelmuratoff/draggable_panel.svg?style=flat" alt="Repository views"></a>
   <a href="https://github.com/yelmuratoff/draggable_panel"><img src="https://img.shields.io/github/stars/yelmuratoff/draggable_panel?style=social" alt="Pub"></a>
 </p>
 <p align="center">
   <a href="https://pub.dev/packages/draggable_panel/score"><img src="https://img.shields.io/pub/likes/draggable_panel?logo=flutter" alt="Pub likes"></a>
-  <a href="https://pub.dev/packages/draggable_panel/score"><img src="https://img.shields.io/pub/popularity/draggable_panel?logo=flutter" alt="Pub popularity"></a>
   <a href="https://pub.dev/packages/draggable_panel/score"><img src="https://img.shields.io/pub/points/draggable_panel?logo=flutter" alt="Pub points"></a>
 </p>
 
