@@ -1,3 +1,7 @@
+## 1.0.4
+- Added tooltip snackbar when long press on the panel buttons and items.
+- Records replaced by `DraggablePanelItem` and `DraggablePanelButton` models with `description` field for tooltips.
+
 ## 1.0.3
 - Removed `copy` method from `DraggablePanelController`. It was not necessary.
 Issue was fixed by another way. Please if you use your own `DraggablePanelController` don't forget to dispose it.
