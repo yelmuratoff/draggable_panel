@@ -5,7 +5,7 @@ class TooltipSnackBar {
   const TooltipSnackBar._();
 
   // Constants for consistent styling
-  static const _kDefaultDuration = Duration(seconds: 4);
+  static const _kDefaultDuration = Duration(seconds: 3);
   static const _kContentPadding =
       EdgeInsets.symmetric(horizontal: 16, vertical: 12);
   static const _kMargin = EdgeInsets.symmetric(horizontal: 16, vertical: 8);

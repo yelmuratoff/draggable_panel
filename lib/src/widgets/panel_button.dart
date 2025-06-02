@@ -7,11 +7,13 @@ class _PanelButton extends StatelessWidget {
     required this.onTap,
     required this.icon,
     required this.label,
+    this.onLongPress,
   }) : _itemColor = itemColor;
 
   final Color _itemColor;
   final double pageWidth;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final IconData icon;
   final String label;
 
@@ -21,6 +23,7 @@ class _PanelButton extends StatelessWidget {
         width: double.maxFinite,
         child: MaterialButton(
           onPressed: onTap,
+          onLongPress: onLongPress,
           color: _itemColor,
           highlightElevation: 0,
           shape: const RoundedRectangleBorder(

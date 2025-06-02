@@ -392,6 +392,22 @@ class _DraggablePanelState extends State<DraggablePanel> {
                                           onTap: () {
                                             button.onTap.call(context);
                                           },
+                                          onLongPress: button.description !=
+                                                      null &&
+                                                  button.description!.isNotEmpty
+                                              ? () {
+                                                  TooltipSnackBar.show(
+                                                    context,
+                                                    message:
+                                                        button.description!,
+                                                    icon: button.icon,
+                                                    backgroundColor: widget
+                                                            .backgroundColor ??
+                                                        Theme.of(context)
+                                                            .primaryColor,
+                                                  );
+                                                }
+                                              : null,
                                         ),
                                       ),
                                     ],
