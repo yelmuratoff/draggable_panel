@@ -63,32 +63,34 @@ Simple add `DraggablePanel` to `MaterialApp`'s `builder`.
 builder: (context, child) {
         return DraggablePanel(
           items: [
-            (
+            DraggablePanelItem(
+              enableBadge: false,
+              icon: Icons.color_lens,
+              onTap: (context) {},
+              description: 'Color picker',
+            ),
+            DraggablePanelItem(
               enableBadge: false,
               icon: Icons.list,
               onTap: (context) {},
             ),
-            (
-              enableBadge: false,
-              icon: Icons.color_lens,
-              onTap: (context) {},
-            ),
-            (
+            DraggablePanelItem(
               enableBadge: false,
               icon: Icons.zoom_in,
               onTap: (context) {},
             ),
-            (
+            DraggablePanelItem(
               enableBadge: false,
               icon: Icons.token,
               onTap: (context) {},
             ),
           ],
           buttons: [
-            (
+            DraggablePanelButtonItem(
               icon: Icons.copy,
               onTap: (context) {},
               label: 'Push token',
+               description: 'Push token to the server',
             ),
           ],
           child: child!,
