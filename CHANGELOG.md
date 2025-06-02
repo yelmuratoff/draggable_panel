@@ -1,4 +1,4 @@
-## 1.0.5
+## 1.0.6
 - Added tooltip snackbar when long press on the panel buttons and items.
 - Records replaced by `DraggablePanelItem` and `DraggablePanelButton` models with `description` field for tooltips.
 
