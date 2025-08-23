@@ -13,8 +13,8 @@ part 'widgets/panel_button.dart';
 /// panel that can be used to show additional information or actions.
 class DraggablePanel extends StatefulWidget {
   const DraggablePanel({
-    super.key,
     required this.child,
+    super.key,
     this.icon,
     this.backgroundColor,
     this.items = const [],
@@ -88,7 +88,7 @@ class _DraggablePanelState extends State<DraggablePanel> {
     _controller.buttonWidth = widget.buttonWidth;
 
     // Propagate controller position changes to external callback if provided.
-    _positionListener = (double x, double y) {
+    _positionListener = (x, y) {
       if (!mounted) return;
       // Only forward when not dragging to avoid spamming during pan updates.
       if (!_controller.isDragging) {
@@ -104,8 +104,9 @@ class _DraggablePanelState extends State<DraggablePanel> {
       if (_controller.panelState == PanelState.closed) {
         final pageWidth = MediaQuery.sizeOf(context).width;
         _controller.isDragging = false;
-        _controller.forceDock(pageWidth);
-        _controller.hidePanel(pageWidth);
+        _controller
+          ..forceDock(pageWidth)
+          ..hidePanel(pageWidth);
       }
     });
   }
@@ -181,8 +182,9 @@ class _DraggablePanelState extends State<DraggablePanel> {
               child: GestureDetector(
                 onPanEnd: (event) {
                   _controller.isDragging = false;
-                  _controller.forceDock(pageWidth);
-                  _controller.hidePanel(pageWidth);
+                  _controller
+                    ..forceDock(pageWidth)
+                    ..hidePanel(pageWidth);
                 },
                 onPanStart: (event) {
                   // Detect the offset between the top and left side of the panel and
@@ -202,25 +204,23 @@ class _DraggablePanelState extends State<DraggablePanel> {
 
                   // Calculate the top position of the panel according to pan;
                   final statusBarHeight = MediaQuery.paddingOf(context).top;
-                  double newTop =
+                  var newTop =
                       event.globalPosition.dy - _controller.panOffsetTop;
 
                   // Check if the top position is exceeding the status bar or dock boundaries;
-                  final double minTop =
-                      statusBarHeight + _controller.dockBoundary;
-                  final double maxTop =
-                      (pageHeight - widget.buttonHeight - 10) -
-                          _controller.dockBoundary;
+                  final minTop = statusBarHeight + _controller.dockBoundary;
+                  final maxTop = (pageHeight - widget.buttonHeight - 10) -
+                      _controller.dockBoundary;
                   if (newTop < minTop) newTop = minTop;
                   if (newTop > maxTop) newTop = maxTop;
 
                   // Calculate the Left position of the panel according to pan;
-                  double newLeft =
+                  var newLeft =
                       event.globalPosition.dx - _controller.panOffsetLeft;
 
                   // Check if the left position is exceeding the dock boundaries;
-                  final double minLeft = 0 + _controller.dockBoundary;
-                  final double maxLeft = (pageWidth - _controller.buttonWidth) -
+                  final minLeft = 0 + _controller.dockBoundary;
+                  final maxLeft = (pageWidth - _controller.buttonWidth) -
                       _controller.dockBoundary;
                   if (newLeft < minLeft) newLeft = minLeft;
                   if (newLeft > maxLeft) newLeft = maxLeft;
@@ -315,8 +315,9 @@ class _DraggablePanelState extends State<DraggablePanel> {
                     _controller.panelState = PanelState.closed;
 
                     // Reset panel position, dock it to nearest edge;
-                    _controller.forceDock(pageWidth);
-                    _controller.togglePanel(pageWidth);
+                    _controller
+                      ..forceDock(pageWidth)
+                      ..togglePanel(pageWidth);
                   }
                 },
                 child: AnimatedSwitcher(
@@ -330,7 +331,8 @@ class _DraggablePanelState extends State<DraggablePanel> {
                       ? AnimatedContainer(
                           key: const ValueKey('panel_container'),
                           duration: Duration(
-                              milliseconds: _controller.panelAnimDuration),
+                            milliseconds: _controller.panelAnimDuration,
+                          ),
                           width: _controller.panelWidth,
                           height: _panelHeight,
                           clipBehavior: Clip.antiAlias,
@@ -354,7 +356,6 @@ class _DraggablePanelState extends State<DraggablePanel> {
                               Wrap(
                                 runSpacing: 8,
                                 spacing: 8,
-                                alignment: WrapAlignment.start,
                                 children: List.generate(
                                   widget.items.length,
                                   (index) => Badge(
@@ -363,7 +364,7 @@ class _DraggablePanelState extends State<DraggablePanel> {
                                     padding: EdgeInsets.zero,
                                     smallSize: 12,
                                     child: ClipRRect(
-                                      borderRadius: BorderRadius.all(
+                                      borderRadius: const BorderRadius.all(
                                         Radius.circular(12),
                                       ),
                                       child: Material(
@@ -375,8 +376,9 @@ class _DraggablePanelState extends State<DraggablePanel> {
 
                                             _controller.panelState =
                                                 PanelState.closed;
-                                            _controller.forceDock(pageWidth);
-                                            _controller.hidePanel(pageWidth);
+                                            _controller
+                                              ..forceDock(pageWidth)
+                                              ..hidePanel(pageWidth);
                                           },
                                           onLongPress:
                                               widget.items[index].description !=
@@ -472,18 +474,19 @@ class _DraggablePanelState extends State<DraggablePanel> {
     // If panel starts closed (default behavior), dock immediately without animation.
     if (_controller.panelState == PanelState.closed) {
       final pageWidth = MediaQuery.sizeOf(context).width;
-      final bool isRight = _controller.draggablePositionLeft > pageWidth / 2;
+      final isRight = _controller.draggablePositionLeft > pageWidth / 2;
       // Keep movement speed zero for first frame
       _controller.movementSpeed = 0;
       // Snap button to nearest edge
-      final double left = isRight
+      final left = isRight
           ? (pageWidth - _controller.buttonWidth) - _controller.dockBoundary
           : 0.0 + _controller.dockBoundary;
-      _controller.setPosition(x: left, y: _controller.draggablePositionTop);
-      // Place panel off-screen on the corresponding side
-      _controller.panelPositionLeft = isRight
-          ? pageWidth + _controller.buttonWidth
-          : -_controller.buttonWidth;
+      _controller
+        ..setPosition(x: left, y: _controller.draggablePositionTop)
+        // Place panel off-screen on the corresponding side
+        ..panelPositionLeft = isRight
+            ? pageWidth + _controller.buttonWidth
+            : -_controller.buttonWidth;
     }
   }
 
@@ -493,17 +496,17 @@ class _DraggablePanelState extends State<DraggablePanel> {
     final pageHeight = size.height;
     final statusBarHeight = MediaQuery.paddingOf(context).top;
 
-    double left = _controller.draggablePositionLeft;
-    double top = _controller.draggablePositionTop;
+    var left = _controller.draggablePositionLeft;
+    var top = _controller.draggablePositionTop;
 
-    final double minLeft = 0 + _controller.dockBoundary;
-    final double maxLeft =
+    final minLeft = 0 + _controller.dockBoundary;
+    final maxLeft =
         (pageWidth - _controller.buttonWidth) - _controller.dockBoundary;
-    final double minTop = statusBarHeight + _controller.dockBoundary;
-    final double maxTop =
+    final minTop = statusBarHeight + _controller.dockBoundary;
+    final maxTop =
         (pageHeight - widget.buttonHeight - 10) - _controller.dockBoundary;
 
-    bool changed = false;
+    var changed = false;
     if (left < minLeft) {
       left = minLeft;
       changed = true;

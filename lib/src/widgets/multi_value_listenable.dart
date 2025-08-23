@@ -12,7 +12,8 @@ class MultiValueListenableBuilder extends StatefulWidget {
   final WidgetBuilder builder;
 
   @override
-  State createState() => _MultiValueListenableBuilderState();
+  State<MultiValueListenableBuilder> createState() =>
+      _MultiValueListenableBuilderState();
 }
 
 class _MultiValueListenableBuilderState
@@ -24,13 +25,22 @@ class _MultiValueListenableBuilderState
   }
 
   void _onUpdated() {
-    // ignore: avoid_empty_blocks
+    if (!mounted) return;
     setState(() {});
   }
 
   void _registerListeners() {
     for (final listenable in widget.valueListenables) {
       listenable.addListener(_onUpdated);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant MultiValueListenableBuilder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!listEquals(widget.valueListenables, oldWidget.valueListenables)) {
+      _deregisterListeners();
+      _registerListeners();
     }
   }
 

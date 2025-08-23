@@ -13,6 +13,24 @@ typedef PositionListener = void Function(double x, double y);
 /// - Managing panel state transitions (open/closed).
 /// - Animating the panel movements.
 final class DraggablePanelController extends ChangeNotifier {
+  /// Constructor to initialize the draggable panel controller with optional parameters.
+  ///
+  /// Defaults:
+  /// - [panelAnimDuration]: 300 ms.
+  /// - [dockType]: [DockType.inside].
+  /// - [dockOffset]: 10.0.
+  DraggablePanelController({
+    this.initialPosition,
+    this.initialPanelState,
+    this.panelAnimDuration = 300,
+    this.dockType = DockType.inside,
+    this.dockOffset = 10.0,
+    this.dockAnimDuration,
+  }) {
+    _panelState = initialPanelState ?? PanelState.closed;
+    _draggablePositionLeft = initialPosition?.x ?? 0.0;
+    _draggablePositionTop = initialPosition?.y ?? 200.0;
+  }
   //
   // <--- Parameters --->
   //
@@ -40,25 +58,6 @@ final class DraggablePanelController extends ChangeNotifier {
   /// The duration (in milliseconds) of the docking animation.
   final int? dockAnimDuration;
 
-  /// Constructor to initialize the draggable panel controller with optional parameters.
-  ///
-  /// Defaults:
-  /// - [panelAnimDuration]: 300 ms.
-  /// - [dockType]: [DockType.inside].
-  /// - [dockOffset]: 10.0.
-  DraggablePanelController({
-    this.initialPosition,
-    this.initialPanelState,
-    this.panelAnimDuration = 300,
-    this.dockType = DockType.inside,
-    this.dockOffset = 10.0,
-    this.dockAnimDuration,
-  }) {
-    _panelState = initialPanelState ?? PanelState.closed;
-    _draggablePositionLeft = initialPosition?.x ?? 0.0;
-    _draggablePositionTop = initialPosition?.y ?? 200.0;
-  }
-
   //
   // <--- Local Variables --->
   //
@@ -67,19 +66,19 @@ final class DraggablePanelController extends ChangeNotifier {
   PanelState _panelState = PanelState.closed;
 
   /// Vertical position of the draggable panel.
-  double _draggablePositionTop = 0.0;
+  double _draggablePositionTop = 0;
 
   /// Horizontal position of the draggable panel.
-  double _draggablePositionLeft = 0.0;
+  double _draggablePositionLeft = 0;
 
   /// The horizontal position of the hidden panel.
-  double _panelPositionLeft = 0.0;
+  double _panelPositionLeft = 0;
 
   /// The vertical drag offset.
-  double _panOffsetTop = 0.0;
+  double _panOffsetTop = 0;
 
   /// The horizontal drag offset.
-  double _panOffsetLeft = 0.0;
+  double _panOffsetLeft = 0;
 
   /// The speed of the panel's movement.
   int _movementSpeed = 0;
@@ -88,7 +87,7 @@ final class DraggablePanelController extends ChangeNotifier {
   bool _isDragging = false;
 
   /// The width of the button associated with the panel.
-  double _buttonWidth = 0.0;
+  double _buttonWidth = 0;
 
   /// Constant width of the panel.
   static const double _panelWidth = 200;
@@ -109,9 +108,9 @@ final class DraggablePanelController extends ChangeNotifier {
   }
 
   void _notifyPositionListeners() {
-    final double x = _draggablePositionLeft;
-    final double y = _draggablePositionTop;
-    for (final PositionListener listener in _positionListeners) {
+    final x = _draggablePositionLeft;
+    final y = _draggablePositionTop;
+    for (final listener in _positionListeners) {
       listener(x, y);
     }
   }
@@ -212,9 +211,8 @@ final class DraggablePanelController extends ChangeNotifier {
   }
 
   /// Helper to calculate the dock boundary based on [DockType].
-  double get _dockBoundary {
-    return (dockType == DockType.inside) ? -dockOffset : dockOffset;
-  }
+  double get _dockBoundary =>
+      (dockType == DockType.inside) ? -dockOffset : dockOffset;
 
   /// Public accessor for the dock boundary used by widgets to apply consistent constraints.
   double get dockBoundary => _dockBoundary;

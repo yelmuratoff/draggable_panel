@@ -4,24 +4,6 @@ import 'package:flutter/material.dart';
 class TooltipSnackBar {
   const TooltipSnackBar._();
 
-  // Constants for consistent styling
-  static const _kDefaultDuration = Duration(seconds: 3);
-  static const _kContentPadding =
-      EdgeInsets.symmetric(horizontal: 16, vertical: 12);
-  static const _kMargin = EdgeInsets.symmetric(horizontal: 16, vertical: 8);
-  static const _kContentBorderRadius = BorderRadius.all(Radius.circular(16));
-  static const _kSnackBarBorderRadius = BorderRadius.all(Radius.circular(12));
-  static const _kIconBorderRadius = BorderRadius.all(Radius.circular(8));
-  static const _kIconPadding = EdgeInsets.all(4);
-  static const _kIconSpacing = SizedBox(width: 12);
-  static const _kIconSize = 16.0;
-  static const _kFontSize = 14.0;
-  static const _kFontWeight = FontWeight.w500;
-  static const _kLineHeight = 1.2;
-  static const _kMaxLines = 2;
-  static const _kAlphaBackground = 0.95;
-  static const _kAlphaIconBackground = 0.2;
-
   /// Shows a tooltip snackbar with the given [message] and optional customization.
   ///
   /// The snackbar automatically adapts to the current theme and provides
@@ -29,20 +11,22 @@ class TooltipSnackBar {
   static void show(
     BuildContext context, {
     required String message,
-    Duration duration = _kDefaultDuration,
+    Duration duration = const Duration(seconds: 3),
     Color? backgroundColor,
     Color? textColor,
     IconData? icon,
   }) {
-    final ThemeData theme = Theme.of(context);
-    final ColorScheme colorScheme = theme.colorScheme;
-    final bool isDark = theme.brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-    final Color resolvedBackgroundColor =
-        backgroundColor ?? _getDefaultBackgroundColor(colorScheme, isDark);
-    final Color resolvedTextColor = textColor ?? Colors.white;
+    final resolvedBackgroundColor = backgroundColor ??
+        (isDark
+            ? colorScheme.surfaceContainer.withValues(alpha: 0.95)
+            : colorScheme.inverseSurface.withValues(alpha: 0.95));
+    final resolvedTextColor = textColor ?? Colors.white;
 
-    final SnackBar snackBar = SnackBar(
+    final snackBar = SnackBar(
       content: _TooltipContent(
         message: message,
         icon: icon,
@@ -51,9 +35,11 @@ class TooltipSnackBar {
       ),
       backgroundColor: Colors.transparent,
       behavior: SnackBarBehavior.floating,
-      shape: const RoundedRectangleBorder(borderRadius: _kSnackBarBorderRadius),
-      margin: _kMargin,
-      padding: _kContentPadding,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       duration: duration,
       elevation: 0,
       dismissDirection: DismissDirection.horizontal,
@@ -62,14 +48,6 @@ class TooltipSnackBar {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(snackBar);
-  }
-
-  /// Gets the default background color based on theme brightness.
-  static Color _getDefaultBackgroundColor(
-      ColorScheme colorScheme, bool isDark) {
-    return isDark
-        ? colorScheme.surfaceContainer.withValues(alpha: _kAlphaBackground)
-        : colorScheme.inverseSurface.withValues(alpha: _kAlphaBackground);
   }
 }
 
@@ -88,35 +66,33 @@ class _TooltipContent extends StatelessWidget {
   final Color textColor;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: TooltipSnackBar._kContentBorderRadius,
-      ),
-      child: Padding(
-        padding: TooltipSnackBar._kContentPadding,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              _IconContainer(
-                icon: icon!,
-                textColor: textColor,
-              ),
-              TooltipSnackBar._kIconSpacing,
-            ],
-            Flexible(
-              child: _MessageText(
-                message: message,
-                textColor: textColor,
-              ),
-            ),
-          ],
+  Widget build(BuildContext context) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
         ),
-      ),
-    );
-  }
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                _IconContainer(
+                  icon: icon!,
+                  textColor: textColor,
+                ),
+                const SizedBox(width: 12),
+              ],
+              Flexible(
+                child: _MessageText(
+                  message: message,
+                  textColor: textColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
 }
 
 /// Private widget for the icon container.
@@ -130,21 +106,18 @@ class _IconContainer extends StatelessWidget {
   final Color textColor;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: TooltipSnackBar._kIconPadding,
-      decoration: const BoxDecoration(
-        color: Color.fromRGBO(
-            255, 255, 255, TooltipSnackBar._kAlphaIconBackground),
-        borderRadius: TooltipSnackBar._kIconBorderRadius,
-      ),
-      child: Icon(
-        icon,
-        color: textColor,
-        size: TooltipSnackBar._kIconSize,
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(4),
+        decoration: const BoxDecoration(
+          color: Color.fromRGBO(255, 255, 255, 0.2),
+          borderRadius: BorderRadius.all(Radius.circular(8)),
+        ),
+        child: Icon(
+          icon,
+          color: textColor,
+          size: 16,
+        ),
+      );
 }
 
 /// Private widget for the message text.
@@ -158,17 +131,15 @@ class _MessageText extends StatelessWidget {
   final Color textColor;
 
   @override
-  Widget build(BuildContext context) {
-    return Text(
-      message,
-      style: TextStyle(
-        color: textColor,
-        fontSize: TooltipSnackBar._kFontSize,
-        fontWeight: TooltipSnackBar._kFontWeight,
-        height: TooltipSnackBar._kLineHeight,
-      ),
-      maxLines: TooltipSnackBar._kMaxLines,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
+  Widget build(BuildContext context) => Text(
+        message,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          height: 1.2,
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      );
 }
