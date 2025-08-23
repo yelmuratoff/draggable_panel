@@ -23,19 +23,18 @@ class _AppState extends State<App> {
   void initState() {
     super.initState();
 
-    controller.addPositionListener((x, y) {
-      if (kDebugMode) {
-        print('Position changed: ($x, $y)');
-      }
-    });
-    //  WidgetsBinding.instance.addPostFrameCallback((_) {
-    //    controller.setPosition(x: 500, y: 500);
-    //  });
+    controller.addPositionListener(_positionChanged);
+    controller.setPosition(x: 500, y: 500);
+  }
+
+  void _positionChanged(double x, double y) {
+    debugPrint('Position changed: ($x, $y)');
   }
 
   @override
   void dispose() {
     super.dispose();
+    controller.removePositionListener(_positionChanged);
     controller.dispose();
   }
 
