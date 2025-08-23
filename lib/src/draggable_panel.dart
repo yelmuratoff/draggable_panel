@@ -1,7 +1,4 @@
-// ignore_for_file: inference_failure_on_function_return_type, prefer_int_literals, unnecessary_parenthesis, prefer_underscore_for_unused_callback_parameters, unnecessary_lambdas
-
 import 'package:draggable_panel/src/controller/controller.dart';
-import 'package:draggable_panel/src/enums/dock_type.dart';
 import 'package:draggable_panel/src/enums/panel_state.dart';
 import 'package:draggable_panel/src/models/panel_button.dart';
 import 'package:draggable_panel/src/models/panel_item.dart';
@@ -81,27 +78,77 @@ class DraggablePanel extends StatefulWidget {
 
 class _DraggablePanelState extends State<DraggablePanel> {
   late DraggablePanelController _controller;
+  PositionListener? _positionListener;
+  bool _didInitLayout = false;
 
   @override
   void initState() {
     super.initState();
     _controller = widget.controller ?? DraggablePanelController();
-    _controller.draggablePositionTop = _controller.initialPosition?.y ?? 200;
-    _controller.draggablePositionLeft = _controller.initialPosition?.x ?? 0;
     _controller.buttonWidth = widget.buttonWidth;
 
+    // Propagate controller position changes to external callback if provided.
+    _positionListener = (double x, double y) {
+      if (!mounted) return;
+      // Only forward when not dragging to avoid spamming during pan updates.
+      if (!_controller.isDragging) {
+        widget.onPositionChanged?.call(x, y);
+      }
+    };
+    _controller.addPositionListener(_positionListener!);
+
+    // Clamp into viewport after first frame (preserves state but prevents off-screen button).
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _controller.toggle(context);
+      if (!mounted || _didInitLayout) return;
+      _clampIntoViewport();
+      if (_controller.panelState == PanelState.closed) {
+        final pageWidth = MediaQuery.sizeOf(context).width;
+        _controller.isDragging = false;
+        _controller.forceDock(pageWidth);
+        _controller.hidePanel(pageWidth);
+      }
     });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (!_didInitLayout) {
+      _ensureInitialDock();
+      _didInitLayout = true;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant DraggablePanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // If external controller instance changed, rewire listeners safely.
+    if (oldWidget.controller != widget.controller) {
+      if (_positionListener != null) {
+        _controller.removePositionListener(_positionListener!);
+      }
+      // If we owned the old controller (oldWidget.controller == null), we keep it;
+      // otherwise, switch to the new external controller instance.
+      if (widget.controller != null) {
+        _controller = widget.controller!;
+      }
+      // Ensure width stays in sync when buttonWidth changes at runtime
+      _controller.buttonWidth = widget.buttonWidth;
+      if (_positionListener != null) {
+        _controller.addPositionListener(_positionListener!);
+      }
+    } else if (oldWidget.buttonWidth != widget.buttonWidth) {
+      // Keep controller's buttonWidth synchronized if only width changed.
+      _controller.buttonWidth = widget.buttonWidth;
+    }
   }
 
   @override
   void dispose() {
+    if (_positionListener != null) {
+      _controller.removePositionListener(_positionListener!);
+      _positionListener = null;
+    }
     if (widget.controller == null) {
       _controller.dispose();
     }
@@ -136,10 +183,6 @@ class _DraggablePanelState extends State<DraggablePanel> {
                   _controller.isDragging = false;
                   _controller.forceDock(pageWidth);
                   _controller.hidePanel(pageWidth);
-                  widget.onPositionChanged?.call(
-                    _controller.draggablePositionLeft,
-                    _controller.draggablePositionTop,
-                  );
                 },
                 onPanStart: (event) {
                   // Detect the offset between the top and left side of the panel and
@@ -153,42 +196,37 @@ class _DraggablePanelState extends State<DraggablePanel> {
                   // Close Panel if opened;
                   _controller.panelState = PanelState.closed;
 
-                  _controller.buttonWidth = widget.buttonWidth;
-
                   // Reset Movement Speed;
                   _controller.movementSpeed = 0;
                   _controller.isDragging = true;
 
                   // Calculate the top position of the panel according to pan;
                   final statusBarHeight = MediaQuery.paddingOf(context).top;
-                  _controller.draggablePositionTop =
+                  double newTop =
                       event.globalPosition.dy - _controller.panOffsetTop;
 
                   // Check if the top position is exceeding the status bar or dock boundaries;
-                  if (_controller.draggablePositionTop <
-                      statusBarHeight + _dockBoundary) {
-                    _controller.draggablePositionTop =
-                        statusBarHeight + _dockBoundary;
-                  }
-                  if (_controller.draggablePositionTop >
-                      (pageHeight - widget.buttonHeight - 10) - _dockBoundary) {
-                    _controller.draggablePositionTop =
-                        (pageHeight - widget.buttonHeight - 10) - _dockBoundary;
-                  }
+                  final double minTop =
+                      statusBarHeight + _controller.dockBoundary;
+                  final double maxTop =
+                      (pageHeight - widget.buttonHeight - 10) -
+                          _controller.dockBoundary;
+                  if (newTop < minTop) newTop = minTop;
+                  if (newTop > maxTop) newTop = maxTop;
 
                   // Calculate the Left position of the panel according to pan;
-                  _controller.draggablePositionLeft =
+                  double newLeft =
                       event.globalPosition.dx - _controller.panOffsetLeft;
 
                   // Check if the left position is exceeding the dock boundaries;
-                  if (_controller.draggablePositionLeft < 0 + _dockBoundary) {
-                    _controller.draggablePositionLeft = 0 + _dockBoundary;
-                  }
-                  if (_controller.draggablePositionLeft >
-                      (pageWidth - _controller.buttonWidth) - _dockBoundary) {
-                    _controller.draggablePositionLeft =
-                        (pageWidth - _controller.buttonWidth) - _dockBoundary;
-                  }
+                  final double minLeft = 0 + _controller.dockBoundary;
+                  final double maxLeft = (pageWidth - _controller.buttonWidth) -
+                      _controller.dockBoundary;
+                  if (newLeft < minLeft) newLeft = minLeft;
+                  if (newLeft > maxLeft) newLeft = maxLeft;
+
+                  // Apply batched position update to avoid extra rebuilds.
+                  _controller.setPosition(x: newLeft, y: newTop);
                 },
                 onTap: () async {
                   await _controller.toggleMainButton(pageWidth);
@@ -428,6 +466,66 @@ class _DraggablePanelState extends State<DraggablePanel> {
 
   // <-- Functions -->
 
+  void _ensureInitialDock() {
+    // Ensure inside viewport first
+    _clampIntoViewport();
+    // If panel starts closed (default behavior), dock immediately without animation.
+    if (_controller.panelState == PanelState.closed) {
+      final pageWidth = MediaQuery.sizeOf(context).width;
+      final bool isRight = _controller.draggablePositionLeft > pageWidth / 2;
+      // Keep movement speed zero for first frame
+      _controller.movementSpeed = 0;
+      // Snap button to nearest edge
+      final double left = isRight
+          ? (pageWidth - _controller.buttonWidth) - _controller.dockBoundary
+          : 0.0 + _controller.dockBoundary;
+      _controller.setPosition(x: left, y: _controller.draggablePositionTop);
+      // Place panel off-screen on the corresponding side
+      _controller.panelPositionLeft = isRight
+          ? pageWidth + _controller.buttonWidth
+          : -_controller.buttonWidth;
+    }
+  }
+
+  void _clampIntoViewport() {
+    final size = MediaQuery.sizeOf(context);
+    final pageWidth = size.width;
+    final pageHeight = size.height;
+    final statusBarHeight = MediaQuery.paddingOf(context).top;
+
+    double left = _controller.draggablePositionLeft;
+    double top = _controller.draggablePositionTop;
+
+    final double minLeft = 0 + _controller.dockBoundary;
+    final double maxLeft =
+        (pageWidth - _controller.buttonWidth) - _controller.dockBoundary;
+    final double minTop = statusBarHeight + _controller.dockBoundary;
+    final double maxTop =
+        (pageHeight - widget.buttonHeight - 10) - _controller.dockBoundary;
+
+    bool changed = false;
+    if (left < minLeft) {
+      left = minLeft;
+      changed = true;
+    } else if (left > maxLeft) {
+      left = maxLeft;
+      changed = true;
+    }
+
+    if (top < minTop) {
+      top = minTop;
+      changed = true;
+    } else if (top > maxTop) {
+      top = maxTop;
+      changed = true;
+    }
+
+    if (changed) {
+      // Update both at once to avoid extra rebuilds.
+      _controller.setPosition(x: left, y: top);
+    }
+  }
+
   double _panelTopPosition(double pageHeight) {
     if (_controller.draggablePositionTop < 0) {
       return 0;
@@ -438,19 +536,8 @@ class _DraggablePanelState extends State<DraggablePanel> {
     }
   }
 
-  double get _dockBoundary {
-    if (_controller.dockType != null &&
-        _controller.dockType == DockType.inside) {
-      // If it's an 'inside' type dock, dock offset will remain the same;
-      return -_controller.dockOffset;
-    } else {
-      // If it's an 'outside' type dock, dock offset will be inverted, hence
-      // negative value;
-      return _controller.dockOffset;
-    }
-  }
-
-// Height of the panel according to its state;
+  // Dock boundary is provided via controller.dockBoundary
+  // Height of the panel according to its state;
   double get _panelHeight {
     if (widget.panelHeight != null) {
       return widget.panelHeight!;

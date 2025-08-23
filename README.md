@@ -44,7 +44,7 @@ Follow these steps to use this package
 
 ```yaml
 dependencies:
-  draggable_panel: ^1.0.6
+  draggable_panel: ^1.1.0
 ```
 
 ### Add import package
@@ -61,42 +61,83 @@ Simple add `DraggablePanel` to `MaterialApp`'s `builder`.
 
 ```dart
 builder: (context, child) {
-        return DraggablePanel(
-          items: [
-            DraggablePanelItem(
-              enableBadge: false,
-              icon: Icons.color_lens,
-              onTap: (context) {},
-              description: 'Color picker',
-            ),
-            DraggablePanelItem(
-              enableBadge: false,
-              icon: Icons.list,
-              onTap: (context) {},
-            ),
-            DraggablePanelItem(
-              enableBadge: false,
-              icon: Icons.zoom_in,
-              onTap: (context) {},
-            ),
-            DraggablePanelItem(
-              enableBadge: false,
-              icon: Icons.token,
-              onTap: (context) {},
-            ),
-          ],
-          buttons: [
-            DraggablePanelButtonItem(
-              icon: Icons.copy,
-              onTap: (context) {},
-              label: 'Push token',
-               description: 'Push token to the server',
-            ),
-          ],
-          child: child!,
-        );
-      },
+  return DraggablePanel(
+    items: [
+      DraggablePanelItem(
+        enableBadge: false,
+        icon: Icons.color_lens,
+        onTap: (context) {},
+        description: 'Color picker',
+      ),
+      DraggablePanelItem(
+        enableBadge: false,
+        icon: Icons.list,
+        onTap: (context) {},
+      ),
+      DraggablePanelItem(
+        enableBadge: false,
+        icon: Icons.zoom_in,
+        onTap: (context) {},
+      ),
+      DraggablePanelItem(
+        enableBadge: false,
+        icon: Icons.token,
+        onTap: (context) {},
+      ),
+    ],
+    buttons: [
+      DraggablePanelButtonItem(
+        icon: Icons.copy,
+        onTap: (context) {},
+        label: 'Push token',
+        description: 'Push token to the server',
+      ),
+    ],
+    child: child!,
+  );
+},
 ```
+
+### Using a controller (recommended for advanced control)
+
+Create a controller once and pass it to the widget. You can preset position/state and listen to position changes.
+
+```dart
+final controller = DraggablePanelController(
+  initialPosition: (x: 20, y: 300),
+  // initialPanelState: PanelState.open, // optional: start opened
+);
+
+@override
+void initState() {
+  super.initState();
+  controller.addPositionListener((x, y) {
+    // persist position, analytics, etc.
+  });
+}
+
+// In MaterialApp.builder
+builder: (context, child) => DraggablePanel(
+  controller: controller,
+  onPositionChanged: (x, y) {
+    // Called when position settles (not during active dragging)
+  },
+  items: const [],
+  buttons: const [],
+  child: child!,
+),
+```
+
+Tips:
+- When the panel starts in the closed state (default), it will be docked to the nearest screen edge on first layout, so the button never “floats” mid-screen.
+- The widget doesn’t auto-toggle on mount. Use `controller.toggle(context)` when you need to programmatically open/close it.
+- Position callbacks: use `controller.addPositionListener` for all position updates; `onPositionChanged` is fired when not dragging (settled updates).
+
+## What’s new in 1.1.0
+- Position listener API in `DraggablePanelController` (`addPositionListener` / `removePositionListener`).
+- Public `dockBoundary` getter for consistent boundary logic.
+- `toggle()` respects current `panelState` (not the initial one). Auto-toggle on mount removed; initial position is clamped and (when closed) auto-docked.
+- Fewer rebuilds during drag via batched `setPosition(x, y)`; lifecycle safety and controller hot-swap handling.
 
 Please, check the [example](https://github.com/yelmuratoff/draggable_panel/tree/main/example) for more details.
 

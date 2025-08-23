@@ -2,6 +2,9 @@ import 'package:draggable_panel/src/enums/dock_type.dart';
 import 'package:draggable_panel/src/enums/panel_state.dart';
 import 'package:flutter/material.dart';
 
+/// Signature for position change listeners.
+typedef PositionListener = void Function(double x, double y);
+
 /// A controller to manage the state and behavior of a draggable panel.
 ///
 /// The [DraggablePanelController] provides functionality for:
@@ -90,6 +93,29 @@ final class DraggablePanelController extends ChangeNotifier {
   /// Constant width of the panel.
   static const double _panelWidth = 200;
 
+  /// Listeners that are notified when the draggable position (x, y) changes.
+  final List<PositionListener> _positionListeners = <PositionListener>[];
+
+  /// Add a listener that is called whenever the draggable position (x, y) changes.
+  void addPositionListener(PositionListener listener) {
+    if (!_positionListeners.contains(listener)) {
+      _positionListeners.add(listener);
+    }
+  }
+
+  /// Remove a previously added position listener.
+  void removePositionListener(PositionListener listener) {
+    _positionListeners.remove(listener);
+  }
+
+  void _notifyPositionListeners() {
+    final double x = _draggablePositionLeft;
+    final double y = _draggablePositionTop;
+    for (final PositionListener listener in _positionListeners) {
+      listener(x, y);
+    }
+  }
+
   //
   // <--- Getters and Setters --->
   //
@@ -112,11 +138,13 @@ final class DraggablePanelController extends ChangeNotifier {
 
   set draggablePositionTop(double value) {
     _draggablePositionTop = value;
+    _notifyPositionListeners();
     notifyListeners();
   }
 
   set draggablePositionLeft(double value) {
     _draggablePositionLeft = value;
+    _notifyPositionListeners();
     notifyListeners();
   }
 
@@ -150,6 +178,13 @@ final class DraggablePanelController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setPosition({required double x, required double y}) {
+    _draggablePositionLeft = x;
+    _draggablePositionTop = y;
+    _notifyPositionListeners();
+    notifyListeners();
+  }
+
   //
   // <--- Action Methods --->
   //
@@ -172,6 +207,7 @@ final class DraggablePanelController extends ChangeNotifier {
       _draggablePositionLeft = (pageWidth - _buttonWidth) - _dockBoundary;
       _panelPositionLeft = pageWidth + _buttonWidth;
     }
+    _notifyPositionListeners();
     notifyListeners();
   }
 
@@ -179,6 +215,9 @@ final class DraggablePanelController extends ChangeNotifier {
   double get _dockBoundary {
     return (dockType == DockType.inside) ? -dockOffset : dockOffset;
   }
+
+  /// Public accessor for the dock boundary used by widgets to apply consistent constraints.
+  double get dockBoundary => _dockBoundary;
 
   /// Hide the panel completely off-screen.
   ///
@@ -217,6 +256,7 @@ final class DraggablePanelController extends ChangeNotifier {
       _draggablePositionLeft = _draggablePositionLeft > pageWidth / 2
           ? pageWidth + _buttonWidth
           : -_buttonWidth;
+      _notifyPositionListeners();
     }
     notifyListeners();
   }
@@ -226,14 +266,15 @@ final class DraggablePanelController extends ChangeNotifier {
   /// - [context]: The current [BuildContext].
   void toggle(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    if (initialPanelState == PanelState.open) {
-      toggleMainButton(width);
-      togglePanel(width);
-    } else {
+    if (_panelState == PanelState.open) {
+      _panelState = PanelState.closed;
       _isDragging = false;
       forceDock(width);
       hidePanel(width);
+    } else {
+      // Open sequence mirrors onTap handler
+      toggleMainButton(width);
+      togglePanel(width);
     }
-    notifyListeners();
   }
 }

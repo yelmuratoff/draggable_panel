@@ -1,4 +1,5 @@
 import 'package:draggable_panel/draggable_panel.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -16,7 +17,21 @@ class App extends StatefulWidget {
 
 class _AppState extends State<App> {
   bool isEnabled = true;
-  final DraggablePanelController controller = DraggablePanelController();
+  final controller = DraggablePanelController(initialPosition: (x: 40, y: 100));
+
+  @override
+  void initState() {
+    super.initState();
+
+    controller.addPositionListener((x, y) {
+      if (kDebugMode) {
+        print('Position changed: ($x, $y)');
+      }
+    });
+    //  WidgetsBinding.instance.addPostFrameCallback((_) {
+    //    controller.setPosition(x: 500, y: 500);
+    //  });
+  }
 
   @override
   void dispose() {

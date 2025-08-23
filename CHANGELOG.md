@@ -1,3 +1,10 @@
+## 1.1.0
+- Added: Position change listener API in `DraggablePanelController` (`addPositionListener` / `removePositionListener`).
+- Added: Public `dockBoundary` getter for consistent boundary logic across widget and controller.
+- Changed: `toggle()` now respects current `panelState` (not `initialPanelState`). Auto-toggle on mount removed to preserve user state. Initial position is clamped and (when starting closed) docked to the nearest edge.
+- Fixed: Panel no longer resets to default after visibility toggles; duplicate position callbacks removed; unified docking logic.
+- Performance: Batched x/y updates during drag via `setPosition(x, y)`; reduced redundant notifications and rebuilds; lifecycle safety (mounted checks) and controller rewire in `didUpdateWidget`.
+
 ## 1.0.6
 - Added tooltip snackbar when long press on the panel buttons and items.
 - Records replaced by `DraggablePanelItem` and `DraggablePanelButton` models with `description` field for tooltips.
