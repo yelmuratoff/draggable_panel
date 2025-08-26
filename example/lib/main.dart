@@ -1,5 +1,4 @@
 import 'package:draggable_panel/draggable_panel.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 void main() {

@@ -92,6 +92,10 @@ final class DraggablePanelController extends ChangeNotifier {
   /// Constant width of the panel.
   static const double _panelWidth = 200;
 
+  /// Whether the draggable is docked on the right edge. This avoids side
+  /// flipping during window resizes; updated in [forceDock].
+  bool _isDockedRight = false;
+
   /// Listeners that are notified when the draggable position (x, y) changes.
   final List<PositionListener> _positionListeners = <PositionListener>[];
 
@@ -129,6 +133,7 @@ final class DraggablePanelController extends ChangeNotifier {
   int get movementSpeed => _movementSpeed;
   bool get isDragging => _isDragging;
   double get buttonWidth => _buttonWidth;
+  bool get isDockedRight => _isDockedRight;
 
   set panelState(PanelState value) {
     _panelState = value;
@@ -199,7 +204,8 @@ final class DraggablePanelController extends ChangeNotifier {
     _movementSpeed = dockAnimDuration ?? 300;
 
     // Determine docking behavior based on the center position.
-    if (center < pageWidth / 2) {
+    _isDockedRight = center >= pageWidth / 2;
+    if (!_isDockedRight) {
       _draggablePositionLeft = 0.0 + _dockBoundary;
       _panelPositionLeft = -_buttonWidth;
     } else {
@@ -221,9 +227,8 @@ final class DraggablePanelController extends ChangeNotifier {
   ///
   /// - [pageWidth]: The width of the page/screen.
   void hidePanel(double pageWidth) {
-    _panelPositionLeft = _draggablePositionLeft > pageWidth / 2
-        ? pageWidth + _panelWidth
-        : -_panelWidth;
+    _panelPositionLeft =
+        _isDockedRight ? pageWidth + _panelWidth : -_panelWidth;
     notifyListeners();
   }
 
@@ -232,12 +237,10 @@ final class DraggablePanelController extends ChangeNotifier {
   /// - [pageWidth]: The width of the page/screen.
   void togglePanel(double pageWidth) {
     if (_panelState == PanelState.open) {
-      _panelPositionLeft = _draggablePositionLeft > pageWidth / 2
-          ? pageWidth - _panelWidth - buttonWidth
-          : buttonWidth;
-    } else {
       _panelPositionLeft =
-          _draggablePositionLeft > pageWidth / 2 ? pageWidth : -_panelWidth;
+          _isDockedRight ? pageWidth - _panelWidth - buttonWidth : buttonWidth;
+    } else {
+      _panelPositionLeft = _isDockedRight ? pageWidth : -_panelWidth;
     }
     notifyListeners();
   }
@@ -251,12 +254,20 @@ final class DraggablePanelController extends ChangeNotifier {
       forceDock(pageWidth);
     } else {
       _panelState = PanelState.open;
-      _draggablePositionLeft = _draggablePositionLeft > pageWidth / 2
-          ? pageWidth + _buttonWidth
-          : -_buttonWidth;
+      // Move button off-screen based on the last known dock side.
+      _draggablePositionLeft =
+          _isDockedRight ? pageWidth + _buttonWidth : -_buttonWidth;
       _notifyPositionListeners();
     }
     notifyListeners();
+  }
+
+  /// Recompute dock side based on current button position and page width without
+  /// moving it to a new edge. Useful during window resize.
+  void recomputeDockSide(double pageWidth) {
+    final center = _draggablePositionLeft + (_buttonWidth / 2);
+    _isDockedRight = center >= pageWidth / 2;
+    // Do not notify here; caller will update dependent fields and notify once.
   }
 
   /// Toggle the panel's behavior based on its initial state.

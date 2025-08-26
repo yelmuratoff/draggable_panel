@@ -76,7 +76,8 @@ class DraggablePanel extends StatefulWidget {
   State<DraggablePanel> createState() => _DraggablePanelState();
 }
 
-class _DraggablePanelState extends State<DraggablePanel> {
+class _DraggablePanelState extends State<DraggablePanel>
+    with WidgetsBindingObserver {
   late DraggablePanelController _controller;
   PositionListener? _positionListener;
   bool _didInitLayout = false;
@@ -84,6 +85,7 @@ class _DraggablePanelState extends State<DraggablePanel> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controller = widget.controller ?? DraggablePanelController();
     _controller.buttonWidth = widget.buttonWidth;
 
@@ -153,7 +155,20 @@ class _DraggablePanelState extends State<DraggablePanel> {
     if (widget.controller == null) {
       _controller.dispose();
     }
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    // Window size changed (desktop/web resize, rotation, etc.).
+    // Re-clamp button into viewport and adjust panel position to the correct side.
+    if (!mounted) return;
+    // Debounce to the next frame (latest callback wins).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _handleWindowResize();
+    });
   }
 
   @override
@@ -167,7 +182,7 @@ class _DraggablePanelState extends State<DraggablePanel> {
       builder: (context, child) {
         // Animated positioned widget can be moved to any part of the screen with
         // animation;
-        final isInRightSide = _controller.draggablePositionLeft > pageWidth / 2;
+        final isInRightSide = _controller.isDockedRight;
         return Stack(
           children: [
             if (widget.child != null) widget.child!,
@@ -468,6 +483,33 @@ class _DraggablePanelState extends State<DraggablePanel> {
 
   // <-- Functions -->
 
+  void _handleWindowResize() {
+    final size = MediaQuery.sizeOf(context);
+    final pageWidth = size.width;
+
+    // Ensure the draggable button stays within the new viewport.
+    _clampIntoViewport();
+
+    // Auto-dock to nearest edge on resize to satisfy "перетягиваться в бока".
+    _controller
+      ..forceDock(pageWidth)
+      ..movementSpeed = 0; // avoid long animations on resize
+
+    if (_controller.panelState == PanelState.open) {
+      // Keep the open panel aligned to its edge with new width.
+      final isRight = _controller.isDockedRight;
+      _controller.panelPositionLeft = isRight
+          ? pageWidth - _controller.panelWidth - _controller.buttonWidth
+          : _controller.buttonWidth;
+    } else {
+      // Keep hidden panel fully off-screen on the correct side.
+      _controller.hidePanel(pageWidth);
+    }
+
+    // Panel's top is derived from button top via _panelTopPosition, which already
+    // uses clamped draggablePositionTop; nothing else needed here.
+  }
+
   void _ensureInitialDock() {
     // Ensure inside viewport first
     _clampIntoViewport();
@@ -483,6 +525,7 @@ class _DraggablePanelState extends State<DraggablePanel> {
           : 0.0 + _controller.dockBoundary;
       _controller
         ..setPosition(x: left, y: _controller.draggablePositionTop)
+        ..recomputeDockSide(pageWidth)
         // Place panel off-screen on the corresponding side
         ..panelPositionLeft = isRight
             ? pageWidth + _controller.buttonWidth
@@ -567,7 +610,7 @@ class _DraggablePanelState extends State<DraggablePanel> {
 
   // Panel border is only enabled if the border width is greater than 0;
   Border? get _panelBorder {
-    if (widget.borderWidth != null && widget.borderWidth! > 0 ||
+    if ((widget.borderWidth != null && widget.borderWidth! > 0) ||
         widget.borderColor != null) {
       return Border.fromBorderSide(
         BorderSide(

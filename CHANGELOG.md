@@ -1,3 +1,33 @@
+## 1.2.0
+
+Desktop/Web resize stability, auto-docking, and controller improvements.
+
+What's new
+- Auto-dock on window resize: the draggable button now snaps to the nearest edge when the window is resized on desktop/web, matching the expected "перетягиваться в бока" behavior.
+- Stable dock side: introduced `isDockedRight` in `DraggablePanelController` to track the docked side explicitly. This prevents side flipping during resizes and ensures consistent alignment when the button is off-screen.
+- Resize handling in widget: `DraggablePanel` now observes `didChangeMetrics` and reclamps/repositions without long animations during resize.
+
+Changes
+- `DraggablePanelController`:
+	- Added `bool get isDockedRight` and internal tracking updated in `forceDock()`.
+	- `hidePanel()`, `togglePanel()`, and `toggleMainButton()` now use `isDockedRight` instead of recomputing side from current left/width.
+	- Added `recomputeDockSide(pageWidth)` helper for future scenarios where side needs recalculation without moving.
+- `DraggablePanel`:
+	- Uses `controller.isDockedRight` in UI instead of deducing side via `left > width/2`.
+	- On init, initial position is clamped and, if closed, docked and panel hidden off-screen on the correct side.
+	- On resize, positions are clamped, side is docked, and open/closed panel positions recalculated accordingly with zero-duration movement during the resize frame.
+
+Fixes
+- Panel and button no longer drift or jump when resizing the window; the open panel stays aligned to its edge, and the closed panel remains fully off-screen on the correct side.
+- Prevented duplicate/misleading side calculations that caused inconsistencies during transitions.
+
+Performance and cleanup
+- Reduced unnecessary rebuilds during resize by batching updates and suppressing long animations for these events.
+- Minor readability improvements (clearer border condition, removal of unused code, better ordering of resize operations).
+
+Migration notes
+- No breaking API changes. If you previously derived side from `draggablePositionLeft`, consider reading `controller.isDockedRight` for consistency with the new logic.
+
 ## 1.1.0
 - Added: Position change listener API in `DraggablePanelController` (`addPositionListener` / `removePositionListener`).
 - Added: Public `dockBoundary` getter for consistent boundary logic across widget and controller.
