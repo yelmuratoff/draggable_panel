@@ -18,10 +18,12 @@ class MultiValueListenableBuilder extends StatefulWidget {
 
 class _MultiValueListenableBuilderState
     extends State<MultiValueListenableBuilder> {
+  Listenable? _mergedListenable;
+
   @override
   void initState() {
     super.initState();
-    _registerListeners(widget.valueListenables);
+    _updateListeners(widget.valueListenables);
   }
 
   void _onUpdated() {
@@ -29,30 +31,27 @@ class _MultiValueListenableBuilderState
     setState(() {});
   }
 
-  void _registerListeners(Iterable<ValueListenable<dynamic>> listenables) {
-    for (final listenable in listenables) {
-      listenable.addListener(_onUpdated);
-    }
-  }
-
   @override
   void didUpdateWidget(covariant MultiValueListenableBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!listEquals(widget.valueListenables, oldWidget.valueListenables)) {
-      _deregisterListeners(oldWidget.valueListenables);
-      _registerListeners(widget.valueListenables);
+      _updateListeners(widget.valueListenables);
+      setState(() {});
     }
   }
 
-  void _deregisterListeners(Iterable<ValueListenable<dynamic>> listenables) {
-    for (final listenable in listenables) {
-      listenable.removeListener(_onUpdated);
+  void _updateListeners(List<ValueListenable<dynamic>> listenables) {
+    _mergedListenable?.removeListener(_onUpdated);
+    if (listenables.isEmpty) {
+      _mergedListenable = null;
+      return;
     }
+    _mergedListenable = Listenable.merge(listenables)..addListener(_onUpdated);
   }
 
   @override
   void dispose() {
-    _deregisterListeners(widget.valueListenables);
+    _mergedListenable?.removeListener(_onUpdated);
     super.dispose();
   }
 

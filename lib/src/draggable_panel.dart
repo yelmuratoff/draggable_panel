@@ -79,13 +79,15 @@ class DraggablePanel extends StatefulWidget {
 class _DraggablePanelState extends State<DraggablePanel>
     with WidgetsBindingObserver {
   late DraggablePanelController _controller;
-  PositionListener? _positionListener;
+  late final PositionListener _positionListener;
   bool _didInitLayout = false;
+  bool _ownsController = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _ownsController = widget.controller == null;
     _controller = widget.controller ?? DraggablePanelController();
     _controller.buttonWidth = widget.buttonWidth;
 
@@ -97,7 +99,7 @@ class _DraggablePanelState extends State<DraggablePanel>
         widget.onPositionChanged?.call(x, y);
       }
     };
-    _controller.addPositionListener(_positionListener!);
+    _controller.addPositionListener(_positionListener);
 
     // Clamp into viewport after first frame (preserves state but prevents off-screen button).
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -127,19 +129,21 @@ class _DraggablePanelState extends State<DraggablePanel>
     super.didUpdateWidget(oldWidget);
     // If external controller instance changed, rewire listeners safely.
     if (oldWidget.controller != widget.controller) {
-      if (_positionListener != null) {
-        _controller.removePositionListener(_positionListener!);
+      _controller.removePositionListener(_positionListener);
+      if (_ownsController &&
+          oldWidget.controller == null &&
+          widget.controller != null) {
+        _controller.dispose();
       }
-      // If we owned the old controller (oldWidget.controller == null), we keep it;
-      // otherwise, switch to the new external controller instance.
       if (widget.controller != null) {
         _controller = widget.controller!;
+        _ownsController = false;
+      } else {
+        _ownsController = true;
       }
       // Ensure width stays in sync when buttonWidth changes at runtime
       _controller.buttonWidth = widget.buttonWidth;
-      if (_positionListener != null) {
-        _controller.addPositionListener(_positionListener!);
-      }
+      _controller.addPositionListener(_positionListener);
     } else if (oldWidget.buttonWidth != widget.buttonWidth) {
       // Keep controller's buttonWidth synchronized if only width changed.
       _controller.buttonWidth = widget.buttonWidth;
@@ -148,11 +152,8 @@ class _DraggablePanelState extends State<DraggablePanel>
 
   @override
   void dispose() {
-    if (_positionListener != null) {
-      _controller.removePositionListener(_positionListener!);
-      _positionListener = null;
-    }
-    if (widget.controller == null) {
+    _controller.removePositionListener(_positionListener);
+    if (_ownsController) {
       _controller.dispose();
     }
     WidgetsBinding.instance.removeObserver(this);
@@ -215,6 +216,9 @@ class _DraggablePanelState extends State<DraggablePanel>
     final resolvedBackground =
         (widget.backgroundColor ?? Theme.of(context).primaryColor)
             .withValues(alpha: 0.4);
+    final buttonWidth = _controller.buttonWidth;
+    final buttonHeight = widget.buttonHeight;
+    final isDragging = _controller.isDragging;
 
     return AnimatedPositioned(
       key: const ValueKey('draggable_panel_button'),
@@ -223,50 +227,22 @@ class _DraggablePanelState extends State<DraggablePanel>
       left: _controller.draggablePositionLeft,
       curve: Curves.fastLinearToSlowEaseIn,
       child: GestureDetector(
-        onPanEnd: (_) {
-          _controller
-            ..isDragging = false
-            ..forceDock(pageWidth)
-            ..hidePanel(pageWidth);
-        },
-        onPanStart: (details) {
-          _controller
-            ..panOffsetTop =
-                details.globalPosition.dy - _controller.draggablePositionTop
-            ..panOffsetLeft =
-                details.globalPosition.dx - _controller.draggablePositionLeft;
-        },
-        onPanUpdate: (details) {
-          _controller.panelState = PanelState.closed;
-          _controller
-            ..movementSpeed = 0
-            ..isDragging = true;
-
-          final statusBarHeight = MediaQuery.paddingOf(context).top;
-          var newTop = details.globalPosition.dy - _controller.panOffsetTop;
-          final minTop = statusBarHeight + _controller.dockBoundary;
-          final maxTop = (pageHeight - widget.buttonHeight - 10) -
-              _controller.dockBoundary;
-          if (newTop < minTop) newTop = minTop;
-          if (newTop > maxTop) newTop = maxTop;
-
-          var newLeft = details.globalPosition.dx - _controller.panOffsetLeft;
-          final minLeft = _controller.dockBoundary;
-          final maxLeft =
-              (pageWidth - _controller.buttonWidth) - _controller.dockBoundary;
-          if (newLeft < minLeft) newLeft = minLeft;
-          if (newLeft > maxLeft) newLeft = maxLeft;
-
-          _controller.setPosition(x: newLeft, y: newTop);
-        },
+        onPanEnd: (_) => _handlePanEnd(pageWidth),
+        onPanStart: _handlePanStart,
+        onPanUpdate: (details) => _handlePanUpdate(
+          context: context,
+          details: details,
+          pageWidth: pageWidth,
+          pageHeight: pageHeight,
+        ),
         onTap: () async {
           await _controller.toggleMainButton(pageWidth);
           _controller.togglePanel(pageWidth);
         },
         child: AnimatedContainer(
           duration: Duration(milliseconds: _controller.panelAnimDuration),
-          width: widget.buttonWidth,
-          height: widget.buttonHeight,
+          width: buttonWidth,
+          height: buttonHeight,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: resolvedBackground,
@@ -286,11 +262,11 @@ class _DraggablePanelState extends State<DraggablePanel>
                       scale: animation,
                       child: child,
                     ),
-                    child: _controller.isDragging
+                    child: isDragging
                         ? Center(
                             child: SizedBox(
-                              width: _controller.buttonWidth,
-                              height: widget.buttonHeight,
+                              width: buttonWidth,
+                              height: buttonHeight,
                               child: Icon(
                                 Icons.drag_indicator_rounded,
                                 color: Colors.white.withValues(alpha: 0.5),
@@ -299,8 +275,8 @@ class _DraggablePanelState extends State<DraggablePanel>
                           )
                         : SizedBox(
                             key: const ValueKey('drag_handle'),
-                            width: _controller.buttonWidth,
-                            height: widget.buttonHeight,
+                            width: buttonWidth,
+                            height: buttonHeight,
                             child: widget.icon ??
                                 Align(
                                   alignment: isDockedRight
@@ -337,6 +313,12 @@ class _DraggablePanelState extends State<DraggablePanel>
         widget.backgroundColor ?? Theme.of(context).primaryColor;
     final resolvedBorderRadius =
         widget.borderRadius ?? const BorderRadius.all(Radius.circular(16));
+    final panelBorder = _panelBorder;
+    final panelHeight = _panelHeight;
+    final panelWidth = _controller.panelWidth;
+    final items = widget.items;
+    final buttons = widget.buttons;
+    final itemColor = _itemColor;
 
     return AnimatedPositioned(
       key: const ValueKey('draggable_panel'),
@@ -360,109 +342,46 @@ class _DraggablePanelState extends State<DraggablePanel>
               ? AnimatedContainer(
                   key: const ValueKey('panel_container'),
                   duration: panelDuration,
-                  width: _controller.panelWidth,
-                  height: _panelHeight,
+                  width: panelWidth,
+                  height: panelHeight,
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     color: resolvedBackgroundColor,
                     borderRadius: resolvedBorderRadius,
-                    border: _panelBorder,
+                    border: panelBorder,
                   ),
                   curve: Curves.linearToEaseOut,
                   padding: const EdgeInsets.all(8),
-                  child: Flex(
-                    direction: Axis.vertical,
-                    spacing: 8,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisAlignment: widget.buttons.isNotEmpty
-                        ? MainAxisAlignment.spaceBetween
-                        : MainAxisAlignment.center,
-                    children: [
-                      Wrap(
-                        runSpacing: 8,
-                        spacing: 8,
-                        children: List.generate(
-                          widget.items.length,
-                          (index) => Badge(
-                            isLabelVisible: widget.items[index].enableBadge,
-                            padding: EdgeInsets.zero,
-                            smallSize: 12,
-                            child: ClipRRect(
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(12),
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () {
-                                    widget.items[index].onTap.call(context);
-                                    _closePanelAndDock(pageWidth);
-                                  },
-                                  onLongPress:
-                                      widget.items[index].description != null &&
-                                              widget.items[index].description!
-                                                  .isNotEmpty
-                                          ? () {
-                                              TooltipSnackBar.show(
-                                                context,
-                                                message: widget
-                                                    .items[index].description!,
-                                                icon: widget.items[index].icon,
-                                                backgroundColor:
-                                                    resolvedBackgroundColor,
-                                              );
-                                            }
-                                          : null,
-                                  child: Ink(
-                                    color: _itemColor,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8),
-                                      child: Icon(
-                                        widget.items[index].icon,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (widget.buttons.isNotEmpty)
-                        Flexible(
-                          child: Wrap(
-                            runSpacing: 6,
-                            children: [
-                              ...widget.buttons.map(
-                                (button) => _PanelButton(
-                                  itemColor: _itemColor,
-                                  icon: button.icon,
-                                  label: button.label,
-                                  onTap: () {
-                                    button.onTap.call(context);
-                                  },
-                                  onLongPress: button.description != null &&
-                                          button.description!.isNotEmpty
-                                      ? () {
-                                          TooltipSnackBar.show(
-                                            context,
-                                            message: button.description!,
-                                            icon: button.icon,
-                                            backgroundColor:
-                                                resolvedBackgroundColor,
-                                          );
-                                        }
-                                      : null,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
+                  child: _PanelContents(
+                    items: items,
+                    buttons: buttons,
+                    itemColor: itemColor,
+                    onItemTap: (item) {
+                      item.onTap.call(context);
+                      _closePanelAndDock(pageWidth);
+                    },
+                    onItemLongPress: (item) {
+                      TooltipSnackBar.show(
+                        context,
+                        message: item.description!,
+                        icon: item.icon,
+                        backgroundColor: resolvedBackgroundColor,
+                      );
+                    },
+                    onButtonTap: (button) {
+                      button.onTap.call(context);
+                    },
+                    onButtonLongPress: (button) {
+                      TooltipSnackBar.show(
+                        context,
+                        message: button.description!,
+                        icon: button.icon,
+                        backgroundColor: resolvedBackgroundColor,
+                      );
+                    },
                   ),
                 )
-              : const SizedBox(),
+              : const SizedBox.shrink(),
         ),
       ),
     );
@@ -475,6 +394,56 @@ class _DraggablePanelState extends State<DraggablePanel>
     _controller
       ..forceDock(pageWidth)
       ..hidePanel(pageWidth);
+  }
+
+  void _handlePanStart(DragStartDetails details) {
+    _controller
+      ..panOffsetTop =
+          details.globalPosition.dy - _controller.draggablePositionTop
+      ..panOffsetLeft =
+          details.globalPosition.dx - _controller.draggablePositionLeft;
+  }
+
+  void _handlePanEnd(double pageWidth) {
+    _controller.isDragging = false;
+    _closePanelAndDock(pageWidth);
+  }
+
+  void _handlePanUpdate({
+    required BuildContext context,
+    required DragUpdateDetails details,
+    required double pageWidth,
+    required double pageHeight,
+  }) {
+    _controller.panelState = PanelState.closed;
+    _controller
+      ..movementSpeed = 0
+      ..isDragging = true;
+
+    final viewPadding = MediaQuery.paddingOf(context);
+    final statusBarHeight = viewPadding.top;
+    final dockBoundary = _controller.dockBoundary;
+    final minTop = statusBarHeight + dockBoundary;
+    final maxTop = (pageHeight - widget.buttonHeight - 10) - dockBoundary;
+    final minLeft = dockBoundary;
+    final maxLeft = (pageWidth - _controller.buttonWidth) - dockBoundary;
+    final globalPosition = details.globalPosition;
+
+    var newTop = globalPosition.dy - _controller.panOffsetTop;
+    if (newTop < minTop) {
+      newTop = minTop;
+    } else if (newTop > maxTop) {
+      newTop = maxTop;
+    }
+
+    var newLeft = globalPosition.dx - _controller.panOffsetLeft;
+    if (newLeft < minLeft) {
+      newLeft = minLeft;
+    } else if (newLeft > maxLeft) {
+      newLeft = maxLeft;
+    }
+
+    _controller.setPosition(x: newLeft, y: newTop);
   }
 
   void _handleWindowResize() {
@@ -638,17 +607,17 @@ class _DraggablePanelState extends State<DraggablePanel>
 
   // Panel border is only enabled if the border width is greater than 0;
   Border? get _panelBorder {
-    if ((widget.borderWidth != null && widget.borderWidth! > 0) ||
-        widget.borderColor != null) {
+    final width = widget.borderWidth;
+    final color = widget.borderColor;
+    if ((width != null && width > 0) || color != null) {
       return Border.fromBorderSide(
         BorderSide(
-          color: widget.borderColor ?? const Color(0xFF333333),
-          width: widget.borderWidth ?? 1,
+          color: color ?? const Color(0xFF333333),
+          width: width ?? 1,
         ),
       );
-    } else {
-      return null;
     }
+    return null;
   }
 
   Color get _itemColor => !(Theme.of(context).brightness == Brightness.dark)
@@ -660,4 +629,114 @@ class _DraggablePanelState extends State<DraggablePanel>
           Theme.of(context).colorScheme.primaryContainer,
           0.9,
         );
+}
+
+class _PanelContents extends StatelessWidget {
+  const _PanelContents({
+    required this.items,
+    required this.buttons,
+    required this.itemColor,
+    required this.onItemTap,
+    required this.onItemLongPress,
+    required this.onButtonTap,
+    required this.onButtonLongPress,
+  });
+
+  final List<DraggablePanelItem> items;
+  final List<DraggablePanelButtonItem> buttons;
+  final Color itemColor;
+  final ValueChanged<DraggablePanelItem> onItemTap;
+  final ValueChanged<DraggablePanelItem> onItemLongPress;
+  final ValueChanged<DraggablePanelButtonItem> onButtonTap;
+  final ValueChanged<DraggablePanelButtonItem> onButtonLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasButtons = buttons.isNotEmpty;
+    return Column(
+      mainAxisAlignment: hasButtons
+          ? MainAxisAlignment.spaceBetween
+          : MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Wrap(
+          runSpacing: 8,
+          spacing: 8,
+          children: [
+            for (final item in items)
+              _PanelItemBadge(
+                item: item,
+                itemColor: itemColor,
+                onPressed: () => onItemTap(item),
+                onLongPress:
+                    (item.description != null && item.description!.isNotEmpty)
+                        ? () => onItemLongPress(item)
+                        : null,
+              ),
+          ],
+        ),
+        if (hasButtons) const SizedBox(height: 8),
+        if (hasButtons)
+          Flexible(
+            child: Wrap(
+              runSpacing: 6,
+              children: [
+                for (final button in buttons)
+                  _PanelButton(
+                    itemColor: itemColor,
+                    icon: button.icon,
+                    label: button.label,
+                    onTap: () => onButtonTap(button),
+                    onLongPress: (button.description != null &&
+                            button.description!.isNotEmpty)
+                        ? () => onButtonLongPress(button)
+                        : null,
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _PanelItemBadge extends StatelessWidget {
+  const _PanelItemBadge({
+    required this.item,
+    required this.itemColor,
+    required this.onPressed,
+    this.onLongPress,
+  });
+
+  final DraggablePanelItem item;
+  final Color itemColor;
+  final VoidCallback onPressed;
+  final VoidCallback? onLongPress;
+
+  @override
+  Widget build(BuildContext context) => Badge(
+        isLabelVisible: item.enableBadge,
+        padding: EdgeInsets.zero,
+        smallSize: 12,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              onLongPress: onLongPress,
+              child: Ink(
+                color: itemColor,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(
+                    item.icon,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
 }
