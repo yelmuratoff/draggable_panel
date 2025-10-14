@@ -136,53 +136,83 @@ final class DraggablePanelController extends ChangeNotifier {
   bool get isDockedRight => _isDockedRight;
 
   set panelState(PanelState value) {
+    if (_panelState == value) {
+      return;
+    }
     _panelState = value;
     notifyListeners();
   }
 
   set draggablePositionTop(double value) {
+    if (_draggablePositionTop == value) {
+      return;
+    }
     _draggablePositionTop = value;
     _notifyPositionListeners();
     notifyListeners();
   }
 
   set draggablePositionLeft(double value) {
+    if (_draggablePositionLeft == value) {
+      return;
+    }
     _draggablePositionLeft = value;
     _notifyPositionListeners();
     notifyListeners();
   }
 
   set panelPositionLeft(double value) {
+    if (_panelPositionLeft == value) {
+      return;
+    }
     _panelPositionLeft = value;
     notifyListeners();
   }
 
   set panOffsetTop(double value) {
+    if (_panOffsetTop == value) {
+      return;
+    }
     _panOffsetTop = value;
     notifyListeners();
   }
 
   set panOffsetLeft(double value) {
+    if (_panOffsetLeft == value) {
+      return;
+    }
     _panOffsetLeft = value;
     notifyListeners();
   }
 
   set movementSpeed(int value) {
+    if (_movementSpeed == value) {
+      return;
+    }
     _movementSpeed = value;
     notifyListeners();
   }
 
   set isDragging(bool value) {
+    if (_isDragging == value) {
+      return;
+    }
     _isDragging = value;
     notifyListeners();
   }
 
   set buttonWidth(double value) {
+    if (_buttonWidth == value) {
+      return;
+    }
     _buttonWidth = value;
     notifyListeners();
   }
 
   void setPosition({required double x, required double y}) {
+    if (_draggablePositionLeft == x && _draggablePositionTop == y) {
+      return;
+    }
     _draggablePositionLeft = x;
     _draggablePositionTop = y;
     _notifyPositionListeners();
@@ -201,24 +231,32 @@ final class DraggablePanelController extends ChangeNotifier {
     final center = _draggablePositionLeft + (_buttonWidth / 2);
 
     // Set the movement speed for docking.
-    _movementSpeed = dockAnimDuration ?? 300;
+    movementSpeed = dockAnimDuration ?? 300;
 
     // Determine docking behavior based on the center position.
-    _isDockedRight = center >= pageWidth / 2;
-    if (!_isDockedRight) {
-      _draggablePositionLeft = 0.0 + _dockBoundary;
-      _panelPositionLeft = -_buttonWidth;
+    final dockRight = center >= pageWidth / 2;
+    final newButtonLeft = dockRight
+        ? (pageWidth - _buttonWidth) - _dockBoundary
+        : 0.0 + _dockBoundary;
+    final newPanelLeft = dockRight ? pageWidth + _buttonWidth : -_buttonWidth;
+
+    if (_draggablePositionLeft != newButtonLeft ||
+        _panelPositionLeft != newPanelLeft ||
+        _isDockedRight != dockRight) {
+      _isDockedRight = dockRight;
+      _draggablePositionLeft = newButtonLeft;
+      _panelPositionLeft = newPanelLeft;
+      _notifyPositionListeners();
+      notifyListeners();
     } else {
-      _draggablePositionLeft = (pageWidth - _buttonWidth) - _dockBoundary;
-      _panelPositionLeft = pageWidth + _buttonWidth;
+      _isDockedRight = dockRight;
     }
-    _notifyPositionListeners();
-    notifyListeners();
   }
 
   /// Helper to calculate the dock boundary based on [DockType].
+  DockType get _effectiveDockType => dockType ?? DockType.inside;
   double get _dockBoundary =>
-      (dockType == DockType.inside) ? -dockOffset : dockOffset;
+      (_effectiveDockType == DockType.inside) ? -dockOffset : dockOffset;
 
   /// Public accessor for the dock boundary used by widgets to apply consistent constraints.
   double get dockBoundary => _dockBoundary;
@@ -227,8 +265,12 @@ final class DraggablePanelController extends ChangeNotifier {
   ///
   /// - [pageWidth]: The width of the page/screen.
   void hidePanel(double pageWidth) {
-    _panelPositionLeft =
+    final newPanelLeft =
         _isDockedRight ? pageWidth + _panelWidth : -_panelWidth;
+    if (_panelPositionLeft == newPanelLeft) {
+      return;
+    }
+    _panelPositionLeft = newPanelLeft;
     notifyListeners();
   }
 
@@ -236,12 +278,14 @@ final class DraggablePanelController extends ChangeNotifier {
   ///
   /// - [pageWidth]: The width of the page/screen.
   void togglePanel(double pageWidth) {
-    if (_panelState == PanelState.open) {
-      _panelPositionLeft =
-          _isDockedRight ? pageWidth - _panelWidth - buttonWidth : buttonWidth;
-    } else {
-      _panelPositionLeft = _isDockedRight ? pageWidth : -_panelWidth;
+    final isOpen = _panelState == PanelState.open;
+    final newPanelLeft = isOpen
+        ? (_isDockedRight ? pageWidth - _panelWidth - buttonWidth : buttonWidth)
+        : (_isDockedRight ? pageWidth : -_panelWidth);
+    if (_panelPositionLeft == newPanelLeft) {
+      return;
     }
+    _panelPositionLeft = newPanelLeft;
     notifyListeners();
   }
 
@@ -250,13 +294,14 @@ final class DraggablePanelController extends ChangeNotifier {
   /// - [pageWidth]: The width of the page/screen.
   Future<void> toggleMainButton(double pageWidth) async {
     if (_panelState == PanelState.open) {
-      _panelState = PanelState.closed;
+      panelState = PanelState.closed;
       forceDock(pageWidth);
-    } else {
-      _panelState = PanelState.open;
-      // Move button off-screen based on the last known dock side.
-      _draggablePositionLeft =
-          _isDockedRight ? pageWidth + _buttonWidth : -_buttonWidth;
+      return;
+    }
+    panelState = PanelState.open;
+    final newLeft = _isDockedRight ? pageWidth + _buttonWidth : -_buttonWidth;
+    if (_draggablePositionLeft != newLeft) {
+      _draggablePositionLeft = newLeft;
       _notifyPositionListeners();
     }
     notifyListeners();
@@ -276,8 +321,8 @@ final class DraggablePanelController extends ChangeNotifier {
   void toggle(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     if (_panelState == PanelState.open) {
-      _panelState = PanelState.closed;
-      _isDragging = false;
+      panelState = PanelState.closed;
+      isDragging = false;
       forceDock(width);
       hidePanel(width);
     } else {

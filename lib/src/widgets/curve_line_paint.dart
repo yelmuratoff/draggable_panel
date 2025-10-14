@@ -33,5 +33,6 @@ class LineWithCurvePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant LineWithCurvePainter oldDelegate) =>
+      oldDelegate.isInRightSide != isInRightSide || oldDelegate.color != color;
 }

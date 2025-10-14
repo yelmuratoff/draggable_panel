@@ -87,16 +87,16 @@ class _AppState extends State<App> {
                 onTap: (context) {},
               ),
             ],
-            buttons: const [
-              // DraggablePanelButtonItem(
-              //   icon: Icons.copy,
-              //   onTap: (context) {
-              //     // Hide
-              //     controller.toggle(context);
-              //   },
-              //   label: 'Push token',
-              //   description: 'This is a push token button',
-              // ),
+            buttons: [
+              DraggablePanelButtonItem(
+                icon: Icons.copy,
+                onTap: (context) {
+                  // Hide
+                  controller.toggle(context);
+                },
+                label: 'Push token',
+                description: 'This is a push token button',
+              ),
               // (
               //   icon: Icons.copy,
               //   onTap: (context) {},

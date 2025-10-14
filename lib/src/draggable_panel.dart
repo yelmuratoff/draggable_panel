@@ -173,307 +173,29 @@ class _DraggablePanelState extends State<DraggablePanel>
 
   @override
   Widget build(BuildContext context) {
-    final pageWidth = MediaQuery.sizeOf(context).width;
-    final pageHeight = MediaQuery.sizeOf(context).height;
+    final pageSize = MediaQuery.sizeOf(context);
+    final pageWidth = pageSize.width;
+    final pageHeight = pageSize.height;
 
     return AnimatedBuilder(
       key: const ValueKey('draggable_panel_builder'),
       animation: _controller,
+      child: widget.child,
       builder: (context, child) {
-        // Animated positioned widget can be moved to any part of the screen with
-        // animation;
-        final isInRightSide = _controller.isDockedRight;
+        final isDockedRight = _controller.isDockedRight;
         return Stack(
           children: [
-            if (widget.child != null) widget.child!,
-            AnimatedPositioned(
-              key: const ValueKey('draggable_panel_button'),
-              duration: Duration(
-                milliseconds: _controller.movementSpeed,
-              ),
-              top: _controller.draggablePositionTop,
-              left: _controller.draggablePositionLeft,
-              curve: Curves.fastLinearToSlowEaseIn,
-              child: GestureDetector(
-                onPanEnd: (event) {
-                  _controller.isDragging = false;
-                  _controller
-                    ..forceDock(pageWidth)
-                    ..hidePanel(pageWidth);
-                },
-                onPanStart: (event) {
-                  // Detect the offset between the top and left side of the panel and
-                  // x and y position of the touch(click) event;
-                  _controller.panOffsetTop = event.globalPosition.dy -
-                      _controller.draggablePositionTop;
-                  _controller.panOffsetLeft = event.globalPosition.dx -
-                      _controller.draggablePositionLeft;
-                },
-                onPanUpdate: (event) {
-                  // Close Panel if opened;
-                  _controller.panelState = PanelState.closed;
-
-                  // Reset Movement Speed;
-                  _controller.movementSpeed = 0;
-                  _controller.isDragging = true;
-
-                  // Calculate the top position of the panel according to pan;
-                  final statusBarHeight = MediaQuery.paddingOf(context).top;
-                  var newTop =
-                      event.globalPosition.dy - _controller.panOffsetTop;
-
-                  // Check if the top position is exceeding the status bar or dock boundaries;
-                  final minTop = statusBarHeight + _controller.dockBoundary;
-                  final maxTop = (pageHeight - widget.buttonHeight - 10) -
-                      _controller.dockBoundary;
-                  if (newTop < minTop) newTop = minTop;
-                  if (newTop > maxTop) newTop = maxTop;
-
-                  // Calculate the Left position of the panel according to pan;
-                  var newLeft =
-                      event.globalPosition.dx - _controller.panOffsetLeft;
-
-                  // Check if the left position is exceeding the dock boundaries;
-                  final minLeft = 0 + _controller.dockBoundary;
-                  final maxLeft = (pageWidth - _controller.buttonWidth) -
-                      _controller.dockBoundary;
-                  if (newLeft < minLeft) newLeft = minLeft;
-                  if (newLeft > maxLeft) newLeft = maxLeft;
-
-                  // Apply batched position update to avoid extra rebuilds.
-                  _controller.setPosition(x: newLeft, y: newTop);
-                },
-                onTap: () async {
-                  await _controller.toggleMainButton(pageWidth);
-                  _controller.togglePanel(pageWidth);
-                },
-                child: AnimatedContainer(
-                  duration:
-                      Duration(milliseconds: _controller.panelAnimDuration),
-                  width: widget.buttonWidth,
-                  height: widget.buttonHeight,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    color: (widget.backgroundColor ??
-                            Theme.of(context).primaryColor)
-                        .withValues(alpha: 0.4),
-                    borderRadius: widget.borderRadius ??
-                        const BorderRadius.all(Radius.circular(16)),
-                    border: _panelBorder,
-                  ),
-                  curve: Curves.fastLinearToSlowEaseIn,
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        // Gesture detector is required to detect the tap and drag on the panel;
-                        Flexible(
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
-                            transitionBuilder: (child, animation) =>
-                                ScaleTransition(
-                              scale: animation,
-                              child: child,
-                            ),
-                            child: _controller.isDragging
-                                ? Center(
-                                    child: SizedBox(
-                                      width: _controller.buttonWidth,
-                                      height: widget.buttonHeight,
-                                      child: Icon(
-                                        Icons.drag_indicator_rounded,
-                                        color:
-                                            Colors.white.withValues(alpha: 0.5),
-                                      ),
-                                    ),
-                                  )
-                                : SizedBox(
-                                    key: const ValueKey('drag_handle'),
-                                    width: _controller.buttonWidth,
-                                    height: widget.buttonHeight,
-                                    child: widget.icon ??
-                                        Align(
-                                          alignment: isInRightSide
-                                              ? Alignment.centerLeft
-                                              : Alignment.centerRight,
-                                          child: CustomPaint(
-                                            willChange: true,
-                                            size: const Size(20, 65),
-                                            painter: LineWithCurvePainter(
-                                              isInRightSide: isInRightSide,
-                                              color: Colors.white
-                                                  .withValues(alpha: 0.5),
-                                            ),
-                                          ),
-                                        ),
-                                  ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+            if (child != null) child,
+            _buildDraggableButton(
+              context: context,
+              pageWidth: pageWidth,
+              pageHeight: pageHeight,
+              isDockedRight: isDockedRight,
             ),
-            AnimatedPositioned(
-              key: const ValueKey('draggable_panel'),
-              duration: Duration(
-                milliseconds: _controller.panelAnimDuration,
-              ),
-              top: _panelTopPosition(pageHeight),
-              left: _controller.panelPositionLeft,
-              curve: Curves.linearToEaseOut,
-              child: TapRegion(
-                onTapOutside: (event) {
-                  if (_controller.panelState == PanelState.open) {
-                    _controller.panelState = PanelState.closed;
-
-                    // Reset panel position, dock it to nearest edge;
-                    _controller
-                      ..forceDock(pageWidth)
-                      ..togglePanel(pageWidth);
-                  }
-                },
-                child: AnimatedSwitcher(
-                  duration:
-                      Duration(milliseconds: _controller.panelAnimDuration),
-                  transitionBuilder: (child, animation) => Transform.translate(
-                    offset: Offset.zero,
-                    child: child,
-                  ),
-                  child: _controller.panelState == PanelState.open
-                      ? AnimatedContainer(
-                          key: const ValueKey('panel_container'),
-                          duration: Duration(
-                            milliseconds: _controller.panelAnimDuration,
-                          ),
-                          width: _controller.panelWidth,
-                          height: _panelHeight,
-                          clipBehavior: Clip.antiAlias,
-                          decoration: BoxDecoration(
-                            color: widget.backgroundColor ??
-                                Theme.of(context).primaryColor,
-                            borderRadius: widget.borderRadius ??
-                                const BorderRadius.all(Radius.circular(16)),
-                            border: _panelBorder,
-                          ),
-                          curve: Curves.linearToEaseOut,
-                          padding: const EdgeInsets.all(8),
-                          child: Flex(
-                            direction: Axis.vertical,
-                            spacing: 8,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            mainAxisAlignment: (widget.buttons.isNotEmpty)
-                                ? MainAxisAlignment.spaceBetween
-                                : MainAxisAlignment.center,
-                            children: [
-                              Wrap(
-                                runSpacing: 8,
-                                spacing: 8,
-                                children: List.generate(
-                                  widget.items.length,
-                                  (index) => Badge(
-                                    isLabelVisible:
-                                        widget.items[index].enableBadge,
-                                    padding: EdgeInsets.zero,
-                                    smallSize: 12,
-                                    child: ClipRRect(
-                                      borderRadius: const BorderRadius.all(
-                                        Radius.circular(12),
-                                      ),
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        child: InkWell(
-                                          onTap: () {
-                                            widget.items[index].onTap
-                                                .call(context);
-
-                                            _controller.panelState =
-                                                PanelState.closed;
-                                            _controller
-                                              ..forceDock(pageWidth)
-                                              ..hidePanel(pageWidth);
-                                          },
-                                          onLongPress:
-                                              widget.items[index].description !=
-                                                          null &&
-                                                      widget
-                                                          .items[index]
-                                                          .description!
-                                                          .isNotEmpty
-                                                  ? () {
-                                                      TooltipSnackBar.show(
-                                                        context,
-                                                        message: widget
-                                                            .items[index]
-                                                            .description!,
-                                                        icon: widget
-                                                            .items[index].icon,
-                                                        backgroundColor: widget
-                                                                .backgroundColor ??
-                                                            Theme.of(context)
-                                                                .primaryColor,
-                                                      );
-                                                    }
-                                                  : null,
-                                          child: Ink(
-                                            color: _itemColor,
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(8),
-                                              child: Icon(
-                                                widget.items[index].icon,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              if (widget.buttons.isNotEmpty)
-                                Flexible(
-                                  child: Wrap(
-                                    runSpacing: 6,
-                                    children: [
-                                      ...widget.buttons.map(
-                                        (button) => _PanelButton(
-                                          itemColor: _itemColor,
-                                          icon: button.icon,
-                                          label: button.label,
-                                          pageWidth: pageWidth,
-                                          onTap: () {
-                                            button.onTap.call(context);
-                                          },
-                                          onLongPress: button.description !=
-                                                      null &&
-                                                  button.description!.isNotEmpty
-                                              ? () {
-                                                  TooltipSnackBar.show(
-                                                    context,
-                                                    message:
-                                                        button.description!,
-                                                    icon: button.icon,
-                                                    backgroundColor: widget
-                                                            .backgroundColor ??
-                                                        Theme.of(context)
-                                                            .primaryColor,
-                                                  );
-                                                }
-                                              : null,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
-                        )
-                      : const SizedBox(),
-                ),
-              ),
+            _buildPanel(
+              context: context,
+              pageWidth: pageWidth,
+              pageHeight: pageHeight,
             ),
           ],
         );
@@ -481,7 +203,279 @@ class _DraggablePanelState extends State<DraggablePanel>
     );
   }
 
+  Widget _buildDraggableButton({
+    required BuildContext context,
+    required double pageWidth,
+    required double pageHeight,
+    required bool isDockedRight,
+  }) {
+    final buttonDuration = Duration(milliseconds: _controller.movementSpeed);
+    final resolvedBorderRadius =
+        widget.borderRadius ?? const BorderRadius.all(Radius.circular(16));
+    final resolvedBackground =
+        (widget.backgroundColor ?? Theme.of(context).primaryColor)
+            .withValues(alpha: 0.4);
+
+    return AnimatedPositioned(
+      key: const ValueKey('draggable_panel_button'),
+      duration: buttonDuration,
+      top: _controller.draggablePositionTop,
+      left: _controller.draggablePositionLeft,
+      curve: Curves.fastLinearToSlowEaseIn,
+      child: GestureDetector(
+        onPanEnd: (_) {
+          _controller
+            ..isDragging = false
+            ..forceDock(pageWidth)
+            ..hidePanel(pageWidth);
+        },
+        onPanStart: (details) {
+          _controller
+            ..panOffsetTop =
+                details.globalPosition.dy - _controller.draggablePositionTop
+            ..panOffsetLeft =
+                details.globalPosition.dx - _controller.draggablePositionLeft;
+        },
+        onPanUpdate: (details) {
+          _controller.panelState = PanelState.closed;
+          _controller
+            ..movementSpeed = 0
+            ..isDragging = true;
+
+          final statusBarHeight = MediaQuery.paddingOf(context).top;
+          var newTop = details.globalPosition.dy - _controller.panOffsetTop;
+          final minTop = statusBarHeight + _controller.dockBoundary;
+          final maxTop = (pageHeight - widget.buttonHeight - 10) -
+              _controller.dockBoundary;
+          if (newTop < minTop) newTop = minTop;
+          if (newTop > maxTop) newTop = maxTop;
+
+          var newLeft = details.globalPosition.dx - _controller.panOffsetLeft;
+          final minLeft = _controller.dockBoundary;
+          final maxLeft =
+              (pageWidth - _controller.buttonWidth) - _controller.dockBoundary;
+          if (newLeft < minLeft) newLeft = minLeft;
+          if (newLeft > maxLeft) newLeft = maxLeft;
+
+          _controller.setPosition(x: newLeft, y: newTop);
+        },
+        onTap: () async {
+          await _controller.toggleMainButton(pageWidth);
+          _controller.togglePanel(pageWidth);
+        },
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: _controller.panelAnimDuration),
+          width: widget.buttonWidth,
+          height: widget.buttonHeight,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: resolvedBackground,
+            borderRadius: resolvedBorderRadius,
+            border: _panelBorder,
+          ),
+          curve: Curves.fastLinearToSlowEaseIn,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Flexible(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    transitionBuilder: (child, animation) => ScaleTransition(
+                      scale: animation,
+                      child: child,
+                    ),
+                    child: _controller.isDragging
+                        ? Center(
+                            child: SizedBox(
+                              width: _controller.buttonWidth,
+                              height: widget.buttonHeight,
+                              child: Icon(
+                                Icons.drag_indicator_rounded,
+                                color: Colors.white.withValues(alpha: 0.5),
+                              ),
+                            ),
+                          )
+                        : SizedBox(
+                            key: const ValueKey('drag_handle'),
+                            width: _controller.buttonWidth,
+                            height: widget.buttonHeight,
+                            child: widget.icon ??
+                                Align(
+                                  alignment: isDockedRight
+                                      ? Alignment.centerLeft
+                                      : Alignment.centerRight,
+                                  child: CustomPaint(
+                                    size: const Size(20, 65),
+                                    painter: LineWithCurvePainter(
+                                      isInRightSide: isDockedRight,
+                                      color:
+                                          Colors.white.withValues(alpha: 0.5),
+                                    ),
+                                  ),
+                                ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPanel({
+    required BuildContext context,
+    required double pageWidth,
+    required double pageHeight,
+  }) {
+    final panelDuration = Duration(milliseconds: _controller.panelAnimDuration);
+    final isPanelOpen = _controller.panelState == PanelState.open;
+    final resolvedBackgroundColor =
+        widget.backgroundColor ?? Theme.of(context).primaryColor;
+    final resolvedBorderRadius =
+        widget.borderRadius ?? const BorderRadius.all(Radius.circular(16));
+
+    return AnimatedPositioned(
+      key: const ValueKey('draggable_panel'),
+      duration: panelDuration,
+      top: _panelTopPosition(pageHeight),
+      left: _controller.panelPositionLeft,
+      curve: Curves.linearToEaseOut,
+      child: TapRegion(
+        onTapOutside: (_) {
+          if (isPanelOpen) {
+            _closePanelAndDock(pageWidth);
+          }
+        },
+        child: AnimatedSwitcher(
+          duration: panelDuration,
+          transitionBuilder: (child, animation) => Transform.translate(
+            offset: Offset.zero,
+            child: child,
+          ),
+          child: isPanelOpen
+              ? AnimatedContainer(
+                  key: const ValueKey('panel_container'),
+                  duration: panelDuration,
+                  width: _controller.panelWidth,
+                  height: _panelHeight,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    color: resolvedBackgroundColor,
+                    borderRadius: resolvedBorderRadius,
+                    border: _panelBorder,
+                  ),
+                  curve: Curves.linearToEaseOut,
+                  padding: const EdgeInsets.all(8),
+                  child: Flex(
+                    direction: Axis.vertical,
+                    spacing: 8,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: widget.buttons.isNotEmpty
+                        ? MainAxisAlignment.spaceBetween
+                        : MainAxisAlignment.center,
+                    children: [
+                      Wrap(
+                        runSpacing: 8,
+                        spacing: 8,
+                        children: List.generate(
+                          widget.items.length,
+                          (index) => Badge(
+                            isLabelVisible: widget.items[index].enableBadge,
+                            padding: EdgeInsets.zero,
+                            smallSize: 12,
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(12),
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {
+                                    widget.items[index].onTap.call(context);
+                                    _closePanelAndDock(pageWidth);
+                                  },
+                                  onLongPress:
+                                      widget.items[index].description != null &&
+                                              widget.items[index].description!
+                                                  .isNotEmpty
+                                          ? () {
+                                              TooltipSnackBar.show(
+                                                context,
+                                                message: widget
+                                                    .items[index].description!,
+                                                icon: widget.items[index].icon,
+                                                backgroundColor:
+                                                    resolvedBackgroundColor,
+                                              );
+                                            }
+                                          : null,
+                                  child: Ink(
+                                    color: _itemColor,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8),
+                                      child: Icon(
+                                        widget.items[index].icon,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (widget.buttons.isNotEmpty)
+                        Flexible(
+                          child: Wrap(
+                            runSpacing: 6,
+                            children: [
+                              ...widget.buttons.map(
+                                (button) => _PanelButton(
+                                  itemColor: _itemColor,
+                                  icon: button.icon,
+                                  label: button.label,
+                                  onTap: () {
+                                    button.onTap.call(context);
+                                  },
+                                  onLongPress: button.description != null &&
+                                          button.description!.isNotEmpty
+                                      ? () {
+                                          TooltipSnackBar.show(
+                                            context,
+                                            message: button.description!,
+                                            icon: button.icon,
+                                            backgroundColor:
+                                                resolvedBackgroundColor,
+                                          );
+                                        }
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                )
+              : const SizedBox(),
+        ),
+      ),
+    );
+  }
+
   // <-- Functions -->
+
+  void _closePanelAndDock(double pageWidth) {
+    _controller.panelState = PanelState.closed;
+    _controller
+      ..forceDock(pageWidth)
+      ..hidePanel(pageWidth);
+  }
 
   void _handleWindowResize() {
     final size = MediaQuery.sizeOf(context);

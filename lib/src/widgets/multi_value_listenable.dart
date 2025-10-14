@@ -21,7 +21,7 @@ class _MultiValueListenableBuilderState
   @override
   void initState() {
     super.initState();
-    _registerListeners();
+    _registerListeners(widget.valueListenables);
   }
 
   void _onUpdated() {
@@ -29,8 +29,8 @@ class _MultiValueListenableBuilderState
     setState(() {});
   }
 
-  void _registerListeners() {
-    for (final listenable in widget.valueListenables) {
+  void _registerListeners(Iterable<ValueListenable<dynamic>> listenables) {
+    for (final listenable in listenables) {
       listenable.addListener(_onUpdated);
     }
   }
@@ -39,20 +39,20 @@ class _MultiValueListenableBuilderState
   void didUpdateWidget(covariant MultiValueListenableBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!listEquals(widget.valueListenables, oldWidget.valueListenables)) {
-      _deregisterListeners();
-      _registerListeners();
+      _deregisterListeners(oldWidget.valueListenables);
+      _registerListeners(widget.valueListenables);
     }
   }
 
-  void _deregisterListeners() {
-    for (final listenable in widget.valueListenables) {
+  void _deregisterListeners(Iterable<ValueListenable<dynamic>> listenables) {
+    for (final listenable in listenables) {
       listenable.removeListener(_onUpdated);
     }
   }
 
   @override
   void dispose() {
-    _deregisterListeners();
+    _deregisterListeners(widget.valueListenables);
     super.dispose();
   }
 

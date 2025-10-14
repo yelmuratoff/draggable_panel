@@ -28,10 +28,5 @@ class DraggablePanelButtonItem {
   }
 
   @override
-  int get hashCode {
-    return icon.hashCode ^
-        description.hashCode ^
-        label.hashCode ^
-        onTap.hashCode;
-  }
+  int get hashCode => Object.hash(icon, description, label, onTap);
 }
