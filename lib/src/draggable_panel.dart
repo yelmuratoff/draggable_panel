@@ -573,36 +573,70 @@ class _DraggablePanelState extends State<DraggablePanel>
   }
 
   double _panelTopPosition(double pageHeight) {
-    if (_controller.draggablePositionTop < 0) {
-      return 0;
-    } else if (_controller.draggablePositionTop > pageHeight - _panelHeight) {
-      return _controller.draggablePositionTop - _panelHeight;
+    final panelHeight = _panelHeight;
+    final buttonTop = _controller.draggablePositionTop;
+    final buttonBottom = buttonTop + widget.buttonHeight;
+    final viewPadding = MediaQuery.viewPaddingOf(context);
+    final safeTop = viewPadding.top;
+    final safeBottom = viewPadding.bottom;
+    final minTop = safeTop;
+    final rawMaxTop = pageHeight - safeBottom - panelHeight;
+    final maxTop = rawMaxTop < minTop ? minTop : rawMaxTop;
+    final aboveSpace = buttonTop - safeTop;
+    final belowSpace = (pageHeight - safeBottom) - buttonBottom;
+    double desiredTop;
+
+    if (belowSpace >= panelHeight) {
+      desiredTop = buttonBottom;
+    } else if (aboveSpace >= panelHeight) {
+      desiredTop = buttonTop - panelHeight;
+    } else if (aboveSpace > belowSpace) {
+      desiredTop = minTop;
     } else {
-      return _controller.draggablePositionTop + widget.buttonHeight;
+      desiredTop = maxTop;
     }
+
+    if (minTop == maxTop) {
+      return minTop;
+    }
+    if (desiredTop < minTop) {
+      return minTop;
+    }
+    if (desiredTop > maxTop) {
+      return maxTop;
+    }
+
+    return desiredTop;
   }
 
   // Dock boundary is provided via controller.dockBoundary
   // Height of the panel according to its state;
   double get _panelHeight {
+    final viewportHeight = MediaQuery.sizeOf(context).height;
+    final viewPadding = MediaQuery.viewPaddingOf(context);
+    final safeTop = viewPadding.top;
+    final safeBottom = viewPadding.bottom;
+    const minHeight = 60.0;
+    final availableHeight = viewportHeight - safeTop - safeBottom;
+    final maxHeight = availableHeight < minHeight ? minHeight : availableHeight;
+
     if (widget.panelHeight != null) {
-      return widget.panelHeight!;
+      final requestedHeight = widget.panelHeight!;
+      if (requestedHeight < minHeight) {
+        return minHeight;
+      }
+      return requestedHeight > maxHeight ? maxHeight : requestedHeight;
     }
 
-    // Calculate the height based on the number of rows for `items`.
+    final buttonsHeight =
+        widget.buttons.isNotEmpty ? widget.buttons.length * 50.0 + 8.0 : 0.0;
     final itemsHeight = (widget.items.length / 4).ceil() * 45.0;
+    final totalHeight = itemsHeight + buttonsHeight + 16.0;
 
-    // Calculate the height for buttons, if present.
-    final buttonsHeight = widget.buttons.isNotEmpty
-        ? widget.buttons.length * 50.0 + 8.0 // Adding a small margin.
-        : 0.0;
-
-    // Calculate the total height of the panel.
-    final totalHeight =
-        itemsHeight + buttonsHeight + 16.0; // 16 for inner padding.
-
-    // Restrict the height to minimum and maximum values.
-    return totalHeight.clamp(100.0, 600.0);
+    if (totalHeight < minHeight) {
+      return minHeight;
+    }
+    return totalHeight > maxHeight ? maxHeight : totalHeight;
   }
 
   // (_calculateRowCount(widget.items.length) * 45) +
