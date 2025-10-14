@@ -1,15 +1,15 @@
 part of '../draggable_panel.dart';
 
-class _PanelButton extends StatelessWidget {
+final class _PanelButton extends StatelessWidget {
   const _PanelButton({
-    required Color itemColor,
+    required this.itemColor,
     required this.onTap,
     required this.icon,
     required this.label,
     this.onLongPress,
-  }) : _itemColor = itemColor;
+  });
 
-  final Color _itemColor;
+  final Color itemColor;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final IconData icon;
@@ -21,7 +21,7 @@ class _PanelButton extends StatelessWidget {
         width: double.maxFinite,
         child: FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: _itemColor,
+            backgroundColor: itemColor,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(16)),
@@ -34,20 +34,14 @@ class _PanelButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                color: Colors.white,
-                size: 18,
-              ),
+              Icon(icon, color: Colors.white, size: 18),
               const SizedBox(width: 12),
               Flexible(
                 child: Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                  ),
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
             ],

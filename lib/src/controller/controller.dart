@@ -136,87 +136,77 @@ final class DraggablePanelController extends ChangeNotifier {
   bool get isDockedRight => _isDockedRight;
 
   set panelState(PanelState value) {
-    if (_panelState == value) {
-      return;
+    if (_panelState != value) {
+      _panelState = value;
+      notifyListeners();
     }
-    _panelState = value;
-    notifyListeners();
   }
 
   set draggablePositionTop(double value) {
-    if (_draggablePositionTop == value) {
-      return;
+    if (_draggablePositionTop != value) {
+      _draggablePositionTop = value;
+      _notifyPositionListeners();
+      notifyListeners();
     }
-    _draggablePositionTop = value;
-    _notifyPositionListeners();
-    notifyListeners();
   }
 
   set draggablePositionLeft(double value) {
-    if (_draggablePositionLeft == value) {
-      return;
+    if (_draggablePositionLeft != value) {
+      _draggablePositionLeft = value;
+      _notifyPositionListeners();
+      notifyListeners();
     }
-    _draggablePositionLeft = value;
-    _notifyPositionListeners();
-    notifyListeners();
   }
 
   set panelPositionLeft(double value) {
-    if (_panelPositionLeft == value) {
-      return;
+    if (_panelPositionLeft != value) {
+      _panelPositionLeft = value;
+      notifyListeners();
     }
-    _panelPositionLeft = value;
-    notifyListeners();
   }
 
   set panOffsetTop(double value) {
-    if (_panOffsetTop == value) {
-      return;
+    if (_panOffsetTop != value) {
+      _panOffsetTop = value;
+      notifyListeners();
     }
-    _panOffsetTop = value;
-    notifyListeners();
   }
 
   set panOffsetLeft(double value) {
-    if (_panOffsetLeft == value) {
-      return;
+    if (_panOffsetLeft != value) {
+      _panOffsetLeft = value;
+      notifyListeners();
     }
-    _panOffsetLeft = value;
-    notifyListeners();
   }
 
   set movementSpeed(int value) {
-    if (_movementSpeed == value) {
-      return;
+    if (_movementSpeed != value) {
+      _movementSpeed = value;
+      notifyListeners();
     }
-    _movementSpeed = value;
-    notifyListeners();
   }
 
   set isDragging(bool value) {
-    if (_isDragging == value) {
-      return;
+    if (_isDragging != value) {
+      _isDragging = value;
+      notifyListeners();
     }
-    _isDragging = value;
-    notifyListeners();
   }
 
   set buttonWidth(double value) {
-    if (_buttonWidth == value) {
-      return;
+    if (_buttonWidth != value) {
+      _buttonWidth = value;
+      notifyListeners();
     }
-    _buttonWidth = value;
-    notifyListeners();
   }
 
   void setPosition({required double x, required double y}) {
-    if (_draggablePositionLeft == x && _draggablePositionTop == y) {
-      return;
+    if (_draggablePositionLeft != x || _draggablePositionTop != y) {
+      _draggablePositionLeft = x;
+      _draggablePositionTop = y;
+      _notifyPositionListeners();
+      notifyListeners();
     }
-    _draggablePositionLeft = x;
-    _draggablePositionTop = y;
-    _notifyPositionListeners();
-    notifyListeners();
   }
 
   //
@@ -255,8 +245,9 @@ final class DraggablePanelController extends ChangeNotifier {
 
   /// Helper to calculate the dock boundary based on [DockType].
   DockType get _effectiveDockType => dockType ?? DockType.inside;
+
   double get _dockBoundary =>
-      (_effectiveDockType == DockType.inside) ? -dockOffset : dockOffset;
+      _effectiveDockType == DockType.inside ? -dockOffset : dockOffset;
 
   /// Public accessor for the dock boundary used by widgets to apply consistent constraints.
   double get dockBoundary => _dockBoundary;
@@ -267,11 +258,10 @@ final class DraggablePanelController extends ChangeNotifier {
   void hidePanel(double pageWidth) {
     final newPanelLeft =
         _isDockedRight ? pageWidth + _panelWidth : -_panelWidth;
-    if (_panelPositionLeft == newPanelLeft) {
-      return;
+    if (_panelPositionLeft != newPanelLeft) {
+      _panelPositionLeft = newPanelLeft;
+      notifyListeners();
     }
-    _panelPositionLeft = newPanelLeft;
-    notifyListeners();
   }
 
   /// Toggle the panel's position between open and closed.
@@ -282,11 +272,10 @@ final class DraggablePanelController extends ChangeNotifier {
     final newPanelLeft = isOpen
         ? (_isDockedRight ? pageWidth - _panelWidth - buttonWidth : buttonWidth)
         : (_isDockedRight ? pageWidth : -_panelWidth);
-    if (_panelPositionLeft == newPanelLeft) {
-      return;
+    if (_panelPositionLeft != newPanelLeft) {
+      _panelPositionLeft = newPanelLeft;
+      notifyListeners();
     }
-    _panelPositionLeft = newPanelLeft;
-    notifyListeners();
   }
 
   /// Asynchronously toggle the main button state and update the panel's docked position.

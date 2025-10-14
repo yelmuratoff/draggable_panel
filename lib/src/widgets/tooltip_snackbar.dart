@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 
 /// Custom SnackBar widget for showing tooltips in DraggablePanel.
-class TooltipSnackBar {
+final class TooltipSnackBar {
   const TooltipSnackBar._();
 
   /// Shows a tooltip snackbar with the given [message] and optional customization.
   ///
   /// The snackbar automatically adapts to the current theme and provides
   /// a clean, modern appearance with optional icon support.
+  ///
+  /// - [context]: The build context.
+  /// - [message]: The message to display.
+  /// - [duration]: How long to show the snackbar (default: 3 seconds).
+  /// - [backgroundColor]: Optional custom background color.
+  /// - [textColor]: Optional custom text color.
+  /// - [icon]: Optional icon to display.
   static void show(
     BuildContext context, {
     required String message,
@@ -24,35 +31,34 @@ class TooltipSnackBar {
         (isDark
             ? colorScheme.surfaceContainer.withValues(alpha: 0.95)
             : colorScheme.inverseSurface.withValues(alpha: 0.95));
-    final resolvedTextColor = textColor ?? Colors.white;
-
-    final snackBar = SnackBar(
-      content: _TooltipContent(
-        message: message,
-        icon: icon,
-        backgroundColor: resolvedBackgroundColor,
-        textColor: resolvedTextColor,
-      ),
-      backgroundColor: Colors.transparent,
-      behavior: SnackBarBehavior.floating,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-      ),
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      duration: duration,
-      elevation: 0,
-      dismissDirection: DismissDirection.horizontal,
-    );
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(snackBar);
+      ..showSnackBar(
+        SnackBar(
+          content: _TooltipContent(
+            message: message,
+            icon: icon,
+            backgroundColor: resolvedBackgroundColor,
+            textColor: textColor ?? Colors.white,
+          ),
+          backgroundColor: Colors.transparent,
+          behavior: SnackBarBehavior.floating,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          duration: duration,
+          elevation: 0,
+          dismissDirection: DismissDirection.horizontal,
+        ),
+      );
   }
 }
 
 /// Private widget for the snackbar content.
-class _TooltipContent extends StatelessWidget {
+final class _TooltipContent extends StatelessWidget {
   const _TooltipContent({
     required this.message,
     required this.backgroundColor,
@@ -77,17 +83,11 @@ class _TooltipContent extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (icon != null) ...[
-                _IconContainer(
-                  icon: icon!,
-                  textColor: textColor,
-                ),
+                _IconContainer(icon: icon!, textColor: textColor),
                 const SizedBox(width: 12),
               ],
               Flexible(
-                child: _MessageText(
-                  message: message,
-                  textColor: textColor,
-                ),
+                child: _MessageText(message: message, textColor: textColor),
               ),
             ],
           ),
@@ -96,7 +96,7 @@ class _TooltipContent extends StatelessWidget {
 }
 
 /// Private widget for the icon container.
-class _IconContainer extends StatelessWidget {
+final class _IconContainer extends StatelessWidget {
   const _IconContainer({
     required this.icon,
     required this.textColor,
@@ -112,16 +112,12 @@ class _IconContainer extends StatelessWidget {
           color: Color.fromRGBO(255, 255, 255, 0.2),
           borderRadius: BorderRadius.all(Radius.circular(8)),
         ),
-        child: Icon(
-          icon,
-          color: textColor,
-          size: 16,
-        ),
+        child: Icon(icon, color: textColor, size: 16),
       );
 }
 
 /// Private widget for the message text.
-class _MessageText extends StatelessWidget {
+final class _MessageText extends StatelessWidget {
   const _MessageText({
     required this.message,
     required this.textColor,

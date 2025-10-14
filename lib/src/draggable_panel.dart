@@ -6,7 +6,9 @@ import 'package:draggable_panel/src/utils/colors.dart';
 import 'package:draggable_panel/src/widgets/curve_line_paint.dart';
 import 'package:draggable_panel/src/widgets/tooltip_snackbar.dart';
 import 'package:flutter/material.dart';
+
 part 'widgets/panel_button.dart';
+part 'widgets/draggable_button_content.dart';
 
 /// `DraggablePanel` is a widget that can be dragged around the screen and can be
 /// docked to the nearest edge of the screen. It can be used to create a floating
@@ -251,50 +253,12 @@ class _DraggablePanelState extends State<DraggablePanel>
           ),
           curve: Curves.fastLinearToSlowEaseIn,
           child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Flexible(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    transitionBuilder: (child, animation) => ScaleTransition(
-                      scale: animation,
-                      child: child,
-                    ),
-                    child: isDragging
-                        ? Center(
-                            child: SizedBox(
-                              width: buttonWidth,
-                              height: buttonHeight,
-                              child: Icon(
-                                Icons.drag_indicator_rounded,
-                                color: Colors.white.withValues(alpha: 0.5),
-                              ),
-                            ),
-                          )
-                        : SizedBox(
-                            key: const ValueKey('drag_handle'),
-                            width: buttonWidth,
-                            height: buttonHeight,
-                            child: widget.icon ??
-                                Align(
-                                  alignment: isDockedRight
-                                      ? Alignment.centerLeft
-                                      : Alignment.centerRight,
-                                  child: CustomPaint(
-                                    size: const Size(20, 65),
-                                    painter: LineWithCurvePainter(
-                                      isInRightSide: isDockedRight,
-                                      color:
-                                          Colors.white.withValues(alpha: 0.5),
-                                    ),
-                                  ),
-                                ),
-                          ),
-                  ),
-                ),
-              ],
+            child: _DraggableButtonContent(
+              isDragging: isDragging,
+              isDockedRight: isDockedRight,
+              icon: widget.icon,
+              buttonWidth: buttonWidth,
+              buttonHeight: buttonHeight,
             ),
           ),
         ),
@@ -313,12 +277,6 @@ class _DraggablePanelState extends State<DraggablePanel>
         widget.backgroundColor ?? Theme.of(context).primaryColor;
     final resolvedBorderRadius =
         widget.borderRadius ?? const BorderRadius.all(Radius.circular(16));
-    final panelBorder = _panelBorder;
-    final panelHeight = _panelHeight;
-    final panelWidth = _controller.panelWidth;
-    final items = widget.items;
-    final buttons = widget.buttons;
-    final itemColor = _itemColor;
 
     return AnimatedPositioned(
       key: const ValueKey('draggable_panel'),
@@ -342,22 +300,22 @@ class _DraggablePanelState extends State<DraggablePanel>
               ? AnimatedContainer(
                   key: const ValueKey('panel_container'),
                   duration: panelDuration,
-                  width: panelWidth,
-                  height: panelHeight,
+                  width: _controller.panelWidth,
+                  height: _panelHeight,
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     color: resolvedBackgroundColor,
                     borderRadius: resolvedBorderRadius,
-                    border: panelBorder,
+                    border: _panelBorder,
                   ),
                   curve: Curves.linearToEaseOut,
                   padding: const EdgeInsets.all(8),
                   child: _PanelContents(
-                    items: items,
-                    buttons: buttons,
-                    itemColor: itemColor,
+                    items: widget.items,
+                    buttons: widget.buttons,
+                    itemColor: _itemColor,
                     onItemTap: (item) {
-                      item.onTap.call(context);
+                      item.onTap(context);
                       _closePanelAndDock(pageWidth);
                     },
                     onItemLongPress: (item) {
@@ -369,7 +327,7 @@ class _DraggablePanelState extends State<DraggablePanel>
                       );
                     },
                     onButtonTap: (button) {
-                      button.onTap.call(context);
+                      button.onTap(context);
                     },
                     onButtonLongPress: (button) {
                       TooltipSnackBar.show(
@@ -415,33 +373,23 @@ class _DraggablePanelState extends State<DraggablePanel>
     required double pageWidth,
     required double pageHeight,
   }) {
-    _controller.panelState = PanelState.closed;
     _controller
+      ..panelState = PanelState.closed
       ..movementSpeed = 0
       ..isDragging = true;
 
     final viewPadding = MediaQuery.paddingOf(context);
-    final statusBarHeight = viewPadding.top;
     final dockBoundary = _controller.dockBoundary;
-    final minTop = statusBarHeight + dockBoundary;
+    final minTop = viewPadding.top + dockBoundary;
     final maxTop = (pageHeight - widget.buttonHeight - 10) - dockBoundary;
     final minLeft = dockBoundary;
     final maxLeft = (pageWidth - _controller.buttonWidth) - dockBoundary;
     final globalPosition = details.globalPosition;
 
-    var newTop = globalPosition.dy - _controller.panOffsetTop;
-    if (newTop < minTop) {
-      newTop = minTop;
-    } else if (newTop > maxTop) {
-      newTop = maxTop;
-    }
-
-    var newLeft = globalPosition.dx - _controller.panOffsetLeft;
-    if (newLeft < minLeft) {
-      newLeft = minLeft;
-    } else if (newLeft > maxLeft) {
-      newLeft = maxLeft;
-    }
+    final newTop =
+        (globalPosition.dy - _controller.panOffsetTop).clamp(minTop, maxTop);
+    final newLeft =
+        (globalPosition.dx - _controller.panOffsetLeft).clamp(minLeft, maxLeft);
 
     _controller.setPosition(x: newLeft, y: newTop);
   }
@@ -498,40 +446,22 @@ class _DraggablePanelState extends State<DraggablePanel>
 
   void _clampIntoViewport() {
     final size = MediaQuery.sizeOf(context);
-    final pageWidth = size.width;
-    final pageHeight = size.height;
     final statusBarHeight = MediaQuery.paddingOf(context).top;
-
-    var left = _controller.draggablePositionLeft;
-    var top = _controller.draggablePositionTop;
 
     final minLeft = 0 + _controller.dockBoundary;
     final maxLeft =
-        (pageWidth - _controller.buttonWidth) - _controller.dockBoundary;
+        (size.width - _controller.buttonWidth) - _controller.dockBoundary;
     final minTop = statusBarHeight + _controller.dockBoundary;
     final maxTop =
-        (pageHeight - widget.buttonHeight - 10) - _controller.dockBoundary;
+        (size.height - widget.buttonHeight - 10) - _controller.dockBoundary;
 
-    var changed = false;
-    if (left < minLeft) {
-      left = minLeft;
-      changed = true;
-    } else if (left > maxLeft) {
-      left = maxLeft;
-      changed = true;
-    }
+    final clampedLeft =
+        _controller.draggablePositionLeft.clamp(minLeft, maxLeft);
+    final clampedTop = _controller.draggablePositionTop.clamp(minTop, maxTop);
 
-    if (top < minTop) {
-      top = minTop;
-      changed = true;
-    } else if (top > maxTop) {
-      top = maxTop;
-      changed = true;
-    }
-
-    if (changed) {
-      // Update both at once to avoid extra rebuilds.
-      _controller.setPosition(x: left, y: top);
+    if (_controller.draggablePositionLeft != clampedLeft ||
+        _controller.draggablePositionTop != clampedTop) {
+      _controller.setPosition(x: clampedLeft, y: clampedTop);
     }
   }
 
@@ -545,50 +475,33 @@ class _DraggablePanelState extends State<DraggablePanel>
     final minTop = safeTop;
     final rawMaxTop = pageHeight - safeBottom - panelHeight;
     final maxTop = rawMaxTop < minTop ? minTop : rawMaxTop;
+
+    if (minTop == maxTop) return minTop;
+
     final aboveSpace = buttonTop - safeTop;
     final belowSpace = (pageHeight - safeBottom) - buttonBottom;
-    double desiredTop;
 
-    if (belowSpace >= panelHeight) {
-      desiredTop = buttonBottom;
-    } else if (aboveSpace >= panelHeight) {
-      desiredTop = buttonTop - panelHeight;
-    } else if (aboveSpace > belowSpace) {
-      desiredTop = minTop;
-    } else {
-      desiredTop = maxTop;
-    }
+    final desiredTop = belowSpace >= panelHeight
+        ? buttonBottom
+        : aboveSpace >= panelHeight
+            ? buttonTop - panelHeight
+            : aboveSpace > belowSpace
+                ? minTop
+                : maxTop;
 
-    if (minTop == maxTop) {
-      return minTop;
-    }
-    if (desiredTop < minTop) {
-      return minTop;
-    }
-    if (desiredTop > maxTop) {
-      return maxTop;
-    }
-
-    return desiredTop;
+    return desiredTop.clamp(minTop, maxTop);
   }
 
-  // Dock boundary is provided via controller.dockBoundary
-  // Height of the panel according to its state;
   double get _panelHeight {
+    const minHeight = 60.0;
     final viewportHeight = MediaQuery.sizeOf(context).height;
     final viewPadding = MediaQuery.viewPaddingOf(context);
-    final safeTop = viewPadding.top;
-    final safeBottom = viewPadding.bottom;
-    const minHeight = 60.0;
-    final availableHeight = viewportHeight - safeTop - safeBottom;
+    final availableHeight =
+        viewportHeight - viewPadding.top - viewPadding.bottom;
     final maxHeight = availableHeight < minHeight ? minHeight : availableHeight;
 
     if (widget.panelHeight != null) {
-      final requestedHeight = widget.panelHeight!;
-      if (requestedHeight < minHeight) {
-        return minHeight;
-      }
-      return requestedHeight > maxHeight ? maxHeight : requestedHeight;
+      return widget.panelHeight!.clamp(minHeight, maxHeight);
     }
 
     final buttonsHeight =
@@ -596,19 +509,13 @@ class _DraggablePanelState extends State<DraggablePanel>
     final itemsHeight = (widget.items.length / 4).ceil() * 45.0;
     final totalHeight = itemsHeight + buttonsHeight + 16.0;
 
-    if (totalHeight < minHeight) {
-      return minHeight;
-    }
-    return totalHeight > maxHeight ? maxHeight : totalHeight;
+    return totalHeight.clamp(minHeight, maxHeight);
   }
 
-  // (_calculateRowCount(widget.items.length) * 45) +
-  // ((widget.buttons.isNotEmpty) ? (50 * (widget.buttons.length) + 0) : 60);
-
-  // Panel border is only enabled if the border width is greater than 0;
   Border? get _panelBorder {
     final width = widget.borderWidth;
     final color = widget.borderColor;
+
     if ((width != null && width > 0) || color != null) {
       return Border.fromBorderSide(
         BorderSide(
@@ -620,14 +527,14 @@ class _DraggablePanelState extends State<DraggablePanel>
     return null;
   }
 
-  Color get _itemColor => !(Theme.of(context).brightness == Brightness.dark)
+  Color get _itemColor => Theme.of(context).brightness == Brightness.dark
       ? adjustColorBrightness(
-          Theme.of(context).colorScheme.primary,
-          0.8,
-        )
-      : adjustColorBrightness(
           Theme.of(context).colorScheme.primaryContainer,
           0.9,
+        )
+      : adjustColorBrightness(
+          Theme.of(context).colorScheme.primary,
+          0.8,
         );
 }
 
@@ -653,6 +560,7 @@ class _PanelContents extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasButtons = buttons.isNotEmpty;
+
     return Column(
       mainAxisAlignment: hasButtons
           ? MainAxisAlignment.spaceBetween
@@ -668,10 +576,9 @@ class _PanelContents extends StatelessWidget {
                 item: item,
                 itemColor: itemColor,
                 onPressed: () => onItemTap(item),
-                onLongPress:
-                    (item.description != null && item.description!.isNotEmpty)
-                        ? () => onItemLongPress(item)
-                        : null,
+                onLongPress: item.description?.isNotEmpty ?? false
+                    ? () => onItemLongPress(item)
+                    : null,
               ),
           ],
         ),
@@ -687,8 +594,7 @@ class _PanelContents extends StatelessWidget {
                     icon: button.icon,
                     label: button.label,
                     onTap: () => onButtonTap(button),
-                    onLongPress: (button.description != null &&
-                            button.description!.isNotEmpty)
+                    onLongPress: button.description?.isNotEmpty ?? false
                         ? () => onButtonLongPress(button)
                         : null,
                   ),
