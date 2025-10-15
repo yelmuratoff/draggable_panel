@@ -303,7 +303,7 @@ final class DraggablePanelController extends ChangeNotifier {
   ///
   /// - Parameters:
   ///   - pageWidth: The width of the page/screen
-  /// - Return: Future<void>
+  /// - Return: `Future<void>`
   /// - Usage example: await controller.toggleMainButton(MediaQuery.sizeOf(context).width)
   Future<void> toggleMainButton(double pageWidth) async {
     if (_panelState == PanelState.open) {
