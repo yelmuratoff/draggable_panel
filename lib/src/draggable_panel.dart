@@ -127,24 +127,19 @@ class _DraggablePanelState extends State<DraggablePanel>
     _controller = widget.controller ?? DraggablePanelController();
     _controller.buttonWidth = widget.buttonWidth;
 
-    // Propagate controller position changes to external callback if provided.
     _positionListener = (x, y) {
-      if (!mounted) return;
-      // Only forward when not dragging to avoid spamming during pan updates.
-      if (!_controller.isDragging) {
-        widget.onPositionChanged?.call(x, y);
-      }
+      if (!mounted || _controller.isDragging) return;
+      widget.onPositionChanged?.call(x, y);
     };
     _controller.addPositionListener(_positionListener);
 
-    // Clamp into viewport after first frame (preserves state but prevents off-screen button).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _didInitLayout) return;
       _clampIntoViewport();
       if (_controller.panelState == PanelState.closed) {
         final pageWidth = MediaQuery.sizeOf(context).width;
-        _controller.isDragging = false;
         _controller
+          ..isDragging = false
           ..forceDock(pageWidth)
           ..hidePanel(pageWidth);
       }
@@ -163,7 +158,7 @@ class _DraggablePanelState extends State<DraggablePanel>
   @override
   void didUpdateWidget(covariant DraggablePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If external controller instance changed, rewire listeners safely.
+
     if (oldWidget.controller != widget.controller) {
       _controller.removePositionListener(_positionListener);
       if (_ownsController &&
@@ -177,11 +172,10 @@ class _DraggablePanelState extends State<DraggablePanel>
       } else {
         _ownsController = true;
       }
-      // Ensure width stays in sync when buttonWidth changes at runtime
+
       _controller.buttonWidth = widget.buttonWidth;
       _controller.addPositionListener(_positionListener);
     } else if (oldWidget.buttonWidth != widget.buttonWidth) {
-      // Keep controller's buttonWidth synchronized if only width changed.
       _controller.buttonWidth = widget.buttonWidth;
     }
   }
@@ -198,10 +192,8 @@ class _DraggablePanelState extends State<DraggablePanel>
 
   @override
   void didChangeMetrics() {
-    // Window size changed (desktop/web resize, rotation, etc.).
-    // Re-clamp button into viewport and adjust panel position to the correct side.
     if (!mounted) return;
-    // Debounce to the next frame (latest callback wins).
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _handleWindowResize();
@@ -301,6 +293,7 @@ class _DraggablePanelState extends State<DraggablePanel>
   }) {
     final panelDuration = Duration(milliseconds: _controller.panelAnimDuration);
     final isPanelOpen = _controller.panelState == PanelState.open;
+    final panelColor = _resolvedPanelColor(context);
 
     return AnimatedPositioned(
       key: const ValueKey('draggable_panel'),
@@ -328,7 +321,7 @@ class _DraggablePanelState extends State<DraggablePanel>
                   height: _panelHeight,
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
-                    color: _resolvedPanelColor(context),
+                    color: panelColor,
                     borderRadius: _resolvedBorderRadius,
                     border: _panelBorder,
                   ),
@@ -342,31 +335,53 @@ class _DraggablePanelState extends State<DraggablePanel>
                       item.onTap(context);
                       _closePanelAndDock(pageWidth);
                     },
-                    onItemLongPress: (item) {
-                      TooltipSnackBar.show(
-                        context,
-                        message: item.description!,
-                        icon: item.icon,
-                        backgroundColor: _resolvedPanelColor(context),
-                      );
-                    },
-                    onButtonTap: (button) {
-                      button.onTap(context);
-                    },
-                    onButtonLongPress: (button) {
-                      TooltipSnackBar.show(
-                        context,
-                        message: button.description!,
-                        icon: button.icon,
-                        backgroundColor: _resolvedPanelColor(context),
-                      );
-                    },
+                    onItemLongPress: (item) => _showItemTooltip(
+                      context,
+                      item,
+                      panelColor,
+                    ),
+                    onButtonTap: (button) => button.onTap(context),
+                    onButtonLongPress: (button) => _showButtonTooltip(
+                      context,
+                      button,
+                      panelColor,
+                    ),
                   ),
                 )
               : const SizedBox.shrink(),
         ),
       ),
     );
+  }
+
+  void _showItemTooltip(
+    BuildContext context,
+    DraggablePanelItem item,
+    Color panelColor,
+  ) {
+    if (item.description?.isNotEmpty ?? false) {
+      TooltipSnackBar.show(
+        context,
+        message: item.description!,
+        icon: item.icon,
+        backgroundColor: panelColor,
+      );
+    }
+  }
+
+  void _showButtonTooltip(
+    BuildContext context,
+    DraggablePanelButtonItem button,
+    Color panelColor,
+  ) {
+    if (button.description?.isNotEmpty ?? false) {
+      TooltipSnackBar.show(
+        context,
+        message: button.description!,
+        icon: button.icon,
+        backgroundColor: panelColor,
+      );
+    }
   }
 
   // <-- Helper Properties -->
@@ -437,46 +452,38 @@ class _DraggablePanelState extends State<DraggablePanel>
     final size = MediaQuery.sizeOf(context);
     final pageWidth = size.width;
 
-    // Ensure the draggable button stays within the new viewport.
     _clampIntoViewport();
 
-    // Auto-dock to nearest edge on resize to satisfy "перетягиваться в бока".
     _controller
       ..forceDock(pageWidth)
-      ..movementSpeed = 0; // avoid long animations on resize
+      ..movementSpeed = 0;
 
     if (_controller.panelState == PanelState.open) {
-      // Keep the open panel aligned to its edge with new width.
       final isRight = _controller.isDockedRight;
       _controller.panelPositionLeft = isRight
           ? pageWidth - _controller.panelWidth - _controller.buttonWidth
           : _controller.buttonWidth;
     } else {
-      // Keep hidden panel fully off-screen on the correct side.
       _controller.hidePanel(pageWidth);
     }
-
-    // Panel's top is derived from button top via _panelTopPosition, which already
-    // uses clamped draggablePositionTop; nothing else needed here.
   }
 
   void _ensureInitialDock() {
-    // Ensure inside viewport first
     _clampIntoViewport();
-    // If panel starts closed (default behavior), dock immediately without animation.
+
     if (_controller.panelState == PanelState.closed) {
       final pageWidth = MediaQuery.sizeOf(context).width;
       final isRight = _controller.draggablePositionLeft > pageWidth / 2;
-      // Keep movement speed zero for first frame
+
       _controller.movementSpeed = 0;
-      // Snap button to nearest edge
+
       final left = isRight
           ? (pageWidth - _controller.buttonWidth) - _controller.dockBoundary
-          : 0.0 + _controller.dockBoundary;
+          : _controller.dockBoundary;
+
       _controller
         ..setPosition(x: left, y: _controller.draggablePositionTop)
         ..recomputeDockSide(pageWidth)
-        // Place panel off-screen on the corresponding side
         ..panelPositionLeft = isRight
             ? pageWidth + _controller.buttonWidth
             : -_controller.buttonWidth;
@@ -490,7 +497,7 @@ class _DraggablePanelState extends State<DraggablePanel>
     final buttonWidth = _controller.buttonWidth;
     final buttonHeight = widget.buttonHeight;
 
-    final minLeft = 0 + dockBoundary;
+    final minLeft = dockBoundary;
     final maxLeft = (size.width - buttonWidth) - dockBoundary;
     final minTop = statusBarHeight + dockBoundary;
     final maxTop = (size.height - buttonHeight - 10) - dockBoundary;
@@ -499,8 +506,10 @@ class _DraggablePanelState extends State<DraggablePanel>
         _controller.draggablePositionLeft.clamp(minLeft, maxLeft);
     final clampedTop = _controller.draggablePositionTop.clamp(minTop, maxTop);
 
-    if (_controller.draggablePositionLeft != clampedLeft ||
-        _controller.draggablePositionTop != clampedTop) {
+    final needsUpdate = _controller.draggablePositionLeft != clampedLeft ||
+        _controller.draggablePositionTop != clampedTop;
+
+    if (needsUpdate) {
       _controller.setPosition(x: clampedLeft, y: clampedTop);
     }
   }
@@ -510,24 +519,23 @@ class _DraggablePanelState extends State<DraggablePanel>
     final buttonTop = _controller.draggablePositionTop;
     final buttonBottom = buttonTop + widget.buttonHeight;
     final viewPadding = MediaQuery.viewPaddingOf(context);
-    final safeTop = viewPadding.top;
-    final safeBottom = viewPadding.bottom;
-    final minTop = safeTop;
-    final rawMaxTop = pageHeight - safeBottom - panelHeight;
+    final minTop = viewPadding.top;
+    final rawMaxTop = pageHeight - viewPadding.bottom - panelHeight;
     final maxTop = rawMaxTop < minTop ? minTop : rawMaxTop;
 
     if (minTop == maxTop) return minTop;
 
-    final aboveSpace = buttonTop - safeTop;
-    final belowSpace = (pageHeight - safeBottom) - buttonBottom;
+    final aboveSpace = buttonTop - viewPadding.top;
+    final belowSpace = (pageHeight - viewPadding.bottom) - buttonBottom;
 
-    final desiredTop = belowSpace >= panelHeight
+    final shouldPlaceBelow = belowSpace >= panelHeight;
+    final shouldPlaceAbove = !shouldPlaceBelow && aboveSpace >= panelHeight;
+
+    final desiredTop = shouldPlaceBelow
         ? buttonBottom
-        : aboveSpace >= panelHeight
+        : shouldPlaceAbove
             ? buttonTop - panelHeight
-            : aboveSpace > belowSpace
-                ? minTop
-                : maxTop;
+            : (aboveSpace > belowSpace ? minTop : maxTop);
 
     return desiredTop.clamp(minTop, maxTop);
   }
