@@ -44,7 +44,7 @@ Follow these steps to use this package
 
 ```yaml
 dependencies:
-  draggable_panel: ^1.3.0
+  draggable_panel: ^1.3.1
 ```
 
 ### Add import package
@@ -132,12 +132,6 @@ Tips:
 - When the panel starts in the closed state (default), it will be docked to the nearest screen edge on first layout, so the button never “floats” mid-screen.
 - The widget doesn’t auto-toggle on mount. Use `controller.toggle(context)` when you need to programmatically open/close it.
 - Position callbacks: use `controller.addPositionListener` for all position updates; `onPositionChanged` is fired when not dragging (settled updates).
-
-## What’s new in 1.1.0
-- Position listener API in `DraggablePanelController` (`addPositionListener` / `removePositionListener`).
-- Public `dockBoundary` getter for consistent boundary logic.
-- `toggle()` respects current `panelState` (not the initial one). Auto-toggle on mount removed; initial position is clamped and (when closed) auto-docked.
-- Fewer rebuilds during drag via batched `setPosition(x, y)`; lifecycle safety and controller hot-swap handling.
 
 Please, check the [example](https://github.com/yelmuratoff/draggable_panel/tree/main/example) for more details.
 
