@@ -8,17 +8,44 @@ typedef PositionListener = void Function(double x, double y);
 /// A controller to manage the state and behavior of a draggable panel.
 ///
 /// The [DraggablePanelController] provides functionality for:
-/// - Tracking and updating panel position.
-/// - Handling docking behavior based on specified [DockType].
-/// - Managing panel state transitions (open/closed).
-/// - Animating the panel movements.
+/// - Tracking and updating panel position
+/// - Handling docking behavior based on specified [DockType]
+/// - Managing panel state transitions (open/closed)
+/// - Animating the panel movements
+/// - Position change notifications for persistence
+///
+/// - Parameters:
+///   - initialPosition: The initial position (x, y) of the panel
+///   - initialPanelState: The initial state (open/closed)
+///   - panelAnimDuration: Duration of panel animations in milliseconds (default: 300)
+///   - dockType: How the panel docks ([DockType.inside] or [DockType.outside])
+///   - dockOffset: Offset from screen edge when docking (default: 10.0)
+///   - dockAnimDuration: Duration of docking animation in milliseconds
+/// - Usage example:
+///   ```dart
+///   final controller = DraggablePanelController(
+///     initialPosition: (x: 100, y: 200),
+///     initialPanelState: PanelState.closed,
+///     dockType: DockType.inside,
+///   );
+///
+///   // Listen to position changes
+///   controller.addPositionListener((x, y) {
+///     // Save to local storage
+///     prefs.setDouble('panel_x', x);
+///     prefs.setDouble('panel_y', y);
+///   });
+///   ```
 final class DraggablePanelController extends ChangeNotifier {
   /// Constructor to initialize the draggable panel controller with optional parameters.
   ///
-  /// Defaults:
-  /// - [panelAnimDuration]: 300 ms.
-  /// - [dockType]: [DockType.inside].
-  /// - [dockOffset]: 10.0.
+  /// - Parameters:
+  ///   - initialPosition: Starting position as (x, y) record
+  ///   - initialPanelState: Starting state (open/closed)
+  ///   - panelAnimDuration: Animation duration in ms (default: 300)
+  ///   - dockType: Docking behavior (default: [DockType.inside])
+  ///   - dockOffset: Edge offset in pixels (default: 10.0)
+  ///   - dockAnimDuration: Dock animation duration in ms
   DraggablePanelController({
     this.initialPosition,
     this.initialPanelState,
@@ -136,77 +163,74 @@ final class DraggablePanelController extends ChangeNotifier {
   bool get isDockedRight => _isDockedRight;
 
   set panelState(PanelState value) {
-    if (_panelState != value) {
-      _panelState = value;
-      notifyListeners();
-    }
+    if (_panelState == value) return;
+    _panelState = value;
+    notifyListeners();
   }
 
   set draggablePositionTop(double value) {
-    if (_draggablePositionTop != value) {
-      _draggablePositionTop = value;
-      _notifyPositionListeners();
-      notifyListeners();
-    }
+    if (_draggablePositionTop == value) return;
+    _draggablePositionTop = value;
+    _notifyPositionListeners();
+    notifyListeners();
   }
 
   set draggablePositionLeft(double value) {
-    if (_draggablePositionLeft != value) {
-      _draggablePositionLeft = value;
-      _notifyPositionListeners();
-      notifyListeners();
-    }
+    if (_draggablePositionLeft == value) return;
+    _draggablePositionLeft = value;
+    _notifyPositionListeners();
+    notifyListeners();
   }
 
   set panelPositionLeft(double value) {
-    if (_panelPositionLeft != value) {
-      _panelPositionLeft = value;
-      notifyListeners();
-    }
+    if (_panelPositionLeft == value) return;
+    _panelPositionLeft = value;
+    notifyListeners();
   }
 
   set panOffsetTop(double value) {
-    if (_panOffsetTop != value) {
-      _panOffsetTop = value;
-      notifyListeners();
-    }
+    if (_panOffsetTop == value) return;
+    _panOffsetTop = value;
+    notifyListeners();
   }
 
   set panOffsetLeft(double value) {
-    if (_panOffsetLeft != value) {
-      _panOffsetLeft = value;
-      notifyListeners();
-    }
+    if (_panOffsetLeft == value) return;
+    _panOffsetLeft = value;
+    notifyListeners();
   }
 
   set movementSpeed(int value) {
-    if (_movementSpeed != value) {
-      _movementSpeed = value;
-      notifyListeners();
-    }
+    if (_movementSpeed == value) return;
+    _movementSpeed = value;
+    notifyListeners();
   }
 
   set isDragging(bool value) {
-    if (_isDragging != value) {
-      _isDragging = value;
-      notifyListeners();
-    }
+    if (_isDragging == value) return;
+    _isDragging = value;
+    notifyListeners();
   }
 
   set buttonWidth(double value) {
-    if (_buttonWidth != value) {
-      _buttonWidth = value;
-      notifyListeners();
-    }
+    if (_buttonWidth == value) return;
+    _buttonWidth = value;
+    notifyListeners();
   }
 
+  /// Sets both position coordinates atomically with a single notification.
+  ///
+  /// - Parameters:
+  ///   - x: Horizontal position
+  ///   - y: Vertical position
+  /// - Return: void
+  /// - Edge case notes: Only notifies listeners if at least one value changed
   void setPosition({required double x, required double y}) {
-    if (_draggablePositionLeft != x || _draggablePositionTop != y) {
-      _draggablePositionLeft = x;
-      _draggablePositionTop = y;
-      _notifyPositionListeners();
-      notifyListeners();
-    }
+    if (_draggablePositionLeft == x && _draggablePositionTop == y) return;
+    _draggablePositionLeft = x;
+    _draggablePositionTop = y;
+    _notifyPositionListeners();
+    notifyListeners();
   }
 
   //
@@ -215,32 +239,32 @@ final class DraggablePanelController extends ChangeNotifier {
 
   /// Force the panel to dock to the nearest screen edge.
   ///
-  /// - [pageWidth]: The width of the page/screen.
+  /// - Parameters:
+  ///   - pageWidth: The width of the page/screen
+  /// - Return: void
+  /// - Usage example: controller.forceDock(MediaQuery.sizeOf(context).width)
+  /// - Edge case notes: Updates dock side and positions in a single notification
   void forceDock(double pageWidth) {
-    // Calculate the center of the panel.
     final center = _draggablePositionLeft + (_buttonWidth / 2);
-
-    // Set the movement speed for docking.
-    movementSpeed = dockAnimDuration ?? 300;
-
-    // Determine docking behavior based on the center position.
     final dockRight = center >= pageWidth / 2;
     final newButtonLeft = dockRight
         ? (pageWidth - _buttonWidth) - _dockBoundary
         : 0.0 + _dockBoundary;
     final newPanelLeft = dockRight ? pageWidth + _buttonWidth : -_buttonWidth;
 
-    if (_draggablePositionLeft != newButtonLeft ||
-        _panelPositionLeft != newPanelLeft ||
-        _isDockedRight != dockRight) {
-      _isDockedRight = dockRight;
-      _draggablePositionLeft = newButtonLeft;
-      _panelPositionLeft = newPanelLeft;
-      _notifyPositionListeners();
-      notifyListeners();
-    } else {
-      _isDockedRight = dockRight;
+    movementSpeed = dockAnimDuration ?? 300;
+
+    if (_draggablePositionLeft == newButtonLeft &&
+        _panelPositionLeft == newPanelLeft &&
+        _isDockedRight == dockRight) {
+      return;
     }
+
+    _isDockedRight = dockRight;
+    _draggablePositionLeft = newButtonLeft;
+    _panelPositionLeft = newPanelLeft;
+    _notifyPositionListeners();
+    notifyListeners();
   }
 
   /// Helper to calculate the dock boundary based on [DockType].
@@ -254,59 +278,74 @@ final class DraggablePanelController extends ChangeNotifier {
 
   /// Hide the panel completely off-screen.
   ///
-  /// - [pageWidth]: The width of the page/screen.
+  /// - Parameters:
+  ///   - pageWidth: The width of the page/screen
+  /// - Return: void
+  /// - Usage example: controller.hidePanel(MediaQuery.sizeOf(context).width)
   void hidePanel(double pageWidth) {
     final newPanelLeft =
         _isDockedRight ? pageWidth + _panelWidth : -_panelWidth;
-    if (_panelPositionLeft != newPanelLeft) {
-      _panelPositionLeft = newPanelLeft;
-      notifyListeners();
-    }
+    if (_panelPositionLeft == newPanelLeft) return;
+    _panelPositionLeft = newPanelLeft;
+    notifyListeners();
   }
 
   /// Toggle the panel's position between open and closed.
   ///
-  /// - [pageWidth]: The width of the page/screen.
+  /// - Parameters:
+  ///   - pageWidth: The width of the page/screen
+  /// - Return: void
+  /// - Usage example: controller.togglePanel(MediaQuery.sizeOf(context).width)
   void togglePanel(double pageWidth) {
     final isOpen = _panelState == PanelState.open;
     final newPanelLeft = isOpen
         ? (_isDockedRight ? pageWidth - _panelWidth - buttonWidth : buttonWidth)
         : (_isDockedRight ? pageWidth : -_panelWidth);
-    if (_panelPositionLeft != newPanelLeft) {
-      _panelPositionLeft = newPanelLeft;
-      notifyListeners();
-    }
+    if (_panelPositionLeft == newPanelLeft) return;
+    _panelPositionLeft = newPanelLeft;
+    notifyListeners();
   }
 
   /// Asynchronously toggle the main button state and update the panel's docked position.
   ///
-  /// - [pageWidth]: The width of the page/screen.
+  /// - Parameters:
+  ///   - pageWidth: The width of the page/screen
+  /// - Return: Future<void>
+  /// - Usage example: await controller.toggleMainButton(MediaQuery.sizeOf(context).width)
   Future<void> toggleMainButton(double pageWidth) async {
     if (_panelState == PanelState.open) {
       panelState = PanelState.closed;
       forceDock(pageWidth);
       return;
     }
+
     panelState = PanelState.open;
     final newLeft = _isDockedRight ? pageWidth + _buttonWidth : -_buttonWidth;
-    if (_draggablePositionLeft != newLeft) {
-      _draggablePositionLeft = newLeft;
-      _notifyPositionListeners();
-    }
+    if (_draggablePositionLeft == newLeft) return;
+
+    _draggablePositionLeft = newLeft;
+    _notifyPositionListeners();
     notifyListeners();
   }
 
   /// Recompute dock side based on current button position and page width without
   /// moving it to a new edge. Useful during window resize.
+  ///
+  /// - Parameters:
+  ///   - pageWidth: The width of the page/screen
+  /// - Return: void
+  /// - Edge case notes: Does not notify listeners; caller handles notification
   void recomputeDockSide(double pageWidth) {
     final center = _draggablePositionLeft + (_buttonWidth / 2);
     _isDockedRight = center >= pageWidth / 2;
-    // Do not notify here; caller will update dependent fields and notify once.
   }
 
   /// Toggle the panel's behavior based on its initial state.
   ///
-  /// - [context]: The current [BuildContext].
+  /// - Parameters:
+  ///   - context: The current BuildContext
+  /// - Return: void
+  /// - Usage example: controller.toggle(context)
   void toggle(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     if (_panelState == PanelState.open) {
@@ -315,7 +354,6 @@ final class DraggablePanelController extends ChangeNotifier {
       forceDock(width);
       hidePanel(width);
     } else {
-      // Open sequence mirrors onTap handler
       toggleMainButton(width);
       togglePanel(width);
     }

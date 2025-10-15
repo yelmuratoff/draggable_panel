@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 
 /// Adjusts the brightness of a color by blending it with white.
 ///
-/// - [color]: The base color to adjust.
-/// - [brightness]: A value between 0.0 (black) and 1.0 (original color).
-///
-/// Returns a brighter version of the input color.
+/// - Parameters:
+///   - color: The base color to adjust
+///   - brightness: A value between 0.0 (black) and 1.0 (original color)
+/// - Return: A brighter version of the input color
+/// - Usage example:
+///   ```dart
+///   final lightBlue = adjustColorBrightness(Colors.blue, 0.8);
+///   ```
+/// - Edge case notes: Asserts that brightness is within valid range [0.0, 1.0]
 Color adjustColorBrightness(Color color, double brightness) {
   assert(
     brightness >= 0.0 && brightness <= 1.0,
@@ -16,10 +21,15 @@ Color adjustColorBrightness(Color color, double brightness) {
 
 /// Darkens a color by blending it with black.
 ///
-/// - [color]: The base color to adjust.
-/// - [darken]: A value between 0.0 (original color) and 1.0 (black).
-///
-/// Returns a darker version of the input color.
+/// - Parameters:
+///   - color: The base color to adjust
+///   - darken: A value between 0.0 (original color) and 1.0 (black)
+/// - Return: A darker version of the input color
+/// - Usage example:
+///   ```dart
+///   final darkBlue = adjustColorDarken(Colors.blue, 0.3);
+///   ```
+/// - Edge case notes: Asserts that darken is within valid range [0.0, 1.0]
 Color adjustColorDarken(Color color, double darken) {
   assert(
     darken >= 0.0 && darken <= 1.0,
@@ -30,11 +40,19 @@ Color adjustColorDarken(Color color, double darken) {
 
 /// Adjusts a color based on the current theme brightness.
 ///
-/// - [color]: The base color to adjust.
-/// - [value]: The adjustment value (0.0 to 1.0).
-/// - [isDark]: Whether the current theme is dark.
-///
-/// Returns a color adjusted for the current theme.
+/// - Parameters:
+///   - color: The base color to adjust
+///   - value: The adjustment value (0.0 to 1.0)
+///   - isDark: Whether the current theme is dark
+/// - Return: A color adjusted for the current theme
+/// - Usage example:
+///   ```dart
+///   final adjustedColor = adjustColor(
+///     color: Colors.blue,
+///     value: 0.5,
+///     isDark: Theme.of(context).brightness == Brightness.dark,
+///   );
+///   ```
 Color adjustColor({
   required Color color,
   required double value,

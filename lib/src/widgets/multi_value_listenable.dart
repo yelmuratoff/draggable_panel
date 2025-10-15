@@ -5,6 +5,17 @@ import 'package:flutter/material.dart';
 ///
 /// This is useful when you need to listen to multiple independent
 /// [ValueListenable] objects and rebuild the UI when any of them changes.
+///
+/// - Parameters:
+///   - valueListenables: The list of listenables to observe
+///   - builder: The builder function called when any listenable changes
+/// - Usage example:
+///   ```dart
+///   MultiValueListenableBuilder(
+///     valueListenables: [controller1, controller2, controller3],
+///     builder: (context) => YourWidget(),
+///   )
+///   ```
 final class MultiValueListenableBuilder extends StatefulWidget {
   /// Creates a multi-value listenable builder.
   ///

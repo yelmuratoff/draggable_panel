@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
 
 /// Custom SnackBar widget for showing tooltips in DraggablePanel.
+///
+/// This is a utility class that provides a static method to show
+/// clean, modern tooltips with automatic theme adaptation.
+///
+/// - Usage example:
+///   ```dart
+///   TooltipSnackBar.show(
+///     context,
+///     message: 'Settings updated',
+///     icon: Icons.check_circle,
+///     duration: Duration(seconds: 2),
+///   );
+///   ```
 final class TooltipSnackBar {
   const TooltipSnackBar._();
 

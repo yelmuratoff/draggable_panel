@@ -4,11 +4,22 @@ import 'package:flutter/material.dart';
 ///
 /// This painter creates a curved line that indicates the draggable direction
 /// based on which side of the screen the button is docked.
+///
+/// - Parameters:
+///   - isInRightSide: Whether the button is docked on the right side
+///   - color: The color of the curved line
+/// - Usage example:
+///   ```dart
+///   CustomPaint(
+///     size: Size(20, 65),
+///     painter: LineWithCurvePainter(
+///       isInRightSide: true,
+///       color: Colors.white.withValues(alpha: 0.5),
+///     ),
+///   )
+///   ```
 final class LineWithCurvePainter extends CustomPainter {
   /// Creates a curved line painter.
-  ///
-  /// - [isInRightSide]: Whether the button is docked on the right side.
-  /// - [color]: The color of the curved line.
   const LineWithCurvePainter({
     required this.isInRightSide,
     required this.color,
