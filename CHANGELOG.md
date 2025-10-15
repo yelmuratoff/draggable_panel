@@ -1,9 +1,26 @@
+## 1.3.0
+
+Code quality improvements and enhanced documentation.
+
+What's new
+- **Enhanced documentation**: comprehensive dartdoc comments with usage examples and parameter descriptions across all public APIs.
+- **Improved tooltips**: better theme adaptation and modern appearance for item/button tooltips.
+
+Improvements
+- Better code organization and widget decomposition for improved maintainability.
+- Optimized performance with reduced widget rebuilds and better const usage.
+- Enhanced position listener handling with improved lifecycle safety.
+- Stricter code quality with comprehensive lint rules and zero analysis issues.
+
+Migration notes
+- No breaking changes. All existing code works as expected.
+
 ## 1.2.0
 
 Desktop/Web resize stability, auto-docking, and controller improvements.
 
 What's new
-- Auto-dock on window resize: the draggable button now snaps to the nearest edge when the window is resized on desktop/web, matching the expected "перетягиваться в бока" behavior.
+- Auto-dock on window resize: the draggable button now snaps to the nearest edge when the window is resized on desktop/web, matching the expected behavior.
 - Stable dock side: introduced `isDockedRight` in `DraggablePanelController` to track the docked side explicitly. This prevents side flipping during resizes and ensures consistent alignment when the button is off-screen.
 - Resize handling in widget: `DraggablePanel` now observes `didChangeMetrics` and reclamps/repositions without long animations during resize.
 

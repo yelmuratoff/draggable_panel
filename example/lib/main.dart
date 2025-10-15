@@ -86,8 +86,87 @@ class _AppState extends State<App> {
                 icon: Icons.token,
                 onTap: (context) {},
               ),
+              DraggablePanelItem(
+                enableBadge: false,
+                icon: Icons.color_lens,
+                onTap: (context) {},
+                description: 'This is a color lens item',
+              ),
+              DraggablePanelItem(
+                enableBadge: false,
+                icon: Icons.zoom_in,
+                onTap: (context) {},
+                description: 'This is a zoom in item',
+              ),
+              DraggablePanelItem(
+                enableBadge: false,
+                icon: Icons.token,
+                onTap: (context) {},
+              ),
+              DraggablePanelItem(
+                enableBadge: false,
+                icon: Icons.color_lens,
+                onTap: (context) {},
+                description: 'This is a color lens item',
+              ),
+              DraggablePanelItem(
+                enableBadge: false,
+                icon: Icons.zoom_in,
+                onTap: (context) {},
+                description: 'This is a zoom in item',
+              ),
+              DraggablePanelItem(
+                enableBadge: false,
+                icon: Icons.token,
+                onTap: (context) {},
+              ),
             ],
             buttons: [
+              DraggablePanelButtonItem(
+                icon: Icons.copy,
+                onTap: (context) {
+                  // Hide
+                  controller.toggle(context);
+                },
+                label: 'Push token',
+                description: 'This is a push token button',
+              ),
+              DraggablePanelButtonItem(
+                icon: Icons.copy,
+                onTap: (context) {
+                  // Hide
+                  controller.toggle(context);
+                },
+                label: 'Push token',
+                description: 'This is a push token button',
+              ),
+              DraggablePanelButtonItem(
+                icon: Icons.copy,
+                onTap: (context) {
+                  // Hide
+                  controller.toggle(context);
+                },
+                label: 'Push token',
+                description: 'This is a push token button',
+              ),
+              DraggablePanelButtonItem(
+                icon: Icons.copy,
+                onTap: (context) {
+                  // Hide
+                  controller.toggle(context);
+                },
+                label: 'Push token',
+                description: 'This is a push token button',
+              ),
+              DraggablePanelButtonItem(
+                icon: Icons.copy,
+                onTap: (context) {
+                  // Hide
+                  controller.toggle(context);
+                },
+                label: 'Push token',
+                description: 'This is a push token button',
+              ),
               DraggablePanelButtonItem(
                 icon: Icons.copy,
                 onTap: (context) {
