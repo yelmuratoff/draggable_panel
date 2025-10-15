@@ -1,12 +1,18 @@
-part of '../draggable_panel.dart';
+import 'package:draggable_panel/src/widgets/curve_line_paint.dart';
+import 'package:flutter/material.dart';
 
-final class _DraggableButtonContent extends StatelessWidget {
-  const _DraggableButtonContent({
+/// Internal widget for the draggable button's visual content.
+///
+/// Switches between a drag indicator (when dragging) and a handle (when docked).
+@immutable
+final class DraggableButtonContentWidget extends StatelessWidget {
+  const DraggableButtonContentWidget({
     required this.isDragging,
     required this.isDockedRight,
     required this.buttonWidth,
     required this.buttonHeight,
     this.icon,
+    super.key,
   });
 
   final bool isDragging;
@@ -38,6 +44,7 @@ final class _DraggableButtonContent extends StatelessWidget {
       );
 }
 
+@immutable
 final class _DraggingIndicator extends StatelessWidget {
   const _DraggingIndicator({
     required this.buttonWidth,
@@ -61,6 +68,7 @@ final class _DraggingIndicator extends StatelessWidget {
       );
 }
 
+@immutable
 final class _DragHandle extends StatelessWidget {
   const _DragHandle({
     required this.isDockedRight,

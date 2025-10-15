@@ -1,12 +1,18 @@
-part of '../draggable_panel.dart';
+import 'package:flutter/material.dart';
 
-final class _PanelButton extends StatelessWidget {
-  const _PanelButton({
+/// Internal widget for rendering a button in the draggable panel.
+///
+/// This widget displays a filled button with an icon and label,
+/// supporting both tap and long-press gestures.
+@immutable
+final class PanelButtonWidget extends StatelessWidget {
+  const PanelButtonWidget({
     required this.itemColor,
     required this.onTap,
     required this.icon,
     required this.label,
     this.onLongPress,
+    super.key,
   });
 
   final Color itemColor;

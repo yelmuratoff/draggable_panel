@@ -3,12 +3,10 @@ import 'package:draggable_panel/src/enums/panel_state.dart';
 import 'package:draggable_panel/src/models/panel_button.dart';
 import 'package:draggable_panel/src/models/panel_item.dart';
 import 'package:draggable_panel/src/utils/colors.dart';
-import 'package:draggable_panel/src/widgets/curve_line_paint.dart';
+import 'package:draggable_panel/src/widgets/draggable_button_content_widget.dart';
+import 'package:draggable_panel/src/widgets/panel_contents_widget.dart';
 import 'package:draggable_panel/src/widgets/tooltip_snackbar.dart';
 import 'package:flutter/material.dart';
-
-part 'widgets/panel_button.dart';
-part 'widgets/draggable_button_content.dart';
 
 /// `DraggablePanel` is a widget that can be dragged around the screen and can be
 /// docked to the nearest edge of the screen. It can be used to create a floating
@@ -48,7 +46,8 @@ part 'widgets/draggable_button_content.dart';
 ///     child: YourMainContent(),
 ///   )
 ///   ```
-class DraggablePanel extends StatefulWidget {
+@immutable
+final class DraggablePanel extends StatefulWidget {
   const DraggablePanel({
     required this.child,
     super.key,
@@ -282,7 +281,7 @@ class _DraggablePanelState extends State<DraggablePanel>
           ),
           curve: Curves.fastLinearToSlowEaseIn,
           child: Center(
-            child: _DraggableButtonContent(
+            child: DraggableButtonContentWidget(
               isDragging: _controller.isDragging,
               isDockedRight: isDockedRight,
               icon: widget.icon,
@@ -335,7 +334,7 @@ class _DraggablePanelState extends State<DraggablePanel>
                   ),
                   curve: Curves.linearToEaseOut,
                   padding: const EdgeInsets.all(8),
-                  child: _PanelContents(
+                  child: PanelContentsWidget(
                     items: widget.items,
                     buttons: widget.buttons,
                     itemColor: _itemColor,
@@ -577,113 +576,4 @@ class _DraggablePanelState extends State<DraggablePanel>
           Theme.of(context).colorScheme.primary,
           0.8,
         );
-}
-
-class _PanelContents extends StatelessWidget {
-  const _PanelContents({
-    required this.items,
-    required this.buttons,
-    required this.itemColor,
-    required this.onItemTap,
-    required this.onItemLongPress,
-    required this.onButtonTap,
-    required this.onButtonLongPress,
-  });
-
-  final List<DraggablePanelItem> items;
-  final List<DraggablePanelButtonItem> buttons;
-  final Color itemColor;
-  final ValueChanged<DraggablePanelItem> onItemTap;
-  final ValueChanged<DraggablePanelItem> onItemLongPress;
-  final ValueChanged<DraggablePanelButtonItem> onButtonTap;
-  final ValueChanged<DraggablePanelButtonItem> onButtonLongPress;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasButtons = buttons.isNotEmpty;
-
-    return Column(
-      mainAxisAlignment: hasButtons
-          ? MainAxisAlignment.spaceBetween
-          : MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Wrap(
-          runSpacing: 8,
-          spacing: 8,
-          children: [
-            for (final item in items)
-              _PanelItemBadge(
-                item: item,
-                itemColor: itemColor,
-                onPressed: () => onItemTap(item),
-                onLongPress: item.description?.isNotEmpty ?? false
-                    ? () => onItemLongPress(item)
-                    : null,
-              ),
-          ],
-        ),
-        if (hasButtons) const SizedBox(height: 8),
-        if (hasButtons)
-          Flexible(
-            child: Wrap(
-              runSpacing: 6,
-              children: [
-                for (final button in buttons)
-                  _PanelButton(
-                    itemColor: itemColor,
-                    icon: button.icon,
-                    label: button.label,
-                    onTap: () => onButtonTap(button),
-                    onLongPress: button.description?.isNotEmpty ?? false
-                        ? () => onButtonLongPress(button)
-                        : null,
-                  ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _PanelItemBadge extends StatelessWidget {
-  const _PanelItemBadge({
-    required this.item,
-    required this.itemColor,
-    required this.onPressed,
-    this.onLongPress,
-  });
-
-  final DraggablePanelItem item;
-  final Color itemColor;
-  final VoidCallback onPressed;
-  final VoidCallback? onLongPress;
-
-  @override
-  Widget build(BuildContext context) => Badge(
-        isLabelVisible: item.enableBadge,
-        padding: EdgeInsets.zero,
-        smallSize: 12,
-        child: ClipRRect(
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onPressed,
-              onLongPress: onLongPress,
-              child: Ink(
-                color: itemColor,
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(
-                    item.icon,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
 }

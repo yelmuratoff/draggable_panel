@@ -163,9 +163,7 @@ final class DraggablePanelController extends ChangeNotifier {
   bool get isDockedRight => _isDockedRight;
 
   set panelState(PanelState value) {
-    if (_panelState == value) return;
-    _panelState = value;
-    notifyListeners();
+    _updateValue(() => _panelState = value, _panelState, value);
   }
 
   set draggablePositionTop(double value) {
@@ -183,38 +181,33 @@ final class DraggablePanelController extends ChangeNotifier {
   }
 
   set panelPositionLeft(double value) {
-    if (_panelPositionLeft == value) return;
-    _panelPositionLeft = value;
-    notifyListeners();
+    _updateValue(() => _panelPositionLeft = value, _panelPositionLeft, value);
   }
 
   set panOffsetTop(double value) {
-    if (_panOffsetTop == value) return;
-    _panOffsetTop = value;
-    notifyListeners();
+    _updateValue(() => _panOffsetTop = value, _panOffsetTop, value);
   }
 
   set panOffsetLeft(double value) {
-    if (_panOffsetLeft == value) return;
-    _panOffsetLeft = value;
-    notifyListeners();
+    _updateValue(() => _panOffsetLeft = value, _panOffsetLeft, value);
   }
 
   set movementSpeed(int value) {
-    if (_movementSpeed == value) return;
-    _movementSpeed = value;
-    notifyListeners();
+    _updateValue(() => _movementSpeed = value, _movementSpeed, value);
   }
 
   set isDragging(bool value) {
-    if (_isDragging == value) return;
-    _isDragging = value;
-    notifyListeners();
+    _updateValue(() => _isDragging = value, _isDragging, value);
   }
 
   set buttonWidth(double value) {
-    if (_buttonWidth == value) return;
-    _buttonWidth = value;
+    _updateValue(() => _buttonWidth = value, _buttonWidth, value);
+  }
+
+  /// Helper method to reduce boilerplate in setters.
+  void _updateValue<T>(VoidCallback update, T oldValue, T newValue) {
+    if (oldValue == newValue) return;
+    update();
     notifyListeners();
   }
 
