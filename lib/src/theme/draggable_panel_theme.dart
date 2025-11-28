@@ -19,7 +19,6 @@ class DraggablePanelTheme {
     this.panelBoxShadow,
     this.panelItemColor,
     this.panelButtonColor,
-    this.panelButtonIconColor,
     this.foregroundColor,
   });
 
@@ -50,9 +49,6 @@ class DraggablePanelTheme {
   /// The background color of the buttons inside the panel.
   final Color? panelButtonColor;
 
-  /// The color of the icons in the buttons inside the panel.
-  final Color? panelButtonIconColor;
-
   /// The foreground color of the panel.
   /// For: icons, text, etc.
   final Color? foregroundColor;
@@ -67,7 +63,6 @@ class DraggablePanelTheme {
     List<BoxShadow>? panelBoxShadow,
     Color? panelItemColor,
     Color? panelButtonColor,
-    Color? panelButtonIconColor,
     Color? foregroundColor,
   }) {
     return DraggablePanelTheme(
@@ -81,7 +76,6 @@ class DraggablePanelTheme {
       panelBoxShadow: panelBoxShadow ?? this.panelBoxShadow,
       panelItemColor: panelItemColor ?? this.panelItemColor,
       panelButtonColor: panelButtonColor ?? this.panelButtonColor,
-      panelButtonIconColor: panelButtonIconColor ?? this.panelButtonIconColor,
       foregroundColor: foregroundColor ?? this.foregroundColor,
     );
   }
@@ -100,7 +94,6 @@ class DraggablePanelTheme {
         listEquals(other.panelBoxShadow, panelBoxShadow) &&
         other.panelItemColor == panelItemColor &&
         other.panelButtonColor == panelButtonColor &&
-        other.panelButtonIconColor == panelButtonIconColor &&
         other.foregroundColor == foregroundColor;
   }
 
@@ -115,7 +108,6 @@ class DraggablePanelTheme {
         panelBoxShadow.hashCode ^
         panelItemColor.hashCode ^
         panelButtonColor.hashCode ^
-        panelButtonIconColor.hashCode ^
         foregroundColor.hashCode;
   }
 }
