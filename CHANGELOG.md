@@ -1,3 +1,16 @@
+## 1.4.0
+
+Major theme refactor and customization improvements.
+
+What's new
+- **DraggablePanelTheme**: Introduced a comprehensive theme class to centralize all styling properties.
+- **Enhanced Customization**: You can now customize every aspect of the panel, including button colors, shadows, borders, and more, via the `theme` property.
+- **Simplified API**: Removed individual style arguments from `DraggablePanel` in favor of the `theme` object, making the API cleaner and more consistent.
+
+Improvements
+- Added widget tests to ensure reliability.
+- Updated documentation with new usage examples.
+
 ## 1.3.1
 
 Code quality improvements and enhanced documentation.

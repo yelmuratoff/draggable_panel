@@ -2,6 +2,7 @@ import 'package:draggable_panel/src/controller/controller.dart';
 import 'package:draggable_panel/src/enums/panel_state.dart';
 import 'package:draggable_panel/src/models/panel_button.dart';
 import 'package:draggable_panel/src/models/panel_item.dart';
+import 'package:draggable_panel/src/theme/theme.dart';
 import 'package:draggable_panel/src/utils/colors.dart';
 import 'package:draggable_panel/src/widgets/draggable_button_content_widget.dart';
 import 'package:draggable_panel/src/widgets/panel_contents_widget.dart';
@@ -15,17 +16,12 @@ import 'package:flutter/material.dart';
 /// - Parameters:
 ///   - child: The child widget that will be used as the main content of the screen
 ///   - icon: The icon in the draggable button (optional, works with dockType)
-///   - backgroundColor: The background color of the panel
 ///   - items: The list of items that will be displayed in the panel
 ///   - buttons: The list of buttons that will be displayed in the panel
-///   - borderColor: The color of the border of the panel
-///   - borderWidth: The width of the border of the panel
-///   - buttonWidth: The width of the draggable button (default: 35)
-///   - buttonHeight: The height of the draggable button (default: 70.0)
-///   - borderRadius: The border radius of the panel
 ///   - controller: Optional controller to manage panel state
 ///   - onPositionChanged: Callback when position changes (useful for persistence)
 ///   - panelHeight: Optional fixed height for the panel
+///   - theme: The theme of the panel (default: DraggablePanelTheme())
 /// - Usage example:
 ///   ```dart
 ///   DraggablePanel(
@@ -52,17 +48,12 @@ final class DraggablePanel extends StatefulWidget {
     required this.child,
     super.key,
     this.icon,
-    this.backgroundColor,
     this.items = const [],
     this.buttons = const [],
-    this.borderColor,
-    this.borderWidth,
-    this.buttonWidth = 35,
-    this.buttonHeight = 70.0,
-    this.borderRadius,
     this.controller,
     this.onPositionChanged,
     this.panelHeight,
+    this.theme = const DraggablePanelTheme(),
   });
 
   final DraggablePanelController? controller;
@@ -76,32 +67,17 @@ final class DraggablePanel extends StatefulWidget {
   /// I recommend use it with `dockType` option.
   final Widget? icon;
 
-  /// The color of the border of the panel.
-  final Color? borderColor;
-
-  /// The width of the border of the panel.
-  final double? borderWidth;
-
-  /// The width of the draggable button.
-  final double buttonWidth;
-
   /// The height of the panel.
   final double? panelHeight;
-
-  /// The height of the draggable button.
-  final double buttonHeight;
-
-  /// The border radius of the panel.
-  final BorderRadius? borderRadius;
-
-  /// The background color of the panel.
-  final Color? backgroundColor;
 
   /// The list of items that will be displayed in the panel.
   final List<DraggablePanelItem> items;
 
   /// The list of buttons that will be displayed in the panel.
   final List<DraggablePanelButtonItem> buttons;
+
+  /// The theme of the panel.
+  final DraggablePanelTheme theme;
 
   /// The callback that will be called when the position of the panel is changed.
   /// You can use local storage to save the position of the panel and restore it
@@ -125,7 +101,7 @@ class _DraggablePanelState extends State<DraggablePanel>
     WidgetsBinding.instance.addObserver(this);
     _ownsController = widget.controller == null;
     _controller = widget.controller ?? DraggablePanelController();
-    _controller.buttonWidth = widget.buttonWidth;
+    _controller.buttonWidth = widget.theme.draggableButtonWidth;
 
     _positionListener = (x, y) {
       if (!mounted || _controller.isDragging) return;
@@ -173,10 +149,11 @@ class _DraggablePanelState extends State<DraggablePanel>
         _ownsController = true;
       }
 
-      _controller.buttonWidth = widget.buttonWidth;
+      _controller.buttonWidth = widget.theme.draggableButtonWidth;
       _controller.addPositionListener(_positionListener);
-    } else if (oldWidget.buttonWidth != widget.buttonWidth) {
-      _controller.buttonWidth = widget.buttonWidth;
+    } else if (oldWidget.theme.draggableButtonWidth !=
+        widget.theme.draggableButtonWidth) {
+      _controller.buttonWidth = widget.theme.draggableButtonWidth;
     }
   }
 
@@ -240,7 +217,7 @@ class _DraggablePanelState extends State<DraggablePanel>
   }) {
     final buttonDuration = Duration(milliseconds: _controller.movementSpeed);
     final buttonWidth = _controller.buttonWidth;
-    final buttonHeight = widget.buttonHeight;
+    final buttonHeight = widget.theme.draggableButtonHeight;
 
     return AnimatedPositioned(
       key: const ValueKey('draggable_panel_button'),
@@ -267,9 +244,11 @@ class _DraggablePanelState extends State<DraggablePanel>
           height: buttonHeight,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: _resolvedBackgroundColor(context),
-            borderRadius: _resolvedBorderRadius,
-            border: _panelBorder,
+            color: widget.theme.draggableButtonColor ??
+                _defaultBackgroundColor(context),
+            borderRadius: widget.theme.panelBorderRadius,
+            border: widget.theme.panelBorder ?? _defaultBorder,
+            boxShadow: widget.theme.panelBoxShadow,
           ),
           curve: Curves.fastLinearToSlowEaseIn,
           child: Center(
@@ -293,7 +272,8 @@ class _DraggablePanelState extends State<DraggablePanel>
   }) {
     final panelDuration = Duration(milliseconds: _controller.panelAnimDuration);
     final isPanelOpen = _controller.panelState == PanelState.open;
-    final panelColor = _resolvedPanelColor(context);
+    final panelColor =
+        widget.theme.panelBackgroundColor ?? _defaultPanelColor(context);
 
     return AnimatedPositioned(
       key: const ValueKey('draggable_panel'),
@@ -322,12 +302,14 @@ class _DraggablePanelState extends State<DraggablePanel>
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     color: panelColor,
-                    borderRadius: _resolvedBorderRadius,
-                    border: _panelBorder,
+                    borderRadius: widget.theme.panelBorderRadius,
+                    border: widget.theme.panelBorder ?? _defaultBorder,
+                    boxShadow: widget.theme.panelBoxShadow,
                   ),
                   curve: Curves.linearToEaseOut,
                   padding: const EdgeInsets.all(8),
                   child: PanelContentsWidget(
+                    theme: widget.theme,
                     items: widget.items,
                     buttons: widget.buttons,
                     itemColor: _itemColor,
@@ -386,15 +368,17 @@ class _DraggablePanelState extends State<DraggablePanel>
 
   // <-- Helper Properties -->
 
-  BorderRadius get _resolvedBorderRadius =>
-      widget.borderRadius ?? const BorderRadius.all(Radius.circular(16));
+  Color _defaultBackgroundColor(BuildContext context) =>
+      Theme.of(context).colorScheme.primary.withValues(alpha: 0.4);
 
-  Color _resolvedBackgroundColor(BuildContext context) =>
-      (widget.backgroundColor ?? Theme.of(context).colorScheme.primary)
-          .withValues(alpha: 0.4);
+  Color _defaultPanelColor(BuildContext context) =>
+      Theme.of(context).colorScheme.primary;
 
-  Color _resolvedPanelColor(BuildContext context) =>
-      widget.backgroundColor ?? Theme.of(context).colorScheme.primary;
+  Border get _defaultBorder => const Border.fromBorderSide(
+        BorderSide(
+          color: Color(0xFF333333),
+        ),
+      );
 
   // <-- Functions -->
 
@@ -431,7 +415,7 @@ class _DraggablePanelState extends State<DraggablePanel>
 
     final viewPadding = MediaQuery.paddingOf(context);
     final dockBoundary = _controller.dockBoundary;
-    final buttonHeight = widget.buttonHeight;
+    final buttonHeight = widget.theme.draggableButtonHeight;
     final buttonWidth = _controller.buttonWidth;
 
     final minTop = viewPadding.top + dockBoundary;
@@ -495,7 +479,7 @@ class _DraggablePanelState extends State<DraggablePanel>
     final statusBarHeight = MediaQuery.paddingOf(context).top;
     final dockBoundary = _controller.dockBoundary;
     final buttonWidth = _controller.buttonWidth;
-    final buttonHeight = widget.buttonHeight;
+    final buttonHeight = widget.theme.draggableButtonHeight;
 
     final minLeft = dockBoundary;
     final maxLeft = (size.width - buttonWidth) - dockBoundary;
@@ -517,7 +501,7 @@ class _DraggablePanelState extends State<DraggablePanel>
   double _panelTopPosition(double pageHeight) {
     final panelHeight = _panelHeight;
     final buttonTop = _controller.draggablePositionTop;
-    final buttonBottom = buttonTop + widget.buttonHeight;
+    final buttonBottom = buttonTop + widget.theme.draggableButtonHeight;
     final viewPadding = MediaQuery.viewPaddingOf(context);
     final minTop = viewPadding.top;
     final rawMaxTop = pageHeight - viewPadding.bottom - panelHeight;
@@ -560,28 +544,15 @@ class _DraggablePanelState extends State<DraggablePanel>
     return totalHeight.clamp(minHeight, maxHeight);
   }
 
-  Border? get _panelBorder {
-    final width = widget.borderWidth;
-    final color = widget.borderColor;
-
-    if ((width != null && width > 0) || color != null) {
-      return Border.fromBorderSide(
-        BorderSide(
-          color: color ?? const Color(0xFF333333),
-          width: width ?? 1,
-        ),
-      );
-    }
-    return null;
-  }
-
-  Color get _itemColor => Theme.of(context).brightness == Brightness.dark
-      ? adjustColorBrightness(
-          Theme.of(context).colorScheme.primaryContainer,
-          0.9,
-        )
-      : adjustColorBrightness(
-          Theme.of(context).colorScheme.primary,
-          0.8,
-        );
+  Color get _itemColor =>
+      widget.theme.panelItemColor ??
+      (Theme.of(context).brightness == Brightness.dark
+          ? adjustColorBrightness(
+              Theme.of(context).colorScheme.primaryContainer,
+              0.9,
+            )
+          : adjustColorBrightness(
+              Theme.of(context).colorScheme.primary,
+              0.8,
+            ));
 }

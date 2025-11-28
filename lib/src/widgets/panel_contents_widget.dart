@@ -1,5 +1,4 @@
-import 'package:draggable_panel/src/models/panel_button.dart';
-import 'package:draggable_panel/src/models/panel_item.dart';
+import 'package:draggable_panel/draggable_panel.dart';
 import 'package:draggable_panel/src/widgets/panel_button_widget.dart';
 import 'package:flutter/material.dart';
 
@@ -14,6 +13,7 @@ final class PanelContentsWidget extends StatelessWidget {
     required this.onItemLongPress,
     required this.onButtonTap,
     required this.onButtonLongPress,
+    required this.theme,
     super.key,
   });
 
@@ -24,6 +24,7 @@ final class PanelContentsWidget extends StatelessWidget {
   final ValueChanged<DraggablePanelItem> onItemLongPress;
   final ValueChanged<DraggablePanelButtonItem> onButtonTap;
   final ValueChanged<DraggablePanelButtonItem> onButtonLongPress;
+  final DraggablePanelTheme theme;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +43,7 @@ final class PanelContentsWidget extends StatelessWidget {
             for (final item in items)
               PanelItemBadge(
                 item: item,
+                theme: theme,
                 itemColor: itemColor,
                 onPressed: () => onItemTap(item),
                 onLongPress: item.description?.isNotEmpty ?? false
@@ -59,6 +61,8 @@ final class PanelContentsWidget extends StatelessWidget {
                 for (final button in buttons)
                   PanelButtonWidget(
                     itemColor: itemColor,
+                    backgroundColor: theme.panelButtonColor,
+                    foregroundColor: theme.foregroundColor,
                     icon: button.icon,
                     label: button.label,
                     onTap: () => onButtonTap(button),
@@ -81,12 +85,14 @@ final class PanelItemBadge extends StatelessWidget {
     required this.item,
     required this.itemColor,
     required this.onPressed,
+    required this.theme,
     this.onLongPress,
     super.key,
   });
 
   final DraggablePanelItem item;
   final Color itemColor;
+  final DraggablePanelTheme theme;
   final VoidCallback onPressed;
   final VoidCallback? onLongPress;
 
@@ -108,7 +114,7 @@ final class PanelItemBadge extends StatelessWidget {
                   padding: const EdgeInsets.all(8),
                   child: Icon(
                     item.icon,
-                    color: Colors.white,
+                    color: theme.foregroundColor,
                   ),
                 ),
               ),

@@ -12,6 +12,8 @@ final class PanelButtonWidget extends StatelessWidget {
     required this.icon,
     required this.label,
     this.onLongPress,
+    this.backgroundColor,
+    this.foregroundColor,
     super.key,
   });
 
@@ -20,6 +22,8 @@ final class PanelButtonWidget extends StatelessWidget {
   final VoidCallback? onLongPress;
   final IconData icon;
   final String label;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -27,7 +31,7 @@ final class PanelButtonWidget extends StatelessWidget {
         width: double.maxFinite,
         child: FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: itemColor,
+            backgroundColor: backgroundColor ?? itemColor,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(16)),
@@ -40,14 +44,20 @@ final class PanelButtonWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: Colors.white, size: 18),
+              Icon(
+                icon,
+                color: foregroundColor ?? Colors.white,
+                size: 18,
+              ),
               const SizedBox(width: 12),
               Flexible(
                 child: Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(
+                    color: foregroundColor ?? Colors.white,
+                  ),
                 ),
               ),
             ],
