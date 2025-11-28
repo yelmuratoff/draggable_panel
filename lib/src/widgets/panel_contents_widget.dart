@@ -114,7 +114,8 @@ final class PanelItemBadge extends StatelessWidget {
                   padding: const EdgeInsets.all(8),
                   child: Icon(
                     item.icon,
-                    color: theme.foregroundColor,
+                    color: theme.foregroundColor ??
+                        Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
               ),

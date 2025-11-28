@@ -247,7 +247,7 @@ class _DraggablePanelState extends State<DraggablePanel>
             color: widget.theme.draggableButtonColor ??
                 _defaultBackgroundColor(context),
             borderRadius: widget.theme.panelBorderRadius,
-            border: widget.theme.panelBorder ?? _defaultBorder,
+            border: widget.theme.panelBorder,
             boxShadow: widget.theme.panelBoxShadow,
           ),
           curve: Curves.fastLinearToSlowEaseIn,
@@ -303,7 +303,7 @@ class _DraggablePanelState extends State<DraggablePanel>
                   decoration: BoxDecoration(
                     color: panelColor,
                     borderRadius: widget.theme.panelBorderRadius,
-                    border: widget.theme.panelBorder ?? _defaultBorder,
+                    border: widget.theme.panelBorder,
                     boxShadow: widget.theme.panelBoxShadow,
                   ),
                   curve: Curves.linearToEaseOut,
@@ -373,12 +373,6 @@ class _DraggablePanelState extends State<DraggablePanel>
 
   Color _defaultPanelColor(BuildContext context) =>
       Theme.of(context).colorScheme.primary;
-
-  Border get _defaultBorder => const Border.fromBorderSide(
-        BorderSide(
-          color: Color(0xFF333333),
-        ),
-      );
 
   // <-- Functions -->
 

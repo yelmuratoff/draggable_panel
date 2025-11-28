@@ -44,7 +44,7 @@ Follow these steps to use this package
 
 ```yaml
 dependencies:
-  draggable_panel: ^1.4.1
+  draggable_panel: ^1.4.2
 ```
 
 ### Add import package

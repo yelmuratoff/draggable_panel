@@ -46,7 +46,8 @@ final class PanelButtonWidget extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: foregroundColor ?? Colors.white,
+                color:
+                    foregroundColor ?? Theme.of(context).colorScheme.onPrimary,
                 size: 18,
               ),
               const SizedBox(width: 12),
@@ -56,7 +57,8 @@ final class PanelButtonWidget extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: foregroundColor ?? Colors.white,
+                    color: foregroundColor ??
+                        Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
               ),
