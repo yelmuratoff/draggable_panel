@@ -532,8 +532,24 @@ class _DraggablePanelState extends State<DraggablePanel>
 
     final buttonsHeight =
         widget.buttons.isNotEmpty ? widget.buttons.length * 50.0 + 8.0 : 0.0;
-    final itemsHeight = (widget.items.length / 4).ceil() * 45.0;
-    final totalHeight = itemsHeight + buttonsHeight + 16.0;
+
+    final border = widget.theme.panelBorder;
+    final horizontalBorder =
+        border is Border ? border.left.width + border.right.width : 0.0;
+    final verticalBorder =
+        border is Border ? border.top.width + border.bottom.width : 0.0;
+    const padding = 16.0; // EdgeInsets.all(8)
+    const itemSize = 40.0; // Icon(24) + Padding(8*2)
+    const spacing = 8.0;
+    final contentWidth = _controller.panelWidth - padding - horizontalBorder;
+    final itemsPerRow = ((contentWidth + spacing) / (itemSize + spacing))
+        .floor()
+        .clamp(1, widget.items.length);
+    final rows = (widget.items.length / itemsPerRow).ceil();
+    const runSpacing = 8.0;
+    final itemsHeight = rows * itemSize + (rows - 1).clamp(0, rows) * runSpacing;
+
+    final totalHeight = itemsHeight + buttonsHeight + padding + verticalBorder;
 
     return totalHeight.clamp(minHeight, maxHeight);
   }
