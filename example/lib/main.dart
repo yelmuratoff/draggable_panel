@@ -62,25 +62,26 @@ class _AppState extends State<App> {
           visible: isEnabled,
           replacement: child!,
           child: DraggablePanel(
-            // theme: DraggablePanelTheme(
-            //   panelBackgroundColor:
-            //       const Color(0xFF1E1E1E).withValues(alpha: 0.9),
-            //   panelBorderRadius: BorderRadius.circular(24),
-            //   panelBorder: Border.all(
-            //     color: Colors.white.withValues(alpha: 0.1),
-            //   ),
-            //   panelItemColor: Colors.white,
-            //   draggableButtonColor:
-            //       const Color(0xFF1E1E1E).withValues(alpha: 0.9),
-            //   foregroundColor: Colors.black,
-            //   panelBoxShadow: [
-            //     BoxShadow(
-            //       color: Colors.black.withValues(alpha: 0.3),
-            //       blurRadius: 20,
-            //       offset: const Offset(0, 10),
-            //     ),
-            //   ],
-            // ),
+            theme: DraggablePanelTheme(
+              panelBackgroundColor:
+                  const Color(0xFF1E1E1E).withValues(alpha: 0.9),
+              panelBorderRadius: BorderRadius.circular(24),
+              panelBorder: Border.all(
+                color: Colors.white.withValues(alpha: 0.1),
+                width: 0,
+              ),
+              panelItemColor: Colors.white,
+              draggableButtonColor:
+                  const Color(0xFF1E1E1E).withValues(alpha: 0.9),
+              foregroundColor: Colors.black,
+              panelBoxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
             items: [
               DraggablePanelItem(
                 enableBadge: false,
@@ -195,21 +196,6 @@ class _AppState extends State<App> {
                 label: 'Push token',
                 description: 'This is a push token button',
               ),
-              // (
-              //   icon: Icons.copy,
-              //   onTap: (context) {},
-              //   label: 'Push token',
-              // ),
-              // (
-              //   icon: Icons.copy,
-              //   onTap: (context) {},
-              //   label: 'Push token',
-              // ),
-              // (
-              //   icon: Icons.copy,
-              //   onTap: (context) {},
-              //   label: 'Push token',
-              // ),
             ],
             controller: controller,
             child: child,
