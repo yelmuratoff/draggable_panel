@@ -38,13 +38,14 @@ Your feedback is highly valued as it will help shape future updates and ensure t
 </div>
 
 ## 📌 Getting Started
+
 Follow these steps to use this package
 
 ### Add dependency
 
 ```yaml
 dependencies:
-  draggable_panel: ^1.4.2
+  draggable_panel: ^1.4.3
 ```
 
 ### Add import package
@@ -146,6 +147,7 @@ builder: (context, child) => DraggablePanel(
 ```
 
 Tips:
+
 - When the panel starts in the closed state (default), it will be docked to the nearest screen edge on first layout, so the button never “floats” mid-screen.
 - The widget doesn’t auto-toggle on mount. Use `controller.toggle(context)` when you need to programmatically open/close it.
 - Position callbacks: use `controller.addPositionListener` for all position updates; `onPositionChanged` is fired when not dragging (settled updates).
