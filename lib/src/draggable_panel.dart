@@ -547,7 +547,8 @@ class _DraggablePanelState extends State<DraggablePanel>
         .clamp(1, widget.items.length);
     final rows = (widget.items.length / itemsPerRow).ceil();
     const runSpacing = 8.0;
-    final itemsHeight = rows * itemSize + (rows - 1).clamp(0, rows) * runSpacing;
+    final itemsHeight =
+        rows * itemSize + (rows - 1).clamp(0, rows) * runSpacing;
 
     final totalHeight = itemsHeight + buttonsHeight + padding + verticalBorder;
 
