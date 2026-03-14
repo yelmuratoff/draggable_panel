@@ -12,6 +12,7 @@ final class DraggableButtonContentWidget extends StatelessWidget {
     required this.buttonWidth,
     required this.buttonHeight,
     this.icon,
+    this.foregroundColor,
     super.key,
   });
 
@@ -20,28 +21,36 @@ final class DraggableButtonContentWidget extends StatelessWidget {
   final Widget? icon;
   final double buttonWidth;
   final double buttonHeight;
+  final Color? foregroundColor;
 
   @override
-  Widget build(BuildContext context) => AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        transitionBuilder: (child, animation) => ScaleTransition(
-          scale: animation,
-          child: child,
-        ),
-        child: isDragging
-            ? _DraggingIndicator(
-                key: const ValueKey('dragging'),
-                buttonWidth: buttonWidth,
-                buttonHeight: buttonHeight,
-              )
-            : _DragHandle(
-                key: const ValueKey('drag_handle'),
-                icon: icon,
-                isDockedRight: isDockedRight,
-                buttonWidth: buttonWidth,
-                buttonHeight: buttonHeight,
-              ),
-      );
+  Widget build(BuildContext context) {
+    final color = foregroundColor ??
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      transitionBuilder: (child, animation) => ScaleTransition(
+        scale: animation,
+        child: child,
+      ),
+      child: isDragging
+          ? _DraggingIndicator(
+              key: const ValueKey('dragging'),
+              buttonWidth: buttonWidth,
+              buttonHeight: buttonHeight,
+              color: color,
+            )
+          : _DragHandle(
+              key: const ValueKey('drag_handle'),
+              icon: icon,
+              isDockedRight: isDockedRight,
+              buttonWidth: buttonWidth,
+              buttonHeight: buttonHeight,
+              color: color,
+            ),
+    );
+  }
 }
 
 @immutable
@@ -49,11 +58,13 @@ final class _DraggingIndicator extends StatelessWidget {
   const _DraggingIndicator({
     required this.buttonWidth,
     required this.buttonHeight,
+    required this.color,
     super.key,
   });
 
   final double buttonWidth;
   final double buttonHeight;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => Center(
@@ -62,7 +73,7 @@ final class _DraggingIndicator extends StatelessWidget {
           height: buttonHeight,
           child: Icon(
             Icons.drag_indicator_rounded,
-            color: Colors.white.withValues(alpha: 0.5),
+            color: color,
           ),
         ),
       );
@@ -74,6 +85,7 @@ final class _DragHandle extends StatelessWidget {
     required this.isDockedRight,
     required this.buttonWidth,
     required this.buttonHeight,
+    required this.color,
     this.icon,
     super.key,
   });
@@ -82,6 +94,7 @@ final class _DragHandle extends StatelessWidget {
   final Widget? icon;
   final double buttonWidth;
   final double buttonHeight;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -95,7 +108,7 @@ final class _DragHandle extends StatelessWidget {
                 size: const Size(20, 65),
                 painter: LineWithCurvePainter(
                   isInRightSide: isDockedRight,
-                  color: Colors.white.withValues(alpha: 0.5),
+                  color: color,
                 ),
               ),
             ),

@@ -16,6 +16,8 @@ class App extends StatefulWidget {
 
 class _AppState extends State<App> {
   bool isEnabled = true;
+  bool isDarkMode = false;
+  bool useCustomTheme = false;
   final controller = DraggablePanelController(initialPosition: (x: 40, y: 100));
 
   @override
@@ -40,6 +42,17 @@ class _AppState extends State<App> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        colorSchemeSeed: Colors.deepPurple,
+        brightness: Brightness.light,
+        useMaterial3: true,
+      ),
+      darkTheme: ThemeData(
+        colorSchemeSeed: Colors.deepPurple,
+        brightness: Brightness.dark,
+        useMaterial3: true,
+      ),
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: Scaffold(
         body: Center(
           child: Column(
@@ -51,7 +64,25 @@ class _AppState extends State<App> {
                     isEnabled = !isEnabled;
                   });
                 },
-                child: const Text('Tap'),
+                child: Text('Panel: ${isEnabled ? "ON" : "OFF"}'),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    isDarkMode = !isDarkMode;
+                  });
+                },
+                child: Text('Theme: ${isDarkMode ? "Dark" : "Light"}'),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    useCustomTheme = !useCustomTheme;
+                  });
+                },
+                child: Text('Colors: ${useCustomTheme ? "Custom" : "Default"}'),
               ),
             ],
           ),
@@ -62,26 +93,28 @@ class _AppState extends State<App> {
           visible: isEnabled,
           replacement: child!,
           child: DraggablePanel(
-            theme: DraggablePanelTheme(
-              panelBackgroundColor:
-                  const Color(0xFF1E1E1E).withValues(alpha: 0.9),
-              panelBorderRadius: BorderRadius.circular(24),
-              panelBorder: Border.all(
-                color: Colors.white.withValues(alpha: 0.1),
-                width: 0,
-              ),
-              panelItemColor: Colors.white,
-              draggableButtonColor:
-                  const Color(0xFF1E1E1E).withValues(alpha: 0.9),
-              foregroundColor: Colors.black,
-              panelBoxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
+            theme: useCustomTheme
+                ? DraggablePanelTheme(
+                    panelBackgroundColor:
+                        const Color(0xFF1E1E1E).withValues(alpha: 0.9),
+                    panelBorderRadius: BorderRadius.circular(24),
+                    panelBorder: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: 0,
+                    ),
+                    panelItemColor: Colors.white,
+                    draggableButtonColor:
+                        const Color(0xFF1E1E1E).withValues(alpha: 0.9),
+                    foregroundColor: Colors.white,
+                    panelBoxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  )
+                : const DraggablePanelTheme(),
             items: [
               DraggablePanelItem(
                 enableBadge: false,

@@ -9,6 +9,7 @@ final class PanelContentsWidget extends StatelessWidget {
     required this.items,
     required this.buttons,
     required this.itemColor,
+    required this.itemForegroundColor,
     required this.onItemTap,
     required this.onItemLongPress,
     required this.onButtonTap,
@@ -20,6 +21,7 @@ final class PanelContentsWidget extends StatelessWidget {
   final List<DraggablePanelItem> items;
   final List<DraggablePanelButtonItem> buttons;
   final Color itemColor;
+  final Color itemForegroundColor;
   final ValueChanged<DraggablePanelItem> onItemTap;
   final ValueChanged<DraggablePanelItem> onItemLongPress;
   final ValueChanged<DraggablePanelButtonItem> onButtonTap;
@@ -43,7 +45,7 @@ final class PanelContentsWidget extends StatelessWidget {
             for (final item in items)
               PanelItemBadge(
                 item: item,
-                theme: theme,
+                foregroundColor: itemForegroundColor,
                 itemColor: itemColor,
                 onPressed: () => onItemTap(item),
                 onLongPress: item.description?.isNotEmpty ?? false
@@ -62,7 +64,7 @@ final class PanelContentsWidget extends StatelessWidget {
                   PanelButtonWidget(
                     itemColor: itemColor,
                     backgroundColor: theme.panelButtonColor,
-                    foregroundColor: theme.foregroundColor,
+                    foregroundColor: itemForegroundColor,
                     icon: button.icon,
                     label: button.label,
                     onTap: () => onButtonTap(button),
@@ -84,15 +86,15 @@ final class PanelItemBadge extends StatelessWidget {
   const PanelItemBadge({
     required this.item,
     required this.itemColor,
+    required this.foregroundColor,
     required this.onPressed,
-    required this.theme,
     this.onLongPress,
     super.key,
   });
 
   final DraggablePanelItem item;
   final Color itemColor;
-  final DraggablePanelTheme theme;
+  final Color foregroundColor;
   final VoidCallback onPressed;
   final VoidCallback? onLongPress;
 
@@ -114,8 +116,7 @@ final class PanelItemBadge extends StatelessWidget {
                   padding: const EdgeInsets.all(8),
                   child: Icon(
                     item.icon,
-                    color: theme.foregroundColor ??
-                        Theme.of(context).colorScheme.onPrimary,
+                    color: foregroundColor,
                   ),
                 ),
               ),

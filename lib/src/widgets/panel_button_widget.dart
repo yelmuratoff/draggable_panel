@@ -8,12 +8,12 @@ import 'package:flutter/material.dart';
 final class PanelButtonWidget extends StatelessWidget {
   const PanelButtonWidget({
     required this.itemColor,
+    required this.foregroundColor,
     required this.onTap,
     required this.icon,
     required this.label,
     this.onLongPress,
     this.backgroundColor,
-    this.foregroundColor,
     super.key,
   });
 
@@ -23,7 +23,7 @@ final class PanelButtonWidget extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color? backgroundColor;
-  final Color? foregroundColor;
+  final Color foregroundColor;
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -46,8 +46,7 @@ final class PanelButtonWidget extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color:
-                    foregroundColor ?? Theme.of(context).colorScheme.onPrimary,
+                color: foregroundColor,
                 size: 18,
               ),
               const SizedBox(width: 12),
@@ -57,8 +56,7 @@ final class PanelButtonWidget extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: foregroundColor ??
-                        Theme.of(context).colorScheme.onPrimary,
+                    color: foregroundColor,
                   ),
                 ),
               ),

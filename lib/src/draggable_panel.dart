@@ -258,6 +258,7 @@ class _DraggablePanelState extends State<DraggablePanel>
               icon: widget.icon,
               buttonWidth: buttonWidth,
               buttonHeight: buttonHeight,
+              foregroundColor: widget.theme.foregroundColor,
             ),
           ),
         ),
@@ -313,6 +314,7 @@ class _DraggablePanelState extends State<DraggablePanel>
                     items: widget.items,
                     buttons: widget.buttons,
                     itemColor: _itemColor,
+                    itemForegroundColor: _itemForegroundColor,
                     onItemTap: (item) {
                       item.onTap(context);
                       _closePanelAndDock(pageWidth);
@@ -369,10 +371,10 @@ class _DraggablePanelState extends State<DraggablePanel>
   // <-- Helper Properties -->
 
   Color _defaultBackgroundColor(BuildContext context) =>
-      Theme.of(context).colorScheme.primary.withValues(alpha: 0.4);
+      Theme.of(context).colorScheme.surfaceContainerHighest;
 
   Color _defaultPanelColor(BuildContext context) =>
-      Theme.of(context).colorScheme.primary;
+      Theme.of(context).colorScheme.surfaceContainer;
 
   // <-- Functions -->
 
@@ -558,12 +560,15 @@ class _DraggablePanelState extends State<DraggablePanel>
   Color get _itemColor =>
       widget.theme.panelItemColor ??
       (Theme.of(context).brightness == Brightness.dark
-          ? adjustColorBrightness(
-              Theme.of(context).colorScheme.primaryContainer,
-              0.9,
-            )
+          ? Theme.of(context).colorScheme.surfaceContainerHighest
           : adjustColorBrightness(
               Theme.of(context).colorScheme.primary,
               0.8,
             ));
+
+  Color get _itemForegroundColor =>
+      widget.theme.foregroundColor ??
+      (Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).colorScheme.onSurface
+          : Theme.of(context).colorScheme.onPrimary);
 }
