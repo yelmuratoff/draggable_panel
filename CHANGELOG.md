@@ -1,3 +1,11 @@
+## 2.0.0
+
+- Sub-themes for items, buttons, tooltip, and drag handle.
+- Layout properties: `panelWidth`, `panelContentPadding`, `itemSpacing`, `buttonSpacing`, `sectionSpacing`.
+- Material 3 dark theme support with surface-based default colors.
+- Border no longer affects content layout.
+- No breaking changes — existing code works without modifications.
+
 ## 1.4.3
 
 Fixes

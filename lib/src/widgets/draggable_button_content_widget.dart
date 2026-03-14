@@ -1,3 +1,4 @@
+import 'package:draggable_panel/src/theme/draggable_panel_handle_theme_data.dart';
 import 'package:draggable_panel/src/widgets/curve_line_paint.dart';
 import 'package:flutter/material.dart';
 
@@ -11,6 +12,7 @@ final class DraggableButtonContentWidget extends StatelessWidget {
     required this.isDockedRight,
     required this.buttonWidth,
     required this.buttonHeight,
+    required this.handleTheme,
     this.icon,
     this.foregroundColor,
     super.key,
@@ -22,6 +24,7 @@ final class DraggableButtonContentWidget extends StatelessWidget {
   final double buttonWidth;
   final double buttonHeight;
   final Color? foregroundColor;
+  final DraggablePanelHandleThemeData handleTheme;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +32,7 @@ final class DraggableButtonContentWidget extends StatelessWidget {
         Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
+      duration: handleTheme.animationDuration,
       transitionBuilder: (child, animation) => ScaleTransition(
         scale: animation,
         child: child,
@@ -48,6 +51,8 @@ final class DraggableButtonContentWidget extends StatelessWidget {
               buttonWidth: buttonWidth,
               buttonHeight: buttonHeight,
               color: color,
+              curveLineSize: handleTheme.curveLineSize,
+              curveStrokeWidth: handleTheme.curveStrokeWidth,
             ),
     );
   }
@@ -86,6 +91,8 @@ final class _DragHandle extends StatelessWidget {
     required this.buttonWidth,
     required this.buttonHeight,
     required this.color,
+    required this.curveLineSize,
+    required this.curveStrokeWidth,
     this.icon,
     super.key,
   });
@@ -95,6 +102,8 @@ final class _DragHandle extends StatelessWidget {
   final double buttonWidth;
   final double buttonHeight;
   final Color color;
+  final Size curveLineSize;
+  final double curveStrokeWidth;
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -105,10 +114,11 @@ final class _DragHandle extends StatelessWidget {
               alignment:
                   isDockedRight ? Alignment.centerLeft : Alignment.centerRight,
               child: CustomPaint(
-                size: const Size(20, 65),
+                size: curveLineSize,
                 painter: LineWithCurvePainter(
                   isInRightSide: isDockedRight,
                   color: color,
+                  strokeWidth: curveStrokeWidth,
                 ),
               ),
             ),

@@ -23,6 +23,7 @@ final class LineWithCurvePainter extends CustomPainter {
   const LineWithCurvePainter({
     required this.isInRightSide,
     required this.color,
+    this.strokeWidth = 5.0,
   });
 
   /// Whether the button is docked on the right side of the screen.
@@ -31,11 +32,14 @@ final class LineWithCurvePainter extends CustomPainter {
   /// The color of the curved line.
   final Color color;
 
+  /// The stroke width of the curved line.
+  final double strokeWidth;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..strokeWidth = 5
+      ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
@@ -57,5 +61,7 @@ final class LineWithCurvePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant LineWithCurvePainter oldDelegate) =>
-      oldDelegate.isInRightSide != isInRightSide || oldDelegate.color != color;
+      oldDelegate.isInRightSide != isInRightSide ||
+      oldDelegate.color != color ||
+      oldDelegate.strokeWidth != strokeWidth;
 }

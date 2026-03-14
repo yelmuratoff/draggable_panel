@@ -45,7 +45,7 @@ Follow these steps to use this package
 
 ```yaml
 dependencies:
-  draggable_panel: ^1.4.3
+  draggable_panel: ^2.0.0
 ```
 
 ### Add import package
@@ -71,7 +71,7 @@ builder: (context, child) {
       ),
       panelItemColor: Colors.white,
       draggableButtonColor: const Color(0xFF2196F3),
-      draggableButtonIconColor: Colors.white,
+      foregroundColor: Colors.white,
       panelBoxShadow: [
         BoxShadow(
           color: Colors.black.withValues(alpha: 0.3),
@@ -114,6 +114,42 @@ builder: (context, child) {
     child: child!,
   );
 },
+```
+
+### Sub-themes for fine-grained control
+
+Customize individual elements without touching the main theme:
+
+```dart
+DraggablePanelTheme(
+  // Layout
+  panelWidth: 220,
+  panelContentPadding: const EdgeInsets.all(12),
+  itemSpacing: 10,
+  buttonSpacing: 8,
+  sectionSpacing: 12,
+
+  // Sub-themes (all optional, sensible defaults)
+  itemTheme: const DraggablePanelItemThemeData(
+    borderRadius: 16,
+    padding: EdgeInsets.all(10),
+    badgeSize: 12,
+  ),
+  buttonTheme: const DraggablePanelButtonThemeData(
+    height: 48,
+    borderRadius: 20,
+    iconSize: 20,
+    iconSpacing: 12,
+  ),
+  handleTheme: const DraggablePanelHandleThemeData(
+    curveStrokeWidth: 4,
+    curveLineSize: Size(20, 65),
+  ),
+  tooltipTheme: const DraggablePanelTooltipThemeData(
+    contentBorderRadius: 20,
+    fontSize: 13,
+  ),
+)
 ```
 
 ### Using a controller (recommended for advanced control)

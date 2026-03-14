@@ -100,9 +100,15 @@ class _AppState extends State<App> {
                     panelBorderRadius: BorderRadius.circular(24),
                     panelBorder: Border.all(
                       color: Colors.white.withValues(alpha: 0.1),
-                      width: 0,
+                      width: 2,
                     ),
-                    panelItemColor: Colors.white,
+                    panelWidth: 220,
+                    panelContentPadding: const EdgeInsets.all(12),
+                    itemSpacing: 10,
+                    buttonSpacing: 8,
+                    sectionSpacing: 12,
+                    panelItemColor:
+                        const Color(0xFF1E1E1E).withValues(alpha: 0.7),
                     draggableButtonColor:
                         const Color(0xFF1E1E1E).withValues(alpha: 0.9),
                     foregroundColor: Colors.white,
@@ -113,6 +119,22 @@ class _AppState extends State<App> {
                         offset: const Offset(0, 10),
                       ),
                     ],
+                    itemTheme: const DraggablePanelItemThemeData(
+                      borderRadius: 16,
+                      padding: EdgeInsets.all(10),
+                    ),
+                    buttonTheme: const DraggablePanelButtonThemeData(
+                      height: 48,
+                      borderRadius: 20,
+                      iconSize: 20,
+                    ),
+                    handleTheme: const DraggablePanelHandleThemeData(
+                      curveStrokeWidth: 4,
+                    ),
+                    tooltipTheme: const DraggablePanelTooltipThemeData(
+                      contentBorderRadius: 20,
+                      fontSize: 13,
+                    ),
                   )
                 : const DraggablePanelTheme(),
             items: [

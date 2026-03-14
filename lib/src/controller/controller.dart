@@ -116,8 +116,8 @@ final class DraggablePanelController extends ChangeNotifier {
   /// The width of the button associated with the panel.
   double _buttonWidth = 0;
 
-  /// Constant width of the panel.
-  static const double _panelWidth = 200;
+  /// Width of the panel.
+  double _panelWidth = 200;
 
   /// Whether the draggable is docked on the right edge. This avoids side
   /// flipping during window resizes; updated in [forceDock].
@@ -151,6 +151,10 @@ final class DraggablePanelController extends ChangeNotifier {
   //
 
   double get panelWidth => _panelWidth;
+
+  set panelWidth(double value) {
+    _updateValue(() => _panelWidth = value, _panelWidth, value);
+  }
   PanelState get panelState => _panelState;
   double get draggablePositionTop => _draggablePositionTop;
   double get draggablePositionLeft => _draggablePositionLeft;

@@ -1,3 +1,4 @@
+import 'package:draggable_panel/src/theme/draggable_panel_button_theme_data.dart';
 import 'package:flutter/material.dart';
 
 /// Internal widget for rendering a button in the draggable panel.
@@ -9,6 +10,7 @@ final class PanelButtonWidget extends StatelessWidget {
   const PanelButtonWidget({
     required this.itemColor,
     required this.foregroundColor,
+    required this.buttonTheme,
     required this.onTap,
     required this.icon,
     required this.label,
@@ -18,23 +20,25 @@ final class PanelButtonWidget extends StatelessWidget {
   });
 
   final Color itemColor;
+  final Color foregroundColor;
+  final DraggablePanelButtonThemeData buttonTheme;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final IconData icon;
   final String label;
   final Color? backgroundColor;
-  final Color foregroundColor;
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        height: 45,
+        height: buttonTheme.height,
         width: double.maxFinite,
         child: FilledButton(
           style: FilledButton.styleFrom(
             backgroundColor: backgroundColor ?? itemColor,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(16)),
+            padding: buttonTheme.padding,
+            shape: RoundedRectangleBorder(
+              borderRadius:
+                  BorderRadius.all(Radius.circular(buttonTheme.borderRadius)),
             ),
             elevation: 0,
           ),
@@ -47,9 +51,9 @@ final class PanelButtonWidget extends StatelessWidget {
               Icon(
                 icon,
                 color: foregroundColor,
-                size: 18,
+                size: buttonTheme.iconSize,
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: buttonTheme.iconSpacing),
               Flexible(
                 child: Text(
                   label,

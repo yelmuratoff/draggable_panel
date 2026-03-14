@@ -101,7 +101,9 @@ class _DraggablePanelState extends State<DraggablePanel>
     WidgetsBinding.instance.addObserver(this);
     _ownsController = widget.controller == null;
     _controller = widget.controller ?? DraggablePanelController();
-    _controller.buttonWidth = widget.theme.draggableButtonWidth;
+    _controller
+      ..buttonWidth = widget.theme.draggableButtonWidth
+      ..panelWidth = widget.theme.panelWidth;
 
     _positionListener = (x, y) {
       if (!mounted || _controller.isDragging) return;
@@ -149,11 +151,14 @@ class _DraggablePanelState extends State<DraggablePanel>
         _ownsController = true;
       }
 
-      _controller.buttonWidth = widget.theme.draggableButtonWidth;
-      _controller.addPositionListener(_positionListener);
-    } else if (oldWidget.theme.draggableButtonWidth !=
-        widget.theme.draggableButtonWidth) {
-      _controller.buttonWidth = widget.theme.draggableButtonWidth;
+      _controller
+        ..buttonWidth = widget.theme.draggableButtonWidth
+        ..panelWidth = widget.theme.panelWidth
+        ..addPositionListener(_positionListener);
+    } else if (oldWidget.theme != widget.theme) {
+      _controller
+        ..buttonWidth = widget.theme.draggableButtonWidth
+        ..panelWidth = widget.theme.panelWidth;
     }
   }
 
@@ -259,6 +264,7 @@ class _DraggablePanelState extends State<DraggablePanel>
               buttonWidth: buttonWidth,
               buttonHeight: buttonHeight,
               foregroundColor: widget.theme.foregroundColor,
+              handleTheme: widget.theme.effectiveHandleTheme,
             ),
           ),
         ),
@@ -275,6 +281,11 @@ class _DraggablePanelState extends State<DraggablePanel>
     final isPanelOpen = _controller.panelState == PanelState.open;
     final panelColor =
         widget.theme.panelBackgroundColor ?? _defaultPanelColor(context);
+    final border = widget.theme.panelBorder;
+    final borderH =
+        border is Border ? border.left.width + border.right.width : 0.0;
+    final borderV =
+        border is Border ? border.top.width + border.bottom.width : 0.0;
 
     return AnimatedPositioned(
       key: const ValueKey('draggable_panel'),
@@ -298,8 +309,8 @@ class _DraggablePanelState extends State<DraggablePanel>
               ? AnimatedContainer(
                   key: const ValueKey('panel_container'),
                   duration: panelDuration,
-                  width: _controller.panelWidth,
-                  height: _panelHeight,
+                  width: _controller.panelWidth + borderH,
+                  height: _panelHeight + borderV,
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     color: panelColor,
@@ -308,8 +319,9 @@ class _DraggablePanelState extends State<DraggablePanel>
                     boxShadow: widget.theme.panelBoxShadow,
                   ),
                   curve: Curves.linearToEaseOut,
-                  padding: const EdgeInsets.all(8),
-                  child: PanelContentsWidget(
+                  child: Padding(
+                    padding: widget.theme.panelContentPadding,
+                    child: PanelContentsWidget(
                     theme: widget.theme,
                     items: widget.items,
                     buttons: widget.buttons,
@@ -331,6 +343,7 @@ class _DraggablePanelState extends State<DraggablePanel>
                       panelColor,
                     ),
                   ),
+                  ),
                 )
               : const SizedBox.shrink(),
         ),
@@ -349,6 +362,7 @@ class _DraggablePanelState extends State<DraggablePanel>
         message: item.description!,
         icon: item.icon,
         backgroundColor: panelColor,
+        tooltipTheme: widget.theme.tooltipTheme,
       );
     }
   }
@@ -364,6 +378,7 @@ class _DraggablePanelState extends State<DraggablePanel>
         message: button.description!,
         icon: button.icon,
         backgroundColor: panelColor,
+        tooltipTheme: widget.theme.tooltipTheme,
       );
     }
   }
@@ -532,27 +547,27 @@ class _DraggablePanelState extends State<DraggablePanel>
       return widget.panelHeight!.clamp(minHeight, maxHeight);
     }
 
-    final buttonsHeight =
-        widget.buttons.isNotEmpty ? widget.buttons.length * 50.0 + 8.0 : 0.0;
+    final theme = widget.theme;
+    final buttonTheme = theme.effectiveButtonTheme;
+    final itemTheme = theme.effectiveItemTheme;
 
-    final border = widget.theme.panelBorder;
-    final horizontalBorder =
-        border is Border ? border.left.width + border.right.width : 0.0;
-    final verticalBorder =
-        border is Border ? border.top.width + border.bottom.width : 0.0;
-    const padding = 16.0; // EdgeInsets.all(8)
-    const itemSize = 40.0; // Icon(24) + Padding(8*2)
-    const spacing = 8.0;
-    final contentWidth = _controller.panelWidth - padding - horizontalBorder;
+    final singleButtonHeight = buttonTheme.height + theme.buttonSpacing;
+    final buttonsHeight = widget.buttons.isNotEmpty
+        ? widget.buttons.length * singleButtonHeight + theme.sectionSpacing
+        : 0.0;
+
+    final padding = theme.panelContentPadding;
+    final itemSize = itemTheme.padding.vertical + 24.0; // Icon(24) + padding
+    final spacing = theme.itemSpacing;
+    final contentWidth =
+        _controller.panelWidth - padding.horizontal;
     final itemsPerRow = ((contentWidth + spacing) / (itemSize + spacing))
         .floor()
         .clamp(1, widget.items.length);
     final rows = (widget.items.length / itemsPerRow).ceil();
-    const runSpacing = 8.0;
-    final itemsHeight =
-        rows * itemSize + (rows - 1).clamp(0, rows) * runSpacing;
+    final itemsHeight = rows * itemSize + (rows - 1).clamp(0, rows) * spacing;
 
-    final totalHeight = itemsHeight + buttonsHeight + padding + verticalBorder;
+    final totalHeight = itemsHeight + buttonsHeight + padding.vertical;
 
     return totalHeight.clamp(minHeight, maxHeight);
   }
