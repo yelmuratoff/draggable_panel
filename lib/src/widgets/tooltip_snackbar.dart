@@ -52,7 +52,9 @@ final class TooltipSnackBar {
             : colorScheme.inverseSurface
                 .withValues(alpha: tt.backgroundOpacity));
 
-    final resolvedTextColor = textColor ?? tt.textColor ?? Colors.white;
+    final resolvedTextColor = textColor ??
+        tt.textColor ??
+        (isDark ? colorScheme.onSurface : colorScheme.onInverseSurface);
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()

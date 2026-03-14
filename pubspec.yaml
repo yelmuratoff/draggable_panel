@@ -1,6 +1,6 @@
 name: draggable_panel
 description: A versatile floating panel widget that can be dragged around the screen and docked to edges. Perfect for displaying tools, actions, or additional content on demand.
-version: 2.0.0
+version: 2.0.1
 homepage: https://github.com/yelmuratoff/draggable_panel.git
 issue_tracker: https://github.com/yelmuratoff/draggable_panel/issues
 

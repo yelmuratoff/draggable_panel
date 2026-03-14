@@ -1,3 +1,7 @@
+## 2.0.1
+
+- Fixed tooltip text color not adapting to light/dark theme.
+
 ## 2.0.0
 
 - Sub-themes for items, buttons, tooltip, and drag handle.
