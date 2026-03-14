@@ -362,6 +362,8 @@ class _DraggablePanelState extends State<DraggablePanel>
         message: item.description!,
         icon: item.icon,
         backgroundColor: panelColor,
+        iconColor: _itemForegroundColor,
+        iconBackgroundColor: _itemColor,
         tooltipTheme: widget.theme.tooltipTheme,
       );
     }
@@ -378,6 +380,8 @@ class _DraggablePanelState extends State<DraggablePanel>
         message: button.description!,
         icon: button.icon,
         backgroundColor: panelColor,
+        iconColor: _itemForegroundColor,
+        iconBackgroundColor: _itemColor,
         tooltipTheme: widget.theme.tooltipTheme,
       );
     }

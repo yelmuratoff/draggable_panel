@@ -28,6 +28,8 @@ final class TooltipSnackBar {
   /// - [duration]: How long to show the snackbar (default: 3 seconds).
   /// - [backgroundColor]: Optional custom background color.
   /// - [textColor]: Optional custom text color.
+  /// - [iconColor]: Optional icon color. Matches panel button foreground.
+  /// - [iconBackgroundColor]: Optional icon container background color.
   /// - [icon]: Optional icon to display.
   /// - [tooltipTheme]: Optional theme data for fine-grained control.
   static void show(
@@ -36,6 +38,8 @@ final class TooltipSnackBar {
     Duration duration = const Duration(seconds: 3),
     Color? backgroundColor,
     Color? textColor,
+    Color? iconColor,
+    Color? iconBackgroundColor,
     IconData? icon,
     DraggablePanelTooltipThemeData? tooltipTheme,
   }) {
@@ -54,7 +58,9 @@ final class TooltipSnackBar {
 
     final resolvedTextColor = textColor ??
         tt.textColor ??
-        (isDark ? colorScheme.onSurface : colorScheme.onInverseSurface);
+        (resolvedBgColor.computeLuminance() > 0.5
+            ? Colors.black
+            : Colors.white);
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -65,6 +71,8 @@ final class TooltipSnackBar {
             icon: icon,
             backgroundColor: resolvedBgColor,
             textColor: resolvedTextColor,
+            iconColor: iconColor,
+            iconBackgroundColor: iconBackgroundColor,
             tooltipTheme: tt,
           ),
           backgroundColor: Colors.transparent,
@@ -90,12 +98,16 @@ final class _TooltipContent extends StatelessWidget {
     required this.textColor,
     required this.tooltipTheme,
     this.icon,
+    this.iconColor,
+    this.iconBackgroundColor,
   });
 
   final String message;
   final IconData? icon;
   final Color backgroundColor;
   final Color textColor;
+  final Color? iconColor;
+  final Color? iconBackgroundColor;
   final DraggablePanelTooltipThemeData tooltipTheme;
 
   @override
@@ -114,7 +126,8 @@ final class _TooltipContent extends StatelessWidget {
               if (icon != null) ...[
                 _IconContainer(
                   icon: icon!,
-                  textColor: textColor,
+                  iconColor: iconColor ?? textColor,
+                  iconBackgroundColor: iconBackgroundColor,
                   tooltipTheme: tooltipTheme,
                 ),
                 const SizedBox(width: 12),
@@ -136,23 +149,26 @@ final class _TooltipContent extends StatelessWidget {
 final class _IconContainer extends StatelessWidget {
   const _IconContainer({
     required this.icon,
-    required this.textColor,
+    required this.iconColor,
     required this.tooltipTheme,
+    this.iconBackgroundColor,
   });
 
   final IconData icon;
-  final Color textColor;
+  final Color iconColor;
+  final Color? iconBackgroundColor;
   final DraggablePanelTooltipThemeData tooltipTheme;
 
   @override
   Widget build(BuildContext context) => Container(
         padding: tooltipTheme.iconPadding,
         decoration: BoxDecoration(
-          color: tooltipTheme.iconBackgroundColor ??
+          color: iconBackgroundColor ??
+              tooltipTheme.iconBackgroundColor ??
               const Color.fromRGBO(255, 255, 255, 0.2),
           borderRadius: const BorderRadius.all(Radius.circular(8)),
         ),
-        child: Icon(icon, color: textColor, size: tooltipTheme.iconSize),
+        child: Icon(icon, color: iconColor, size: tooltipTheme.iconSize),
       );
 }
 
