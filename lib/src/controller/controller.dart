@@ -155,6 +155,7 @@ final class DraggablePanelController extends ChangeNotifier {
   set panelWidth(double value) {
     _updateValue(() => _panelWidth = value, _panelWidth, value);
   }
+
   PanelState get panelState => _panelState;
   double get draggablePositionTop => _draggablePositionTop;
   double get draggablePositionLeft => _draggablePositionLeft;

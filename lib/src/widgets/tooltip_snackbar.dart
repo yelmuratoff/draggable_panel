@@ -68,8 +68,7 @@ final class TooltipSnackBar {
           backgroundColor: Colors.transparent,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.all(Radius.circular(tt.borderRadius)),
+            borderRadius: BorderRadius.all(Radius.circular(tt.borderRadius)),
           ),
           margin: tt.margin,
           padding: tt.padding,

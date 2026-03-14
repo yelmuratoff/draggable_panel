@@ -137,15 +137,12 @@ class DraggablePanelTheme {
     DraggablePanelHandleThemeData? handleTheme,
   }) =>
       DraggablePanelTheme(
-        draggableButtonWidth:
-            draggableButtonWidth ?? this.draggableButtonWidth,
+        draggableButtonWidth: draggableButtonWidth ?? this.draggableButtonWidth,
         draggableButtonHeight:
             draggableButtonHeight ?? this.draggableButtonHeight,
-        draggableButtonColor:
-            draggableButtonColor ?? this.draggableButtonColor,
+        draggableButtonColor: draggableButtonColor ?? this.draggableButtonColor,
         panelWidth: panelWidth ?? this.panelWidth,
-        panelBackgroundColor:
-            panelBackgroundColor ?? this.panelBackgroundColor,
+        panelBackgroundColor: panelBackgroundColor ?? this.panelBackgroundColor,
         panelBorder: panelBorder ?? this.panelBorder,
         panelBorderRadius: panelBorderRadius ?? this.panelBorderRadius,
         panelBoxShadow: panelBoxShadow ?? this.panelBoxShadow,

@@ -322,27 +322,27 @@ class _DraggablePanelState extends State<DraggablePanel>
                   child: Padding(
                     padding: widget.theme.panelContentPadding,
                     child: PanelContentsWidget(
-                    theme: widget.theme,
-                    items: widget.items,
-                    buttons: widget.buttons,
-                    itemColor: _itemColor,
-                    itemForegroundColor: _itemForegroundColor,
-                    onItemTap: (item) {
-                      item.onTap(context);
-                      _closePanelAndDock(pageWidth);
-                    },
-                    onItemLongPress: (item) => _showItemTooltip(
-                      context,
-                      item,
-                      panelColor,
+                      theme: widget.theme,
+                      items: widget.items,
+                      buttons: widget.buttons,
+                      itemColor: _itemColor,
+                      itemForegroundColor: _itemForegroundColor,
+                      onItemTap: (item) {
+                        item.onTap(context);
+                        _closePanelAndDock(pageWidth);
+                      },
+                      onItemLongPress: (item) => _showItemTooltip(
+                        context,
+                        item,
+                        panelColor,
+                      ),
+                      onButtonTap: (button) => button.onTap(context),
+                      onButtonLongPress: (button) => _showButtonTooltip(
+                        context,
+                        button,
+                        panelColor,
+                      ),
                     ),
-                    onButtonTap: (button) => button.onTap(context),
-                    onButtonLongPress: (button) => _showButtonTooltip(
-                      context,
-                      button,
-                      panelColor,
-                    ),
-                  ),
                   ),
                 )
               : const SizedBox.shrink(),
@@ -559,8 +559,7 @@ class _DraggablePanelState extends State<DraggablePanel>
     final padding = theme.panelContentPadding;
     final itemSize = itemTheme.padding.vertical + 24.0; // Icon(24) + padding
     final spacing = theme.itemSpacing;
-    final contentWidth =
-        _controller.panelWidth - padding.horizontal;
+    final contentWidth = _controller.panelWidth - padding.horizontal;
     final itemsPerRow = ((contentWidth + spacing) / (itemSize + spacing))
         .floor()
         .clamp(1, widget.items.length);

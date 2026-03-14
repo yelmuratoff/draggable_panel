@@ -63,19 +63,20 @@ class DraggablePanelTooltipThemeData {
     double? fontSize,
     EdgeInsets? iconPadding,
     Color? iconBackgroundColor,
-  }) => DraggablePanelTooltipThemeData(
-      backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
-      borderRadius: borderRadius ?? this.borderRadius,
-      contentBorderRadius: contentBorderRadius ?? this.contentBorderRadius,
-      margin: margin ?? this.margin,
-      padding: padding ?? this.padding,
-      textColor: textColor ?? this.textColor,
-      backgroundColor: backgroundColor ?? this.backgroundColor,
-      iconSize: iconSize ?? this.iconSize,
-      fontSize: fontSize ?? this.fontSize,
-      iconPadding: iconPadding ?? this.iconPadding,
-      iconBackgroundColor: iconBackgroundColor ?? this.iconBackgroundColor,
-    );
+  }) =>
+      DraggablePanelTooltipThemeData(
+        backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
+        borderRadius: borderRadius ?? this.borderRadius,
+        contentBorderRadius: contentBorderRadius ?? this.contentBorderRadius,
+        margin: margin ?? this.margin,
+        padding: padding ?? this.padding,
+        textColor: textColor ?? this.textColor,
+        backgroundColor: backgroundColor ?? this.backgroundColor,
+        iconSize: iconSize ?? this.iconSize,
+        fontSize: fontSize ?? this.fontSize,
+        iconPadding: iconPadding ?? this.iconPadding,
+        iconBackgroundColor: iconBackgroundColor ?? this.iconBackgroundColor,
+      );
 
   @override
   bool operator ==(Object other) {
