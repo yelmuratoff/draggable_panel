@@ -1,3 +1,4 @@
+export 'src/builders.dart';
 export 'src/controller/controller.dart';
 export 'src/draggable_panel.dart';
 export 'src/enums/dock_type.dart';

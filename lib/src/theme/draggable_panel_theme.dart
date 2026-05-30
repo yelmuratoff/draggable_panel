@@ -1,6 +1,7 @@
 import 'package:draggable_panel/src/theme/draggable_panel_button_theme_data.dart';
 import 'package:draggable_panel/src/theme/draggable_panel_handle_theme_data.dart';
 import 'package:draggable_panel/src/theme/draggable_panel_item_theme_data.dart';
+import 'package:draggable_panel/src/theme/draggable_panel_motion.dart';
 import 'package:draggable_panel/src/theme/draggable_panel_tooltip_theme_data.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -28,6 +29,7 @@ class DraggablePanelTheme {
     this.itemSpacing = 8.0,
     this.buttonSpacing = 6.0,
     this.sectionSpacing = 8.0,
+    this.motion = const DraggablePanelMotion(),
     this.itemTheme,
     this.buttonTheme,
     this.tooltipTheme,
@@ -47,7 +49,8 @@ class DraggablePanelTheme {
 
   // -- Panel --
 
-  /// Width of the expanded panel.
+  /// Maximum width of the expanded panel. The panel hugs its content up to
+  /// this width, then wraps items onto more rows once they exceed it.
   final double panelWidth;
 
   /// Background color of the panel.
@@ -86,6 +89,11 @@ class DraggablePanelTheme {
 
   /// Spacing between the items section and the buttons section.
   final double sectionSpacing;
+
+  // -- Motion --
+
+  /// Durations and curves for the panel's animations.
+  final DraggablePanelMotion motion;
 
   // -- Sub-themes --
 
@@ -131,6 +139,7 @@ class DraggablePanelTheme {
     double? itemSpacing,
     double? buttonSpacing,
     double? sectionSpacing,
+    DraggablePanelMotion? motion,
     DraggablePanelItemThemeData? itemTheme,
     DraggablePanelButtonThemeData? buttonTheme,
     DraggablePanelTooltipThemeData? tooltipTheme,
@@ -153,6 +162,7 @@ class DraggablePanelTheme {
         itemSpacing: itemSpacing ?? this.itemSpacing,
         buttonSpacing: buttonSpacing ?? this.buttonSpacing,
         sectionSpacing: sectionSpacing ?? this.sectionSpacing,
+        motion: motion ?? this.motion,
         itemTheme: itemTheme ?? this.itemTheme,
         buttonTheme: buttonTheme ?? this.buttonTheme,
         tooltipTheme: tooltipTheme ?? this.tooltipTheme,
@@ -179,6 +189,7 @@ class DraggablePanelTheme {
         other.itemSpacing == itemSpacing &&
         other.buttonSpacing == buttonSpacing &&
         other.sectionSpacing == sectionSpacing &&
+        other.motion == motion &&
         other.itemTheme == itemTheme &&
         other.buttonTheme == buttonTheme &&
         other.tooltipTheme == tooltipTheme &&
@@ -202,6 +213,7 @@ class DraggablePanelTheme {
       itemSpacing.hashCode ^
       buttonSpacing.hashCode ^
       sectionSpacing.hashCode ^
+      motion.hashCode ^
       itemTheme.hashCode ^
       buttonTheme.hashCode ^
       tooltipTheme.hashCode ^

@@ -15,6 +15,10 @@ class DraggablePanelTooltipThemeData {
     this.fontSize = 14.0,
     this.iconPadding = const EdgeInsets.all(4),
     this.iconBackgroundColor,
+    this.iconBorderRadius = 8.0,
+    this.iconSpacing = 12.0,
+    this.maxLines = 2,
+    this.textStyle,
   });
 
   /// Opacity applied to the background color.
@@ -51,6 +55,19 @@ class DraggablePanelTooltipThemeData {
   /// Defaults to white with 20% opacity.
   final Color? iconBackgroundColor;
 
+  /// Border radius of the icon container.
+  final double iconBorderRadius;
+
+  /// Spacing between the icon container and the message text.
+  final double iconSpacing;
+
+  /// Maximum number of lines for the message text.
+  final int maxLines;
+
+  /// Text style of the message. When set it overrides [fontSize]; the resolved
+  /// text color is always applied on top.
+  final TextStyle? textStyle;
+
   DraggablePanelTooltipThemeData copyWith({
     double? backgroundOpacity,
     double? borderRadius,
@@ -63,6 +80,10 @@ class DraggablePanelTooltipThemeData {
     double? fontSize,
     EdgeInsets? iconPadding,
     Color? iconBackgroundColor,
+    double? iconBorderRadius,
+    double? iconSpacing,
+    int? maxLines,
+    TextStyle? textStyle,
   }) =>
       DraggablePanelTooltipThemeData(
         backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
@@ -76,6 +97,10 @@ class DraggablePanelTooltipThemeData {
         fontSize: fontSize ?? this.fontSize,
         iconPadding: iconPadding ?? this.iconPadding,
         iconBackgroundColor: iconBackgroundColor ?? this.iconBackgroundColor,
+        iconBorderRadius: iconBorderRadius ?? this.iconBorderRadius,
+        iconSpacing: iconSpacing ?? this.iconSpacing,
+        maxLines: maxLines ?? this.maxLines,
+        textStyle: textStyle ?? this.textStyle,
       );
 
   @override
@@ -93,7 +118,11 @@ class DraggablePanelTooltipThemeData {
         other.iconSize == iconSize &&
         other.fontSize == fontSize &&
         other.iconPadding == iconPadding &&
-        other.iconBackgroundColor == iconBackgroundColor;
+        other.iconBackgroundColor == iconBackgroundColor &&
+        other.iconBorderRadius == iconBorderRadius &&
+        other.iconSpacing == iconSpacing &&
+        other.maxLines == maxLines &&
+        other.textStyle == textStyle;
   }
 
   @override
@@ -108,5 +137,9 @@ class DraggablePanelTooltipThemeData {
       iconSize.hashCode ^
       fontSize.hashCode ^
       iconPadding.hashCode ^
-      iconBackgroundColor.hashCode;
+      iconBackgroundColor.hashCode ^
+      iconBorderRadius.hashCode ^
+      iconSpacing.hashCode ^
+      maxLines.hashCode ^
+      textStyle.hashCode;
 }

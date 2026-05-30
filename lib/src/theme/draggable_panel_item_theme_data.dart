@@ -7,6 +7,7 @@ class DraggablePanelItemThemeData {
     this.borderRadius = 12.0,
     this.padding = const EdgeInsets.all(8),
     this.badgeSize = 12.0,
+    this.iconSize = 24.0,
   });
 
   /// Border radius of each item cell.
@@ -18,15 +19,20 @@ class DraggablePanelItemThemeData {
   /// Size of the notification badge dot.
   final double badgeSize;
 
+  /// Size of the item icon. Also drives the panel height calculation.
+  final double iconSize;
+
   DraggablePanelItemThemeData copyWith({
     double? borderRadius,
     EdgeInsets? padding,
     double? badgeSize,
+    double? iconSize,
   }) =>
       DraggablePanelItemThemeData(
         borderRadius: borderRadius ?? this.borderRadius,
         padding: padding ?? this.padding,
         badgeSize: badgeSize ?? this.badgeSize,
+        iconSize: iconSize ?? this.iconSize,
       );
 
   @override
@@ -36,10 +42,14 @@ class DraggablePanelItemThemeData {
     return other is DraggablePanelItemThemeData &&
         other.borderRadius == borderRadius &&
         other.padding == padding &&
-        other.badgeSize == badgeSize;
+        other.badgeSize == badgeSize &&
+        other.iconSize == iconSize;
   }
 
   @override
   int get hashCode =>
-      borderRadius.hashCode ^ padding.hashCode ^ badgeSize.hashCode;
+      borderRadius.hashCode ^
+      padding.hashCode ^
+      badgeSize.hashCode ^
+      iconSize.hashCode;
 }

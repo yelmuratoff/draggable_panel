@@ -14,13 +14,17 @@ typedef PositionListener = void Function(double x, double y);
 /// - Animating the panel movements
 /// - Position change notifications for persistence
 ///
+/// Animation timing (durations and curves) is configured separately via
+/// [DraggablePanelTheme.motion], not on this controller.
+///
 /// - Parameters:
 ///   - initialPosition: The initial position (x, y) of the panel
 ///   - initialPanelState: The initial state (open/closed)
-///   - panelAnimDuration: Duration of panel animations in milliseconds (default: 300)
 ///   - dockType: How the panel docks ([DockType.inside] or [DockType.outside])
 ///   - dockOffset: Offset from screen edge when docking (default: 10.0)
-///   - dockAnimDuration: Duration of docking animation in milliseconds
+///   - tapToToggle: Whether tapping the button toggles the panel (default: true)
+///   - draggable: Whether the button can be dragged (default: true)
+///   - closeOnTapOutside: Whether tapping outside closes the panel (default: true)
 /// - Usage example:
 ///   ```dart
 ///   final controller = DraggablePanelController(
@@ -42,16 +46,28 @@ final class DraggablePanelController extends ChangeNotifier {
   /// - Parameters:
   ///   - initialPosition: Starting position as (x, y) record
   ///   - initialPanelState: Starting state (open/closed)
-  ///   - panelAnimDuration: Animation duration in ms (default: 300)
   ///   - dockType: Docking behavior (default: [DockType.inside])
   ///   - dockOffset: Edge offset in pixels (default: 10.0)
-  ///   - dockAnimDuration: Dock animation duration in ms
+  ///   - tapToToggle: Whether tapping the button toggles the panel (default: true)
+  ///   - draggable: Whether the button can be dragged (default: true)
+  ///   - closeOnTapOutside: Whether tapping outside closes the panel (default: true)
   DraggablePanelController({
     this.initialPosition,
     this.initialPanelState,
-    this.panelAnimDuration = 300,
     this.dockType = DockType.inside,
     this.dockOffset = 10.0,
+    this.tapToToggle = true,
+    this.draggable = true,
+    this.closeOnTapOutside = true,
+    @Deprecated(
+      'Configure durations via DraggablePanelTheme.motion instead. '
+      'This parameter no longer has any effect and will be removed in a future release.',
+    )
+    this.panelAnimDuration = 300,
+    @Deprecated(
+      'Configure durations via DraggablePanelTheme.motion instead. '
+      'This parameter no longer has any effect and will be removed in a future release.',
+    )
     this.dockAnimDuration,
   }) {
     _panelState = initialPanelState ?? PanelState.closed;
@@ -71,6 +87,10 @@ final class DraggablePanelController extends ChangeNotifier {
   final PanelState? initialPanelState;
 
   /// The duration (in milliseconds) of the panel's open/close animation.
+  @Deprecated(
+    'Configure durations via DraggablePanelTheme.motion instead. '
+    'This field no longer has any effect and will be removed in a future release.',
+  )
   final int panelAnimDuration;
 
   /// The docking type of the panel.
@@ -83,7 +103,20 @@ final class DraggablePanelController extends ChangeNotifier {
   final double dockOffset;
 
   /// The duration (in milliseconds) of the docking animation.
+  @Deprecated(
+    'Configure durations via DraggablePanelTheme.motion instead. '
+    'This field no longer has any effect and will be removed in a future release.',
+  )
   final int? dockAnimDuration;
+
+  /// Whether tapping the draggable button toggles the panel open/closed.
+  final bool tapToToggle;
+
+  /// Whether the button can be dragged around the screen.
+  final bool draggable;
+
+  /// Whether tapping outside an open panel closes it.
+  final bool closeOnTapOutside;
 
   //
   // <--- Local Variables --->
@@ -107,8 +140,12 @@ final class DraggablePanelController extends ChangeNotifier {
   /// The horizontal drag offset.
   double _panOffsetLeft = 0;
 
-  /// The speed of the panel's movement.
-  int _movementSpeed = 0;
+  /// Whether button repositioning is animated.
+  ///
+  /// Set to `false` while dragging so the button tracks the finger instantly;
+  /// otherwise `true` so docking/hiding/revealing slide smoothly. The actual
+  /// duration and curve come from [DraggablePanelTheme.motion].
+  bool _animateMovement = true;
 
   /// Whether the panel is being dragged.
   bool _isDragging = false;
@@ -162,7 +199,17 @@ final class DraggablePanelController extends ChangeNotifier {
   double get panelPositionLeft => _panelPositionLeft;
   double get panOffsetTop => _panOffsetTop;
   double get panOffsetLeft => _panOffsetLeft;
-  int get movementSpeed => _movementSpeed;
+
+  /// Whether button repositioning is currently animated.
+  ///
+  /// `false` only while dragging, so the button follows the finger without lag.
+  bool get animateMovement => _animateMovement;
+
+  @Deprecated(
+    'Use animateMovement (a bool) instead, and configure durations via '
+    'DraggablePanelTheme.motion. Will be removed in a future release.',
+  )
+  int get movementSpeed => _animateMovement ? 300 : 0;
   bool get isDragging => _isDragging;
   double get buttonWidth => _buttonWidth;
   bool get isDockedRight => _isDockedRight;
@@ -197,9 +244,15 @@ final class DraggablePanelController extends ChangeNotifier {
     _updateValue(() => _panOffsetLeft = value, _panOffsetLeft, value);
   }
 
-  set movementSpeed(int value) {
-    _updateValue(() => _movementSpeed = value, _movementSpeed, value);
+  set animateMovement(bool value) {
+    _updateValue(() => _animateMovement = value, _animateMovement, value);
   }
+
+  @Deprecated(
+    'Use animateMovement (a bool) instead, and configure durations via '
+    'DraggablePanelTheme.motion. Will be removed in a future release.',
+  )
+  set movementSpeed(int value) => animateMovement = value != 0;
 
   set isDragging(bool value) {
     _updateValue(() => _isDragging = value, _isDragging, value);
@@ -250,7 +303,7 @@ final class DraggablePanelController extends ChangeNotifier {
         : 0.0 + _dockBoundary;
     final newPanelLeft = dockRight ? pageWidth + _buttonWidth : -_buttonWidth;
 
-    movementSpeed = dockAnimDuration ?? 300;
+    animateMovement = true;
 
     if (_draggablePositionLeft == newButtonLeft &&
         _panelPositionLeft == newPanelLeft &&
@@ -304,13 +357,17 @@ final class DraggablePanelController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Asynchronously toggle the main button state and update the panel's docked position.
+  /// Toggle the main button state and update the panel's docked position.
   ///
   /// - Parameters:
   ///   - pageWidth: The width of the page/screen
-  /// - Return: `Future<void>`
-  /// - Usage example: await controller.toggleMainButton(MediaQuery.sizeOf(context).width)
-  Future<void> toggleMainButton(double pageWidth) async {
+  /// - Usage example: controller.toggleMainButton(MediaQuery.sizeOf(context).width)
+  /// - Edge case notes: While opening, the button slides off-screen. That hidden
+  ///   coordinate is intentionally not reported to position listeners, so
+  ///   persisted positions only ever hold a real docked resting point.
+  void toggleMainButton(double pageWidth) {
+    animateMovement = true;
+
     if (_panelState == PanelState.open) {
       panelState = PanelState.closed;
       forceDock(pageWidth);
@@ -322,7 +379,6 @@ final class DraggablePanelController extends ChangeNotifier {
     if (_draggablePositionLeft == newLeft) return;
 
     _draggablePositionLeft = newLeft;
-    _notifyPositionListeners();
     notifyListeners();
   }
 
@@ -336,6 +392,32 @@ final class DraggablePanelController extends ChangeNotifier {
   void recomputeDockSide(double pageWidth) {
     final center = _draggablePositionLeft + (_buttonWidth / 2);
     _isDockedRight = center >= pageWidth / 2;
+  }
+
+  /// Re-place the button and panel for the current [pageWidth] without animating.
+  ///
+  /// Use on window/metrics changes (rotation, keyboard, split-screen). When the
+  /// panel is open the button stays hidden off-screen and the panel is
+  /// re-anchored to the (possibly flipped) dock side; when closed the button
+  /// docks and the panel is hidden.
+  ///
+  /// - Parameters:
+  ///   - pageWidth: The width of the page/screen
+  void relayout(double pageWidth) {
+    if (_panelState == PanelState.open) {
+      recomputeDockSide(pageWidth);
+      _animateMovement = false;
+      _draggablePositionLeft =
+          _isDockedRight ? pageWidth + _buttonWidth : -_buttonWidth;
+      _panelPositionLeft = _isDockedRight
+          ? pageWidth - _panelWidth - _buttonWidth
+          : _buttonWidth;
+      notifyListeners();
+    } else {
+      forceDock(pageWidth);
+      hidePanel(pageWidth);
+      animateMovement = false;
+    }
   }
 
   /// Toggle the panel's behavior based on its initial state.

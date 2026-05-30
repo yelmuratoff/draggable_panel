@@ -9,6 +9,7 @@ class DraggablePanelButtonThemeData {
     this.borderRadius = 16.0,
     this.iconSize = 18.0,
     this.iconSpacing = 12.0,
+    this.labelStyle,
   });
 
   /// Height of each button.
@@ -26,12 +27,17 @@ class DraggablePanelButtonThemeData {
   /// Spacing between icon and label text.
   final double iconSpacing;
 
+  /// Text style of the button label. The foreground color is applied on top,
+  /// so leave [TextStyle.color] unset unless you want to override it.
+  final TextStyle? labelStyle;
+
   DraggablePanelButtonThemeData copyWith({
     double? height,
     EdgeInsets? padding,
     double? borderRadius,
     double? iconSize,
     double? iconSpacing,
+    TextStyle? labelStyle,
   }) =>
       DraggablePanelButtonThemeData(
         height: height ?? this.height,
@@ -39,6 +45,7 @@ class DraggablePanelButtonThemeData {
         borderRadius: borderRadius ?? this.borderRadius,
         iconSize: iconSize ?? this.iconSize,
         iconSpacing: iconSpacing ?? this.iconSpacing,
+        labelStyle: labelStyle ?? this.labelStyle,
       );
 
   @override
@@ -50,7 +57,8 @@ class DraggablePanelButtonThemeData {
         other.padding == padding &&
         other.borderRadius == borderRadius &&
         other.iconSize == iconSize &&
-        other.iconSpacing == iconSpacing;
+        other.iconSpacing == iconSpacing &&
+        other.labelStyle == labelStyle;
   }
 
   @override
@@ -59,5 +67,6 @@ class DraggablePanelButtonThemeData {
       padding.hashCode ^
       borderRadius.hashCode ^
       iconSize.hashCode ^
-      iconSpacing.hashCode;
+      iconSpacing.hashCode ^
+      labelStyle.hashCode;
 }

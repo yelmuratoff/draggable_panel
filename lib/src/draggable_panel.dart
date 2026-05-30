@@ -1,3 +1,4 @@
+import 'package:draggable_panel/src/builders.dart';
 import 'package:draggable_panel/src/controller/controller.dart';
 import 'package:draggable_panel/src/enums/panel_state.dart';
 import 'package:draggable_panel/src/models/panel_button.dart';
@@ -54,6 +55,14 @@ final class DraggablePanel extends StatefulWidget {
     this.onPositionChanged,
     this.panelHeight,
     this.theme = const DraggablePanelTheme(),
+    this.itemBuilder,
+    this.buttonBuilder,
+    this.handleBuilder,
+    this.itemFrameBuilder,
+    this.buttonFrameBuilder,
+    this.onShowTooltip,
+    this.panelBuilder,
+    this.panelContentBuilder,
   });
 
   final DraggablePanelController? controller;
@@ -83,6 +92,38 @@ final class DraggablePanel extends StatefulWidget {
   /// You can use local storage to save the position of the panel and restore it
   /// when the widget is initialized in `initialPosition`.
   final void Function(double x, double y)? onPositionChanged;
+
+  /// Builds custom content for each item, replacing the default icon. The cell,
+  /// tap/long-press handling, and badge are still provided by the panel.
+  final DraggablePanelItemBuilder? itemBuilder;
+
+  /// Builds custom content for each action button, replacing the default icon +
+  /// label row. The button shape and tap/long-press handling are kept.
+  final DraggablePanelButtonBuilder? buttonBuilder;
+
+  /// Builds the entire draggable button content, replacing the default handle.
+  final DraggablePanelHandleBuilder? handleBuilder;
+
+  /// Builds the entire item cell (shell + content), replacing the default
+  /// badge/ink-well frame. Takes precedence over [itemBuilder] for the shell;
+  /// [itemBuilder]'s result is still passed in as the cell content.
+  final DraggablePanelItemFrameBuilder? itemFrameBuilder;
+
+  /// Builds the entire action button (shell + content), replacing the default
+  /// [FilledButton] frame. [buttonBuilder]'s result is passed in as the content.
+  final DraggablePanelButtonFrameBuilder? buttonFrameBuilder;
+
+  /// Presents the long-press tooltip. When null, a built-in SnackBar is shown.
+  final DraggablePanelTooltipPresenter? onShowTooltip;
+
+  /// Builds the visible panel surface (the decorated sheet), replacing the
+  /// default container. Slide/dock positioning, fade, and tap-to-close are
+  /// kept; the builder receives the contents plus the resolved size and color.
+  final DraggablePanelSurfaceBuilder? panelBuilder;
+
+  /// Builds the panel content layout, replacing the default `Wrap` + `Column`.
+  /// Use the provided `buildItem`/`buildButton` helpers to keep interactions.
+  final DraggablePanelContentBuilder? panelContentBuilder;
 
   @override
   State<DraggablePanel> createState() => _DraggablePanelState();
@@ -220,31 +261,37 @@ class _DraggablePanelState extends State<DraggablePanel>
     required double pageHeight,
     required bool isDockedRight,
   }) {
-    final buttonDuration = Duration(milliseconds: _controller.movementSpeed);
+    final motion = widget.theme.motion;
+    final buttonDuration =
+        _controller.animateMovement ? motion.buttonMoveDuration : Duration.zero;
     final buttonWidth = _controller.buttonWidth;
     final buttonHeight = widget.theme.draggableButtonHeight;
+    final isDraggable = _controller.draggable;
 
     return AnimatedPositioned(
       key: const ValueKey('draggable_panel_button'),
       duration: buttonDuration,
       top: _controller.draggablePositionTop,
       left: _controller.draggablePositionLeft,
-      curve: Curves.fastLinearToSlowEaseIn,
+      curve: motion.buttonMoveCurve,
       child: GestureDetector(
-        onPanEnd: (_) => _handlePanEnd(pageWidth),
-        onPanStart: _handlePanStart,
-        onPanUpdate: (details) => _handlePanUpdate(
-          context: context,
-          details: details,
-          pageWidth: pageWidth,
-          pageHeight: pageHeight,
-        ),
-        onTap: () async {
-          await _controller.toggleMainButton(pageWidth);
-          _controller.togglePanel(pageWidth);
-        },
+        onPanEnd: isDraggable ? (_) => _handlePanEnd(pageWidth) : null,
+        onPanStart: isDraggable ? _handlePanStart : null,
+        onPanUpdate: isDraggable
+            ? (details) => _handlePanUpdate(
+                  context: context,
+                  details: details,
+                  pageWidth: pageWidth,
+                  pageHeight: pageHeight,
+                )
+            : null,
+        onTap: _controller.tapToToggle
+            ? () => _controller
+              ..toggleMainButton(pageWidth)
+              ..togglePanel(pageWidth)
+            : null,
         child: AnimatedContainer(
-          duration: Duration(milliseconds: _controller.panelAnimDuration),
+          duration: motion.buttonMoveDuration,
           width: buttonWidth,
           height: buttonHeight,
           clipBehavior: Clip.antiAlias,
@@ -255,17 +302,22 @@ class _DraggablePanelState extends State<DraggablePanel>
             border: widget.theme.panelBorder,
             boxShadow: widget.theme.panelBoxShadow,
           ),
-          curve: Curves.fastLinearToSlowEaseIn,
+          curve: motion.buttonMoveCurve,
           child: Center(
-            child: DraggableButtonContentWidget(
-              isDragging: _controller.isDragging,
-              isDockedRight: isDockedRight,
-              icon: widget.icon,
-              buttonWidth: buttonWidth,
-              buttonHeight: buttonHeight,
-              foregroundColor: widget.theme.foregroundColor,
-              handleTheme: widget.theme.effectiveHandleTheme,
-            ),
+            child: widget.handleBuilder?.call(
+                  context,
+                  isDragging: _controller.isDragging,
+                  isDockedRight: isDockedRight,
+                ) ??
+                DraggableButtonContentWidget(
+                  isDragging: _controller.isDragging,
+                  isDockedRight: isDockedRight,
+                  icon: widget.icon,
+                  buttonWidth: buttonWidth,
+                  buttonHeight: buttonHeight,
+                  foregroundColor: widget.theme.foregroundColor,
+                  handleTheme: widget.theme.effectiveHandleTheme,
+                ),
           ),
         ),
       ),
@@ -277,72 +329,43 @@ class _DraggablePanelState extends State<DraggablePanel>
     required double pageWidth,
     required double pageHeight,
   }) {
-    final panelDuration = Duration(milliseconds: _controller.panelAnimDuration);
+    final motion = widget.theme.motion;
     final isPanelOpen = _controller.panelState == PanelState.open;
     final panelColor =
         widget.theme.panelBackgroundColor ?? _defaultPanelColor(context);
-    final border = widget.theme.panelBorder;
-    final borderH =
-        border is Border ? border.left.width + border.right.width : 0.0;
-    final borderV =
-        border is Border ? border.top.width + border.bottom.width : 0.0;
+    final placement = _panelPlacement(pageHeight);
 
     return AnimatedPositioned(
       key: const ValueKey('draggable_panel'),
-      duration: panelDuration,
-      top: _panelTopPosition(pageHeight),
-      left: _controller.panelPositionLeft,
-      curve: Curves.linearToEaseOut,
+      duration: motion.panelMoveDuration,
+      top: placement.top,
+      bottom: placement.bottom,
+      left: placement.left,
+      right: placement.right,
+      curve: motion.panelMoveCurve,
       child: TapRegion(
         onTapOutside: (_) {
-          if (isPanelOpen) {
+          if (isPanelOpen && _controller.closeOnTapOutside) {
             _closePanelAndDock(pageWidth);
           }
         },
         child: AnimatedSwitcher(
-          duration: panelDuration,
+          duration: motion.panelSwitchDuration,
+          switchInCurve: motion.panelSwitchInCurve,
+          switchOutCurve: motion.panelSwitchOutCurve,
           transitionBuilder: (child, animation) => Transform.translate(
             offset: Offset.zero,
             child: child,
           ),
           child: isPanelOpen
-              ? AnimatedContainer(
+              ? KeyedSubtree(
                   key: const ValueKey('panel_container'),
-                  duration: panelDuration,
-                  width: _controller.panelWidth + borderH,
-                  height: _panelHeight + borderV,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    color: panelColor,
-                    borderRadius: widget.theme.panelBorderRadius,
-                    border: widget.theme.panelBorder,
-                    boxShadow: widget.theme.panelBoxShadow,
-                  ),
-                  curve: Curves.linearToEaseOut,
-                  child: Padding(
-                    padding: widget.theme.panelContentPadding,
-                    child: PanelContentsWidget(
-                      theme: widget.theme,
-                      items: widget.items,
-                      buttons: widget.buttons,
-                      itemColor: _itemColor,
-                      itemForegroundColor: _itemForegroundColor,
-                      onItemTap: (item) {
-                        item.onTap(context);
-                        _closePanelAndDock(pageWidth);
-                      },
-                      onItemLongPress: (item) => _showItemTooltip(
-                        context,
-                        item,
-                        panelColor,
-                      ),
-                      onButtonTap: (button) => button.onTap(context),
-                      onButtonLongPress: (button) => _showButtonTooltip(
-                        context,
-                        button,
-                        panelColor,
-                      ),
-                    ),
+                  child: _buildPanelSurface(
+                    context,
+                    panelColor,
+                    pageWidth,
+                    placement.width,
+                    placement.maxHeight,
                   ),
                 )
               : const SizedBox.shrink(),
@@ -351,20 +374,100 @@ class _DraggablePanelState extends State<DraggablePanel>
     );
   }
 
+  Widget _buildPanelSurface(
+    BuildContext context,
+    Color panelColor,
+    double pageWidth,
+    double width,
+    double maxHeight,
+  ) {
+    final motion = widget.theme.motion;
+    final content = _buildPanelContents(context, panelColor, pageWidth);
+
+    final panelBuilder = widget.panelBuilder;
+    if (panelBuilder != null) {
+      return panelBuilder(
+        context,
+        DraggablePanelSurface(
+          content: content,
+          width: width,
+          maxHeight: maxHeight,
+          color: panelColor,
+          theme: widget.theme,
+          isOpen: true,
+        ),
+      );
+    }
+
+    final fixedHeight = widget.panelHeight?.clamp(0.0, maxHeight);
+    final sizedContent = ConstrainedBox(
+      constraints: BoxConstraints(
+        minHeight: fixedHeight ?? 0.0,
+        maxHeight: fixedHeight ?? maxHeight,
+      ),
+      child: Padding(
+        padding: widget.theme.panelContentPadding,
+        child: content,
+      ),
+    );
+
+    return AnimatedContainer(
+      duration: motion.panelMoveDuration,
+      width: width,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: panelColor,
+        borderRadius: widget.theme.panelBorderRadius,
+        border: widget.theme.panelBorder,
+        boxShadow: widget.theme.panelBoxShadow,
+      ),
+      curve: motion.panelMoveCurve,
+      child: AnimatedSize(
+        duration: motion.panelMoveDuration,
+        curve: motion.panelMoveCurve,
+        alignment: Alignment.topCenter,
+        child: sizedContent,
+      ),
+    );
+  }
+
+  Widget _buildPanelContents(
+    BuildContext context,
+    Color panelColor,
+    double pageWidth,
+  ) =>
+      PanelContentsWidget(
+        theme: widget.theme,
+        items: widget.items,
+        buttons: widget.buttons,
+        itemBuilder: widget.itemBuilder,
+        buttonBuilder: widget.buttonBuilder,
+        itemFrameBuilder: widget.itemFrameBuilder,
+        buttonFrameBuilder: widget.buttonFrameBuilder,
+        contentBuilder: widget.panelContentBuilder,
+        itemColor: _itemColor,
+        itemForegroundColor: _itemForegroundColor,
+        onItemTap: (item) {
+          item.onTap(context);
+          _closePanelAndDock(pageWidth);
+        },
+        onItemLongPress: (item) => _showItemTooltip(context, item, panelColor),
+        onButtonTap: (button) => button.onTap(context),
+        onButtonLongPress: (button) =>
+            _showButtonTooltip(context, button, panelColor),
+      );
+
   void _showItemTooltip(
     BuildContext context,
     DraggablePanelItem item,
     Color panelColor,
   ) {
     if (item.description?.isNotEmpty ?? false) {
-      TooltipSnackBar.show(
+      _presentTooltip(
         context,
         message: item.description!,
         icon: item.icon,
-        backgroundColor: panelColor,
-        iconColor: _itemForegroundColor,
-        iconBackgroundColor: _itemColor,
-        tooltipTheme: widget.theme.tooltipTheme,
+        panelColor: panelColor,
       );
     }
   }
@@ -375,16 +478,45 @@ class _DraggablePanelState extends State<DraggablePanel>
     Color panelColor,
   ) {
     if (button.description?.isNotEmpty ?? false) {
-      TooltipSnackBar.show(
+      _presentTooltip(
         context,
         message: button.description!,
         icon: button.icon,
-        backgroundColor: panelColor,
-        iconColor: _itemForegroundColor,
-        iconBackgroundColor: _itemColor,
-        tooltipTheme: widget.theme.tooltipTheme,
+        panelColor: panelColor,
       );
     }
+  }
+
+  void _presentTooltip(
+    BuildContext context, {
+    required String message,
+    required IconData icon,
+    required Color panelColor,
+  }) {
+    final data = DraggablePanelTooltipData(
+      message: message,
+      icon: icon,
+      backgroundColor: panelColor,
+      iconColor: _itemForegroundColor,
+      iconBackgroundColor: _itemColor,
+      tooltipTheme: widget.theme.effectiveTooltipTheme,
+    );
+
+    final presenter = widget.onShowTooltip;
+    if (presenter != null) {
+      presenter(context, data);
+      return;
+    }
+
+    TooltipSnackBar.show(
+      context,
+      message: data.message,
+      icon: data.icon,
+      backgroundColor: data.backgroundColor,
+      iconColor: data.iconColor,
+      iconBackgroundColor: data.iconBackgroundColor,
+      tooltipTheme: data.tooltipTheme,
+    );
   }
 
   // <-- Helper Properties -->
@@ -425,7 +557,7 @@ class _DraggablePanelState extends State<DraggablePanel>
   }) {
     _controller
       ..panelState = PanelState.closed
-      ..movementSpeed = 0
+      ..animateMovement = false
       ..isDragging = true;
 
     final viewPadding = MediaQuery.paddingOf(context);
@@ -448,23 +580,13 @@ class _DraggablePanelState extends State<DraggablePanel>
   }
 
   void _handleWindowResize() {
-    final size = MediaQuery.sizeOf(context);
-    final pageWidth = size.width;
-
-    _clampIntoViewport();
-
-    _controller
-      ..forceDock(pageWidth)
-      ..movementSpeed = 0;
-
-    if (_controller.panelState == PanelState.open) {
-      final isRight = _controller.isDockedRight;
-      _controller.panelPositionLeft = isRight
-          ? pageWidth - _controller.panelWidth - _controller.buttonWidth
-          : _controller.buttonWidth;
-    } else {
-      _controller.hidePanel(pageWidth);
+    final pageWidth = MediaQuery.sizeOf(context).width;
+    // When open, the button sits off-screen on purpose; clamping it would pull
+    // it back into view for a frame. relayout re-places everything instead.
+    if (_controller.panelState == PanelState.closed) {
+      _clampIntoViewport();
     }
+    _controller.relayout(pageWidth);
   }
 
   void _ensureInitialDock() {
@@ -474,7 +596,7 @@ class _DraggablePanelState extends State<DraggablePanel>
       final pageWidth = MediaQuery.sizeOf(context).width;
       final isRight = _controller.draggablePositionLeft > pageWidth / 2;
 
-      _controller.movementSpeed = 0;
+      _controller.animateMovement = false;
 
       final left = isRight
           ? (pageWidth - _controller.buttonWidth) - _controller.dockBoundary
@@ -513,66 +635,144 @@ class _DraggablePanelState extends State<DraggablePanel>
     }
   }
 
-  double _panelTopPosition(double pageHeight) {
-    final panelHeight = _panelHeight;
+  /// Chooses which side of the button the panel opens on and how much height it
+  /// may use, without forcing a fixed panel height.
+  ///
+  /// The panel sizes itself to its content (capped at [maxHeight], scrolling
+  /// beyond it), so the estimate is only used to prefer the more natural side.
+  /// Above placement anchors via `bottom` so the height never has to be known.
+  ({
+    double? left,
+    double? right,
+    double? top,
+    double? bottom,
+    double width,
+    double maxHeight,
+  }) _panelPlacement(double pageHeight) {
+    final viewPadding = MediaQuery.viewPaddingOf(context);
     final buttonTop = _controller.draggablePositionTop;
     final buttonBottom = buttonTop + widget.theme.draggableButtonHeight;
-    final viewPadding = MediaQuery.viewPaddingOf(context);
-    final minTop = viewPadding.top;
-    final rawMaxTop = pageHeight - viewPadding.bottom - panelHeight;
-    final maxTop = rawMaxTop < minTop ? minTop : rawMaxTop;
+    final topLimit = viewPadding.top;
+    final bottomLimit = pageHeight - viewPadding.bottom;
 
-    if (minTop == maxTop) return minTop;
+    final aboveSpace = (buttonTop - topLimit).clamp(0.0, double.infinity);
+    final belowSpace = (bottomLimit - buttonBottom).clamp(0.0, double.infinity);
 
-    final aboveSpace = buttonTop - viewPadding.top;
-    final belowSpace = (pageHeight - viewPadding.bottom) - buttonBottom;
+    final desired = _estimatedContentHeight;
+    final fitsBelow = desired <= belowSpace;
+    final fitsAbove = desired <= aboveSpace;
+    final useBelow = fitsBelow || (!fitsAbove && belowSpace >= aboveSpace);
 
-    final shouldPlaceBelow = belowSpace >= panelHeight;
-    final shouldPlaceAbove = !shouldPlaceBelow && aboveSpace >= panelHeight;
+    final double? top;
+    final double? bottom;
+    final double maxHeight;
+    if (useBelow) {
+      top = buttonBottom;
+      bottom = null;
+      maxHeight = belowSpace;
+    } else {
+      top = null;
+      bottom = pageHeight - buttonTop;
+      maxHeight = aboveSpace;
+    }
 
-    final desiredTop = shouldPlaceBelow
-        ? buttonBottom
-        : shouldPlaceAbove
-            ? buttonTop - panelHeight
-            : (aboveSpace > belowSpace ? minTop : maxTop);
+    // Horizontal: the panel hugs its content width (see _resolvedContentWidth)
+    // and anchors to the button's inner edge so it sits flush against it (no
+    // gap), no matter how narrow the content is. Off-screen on the dock side
+    // when closed.
+    final border = widget.theme.panelBorder;
+    final borderH =
+        border is Border ? border.left.width + border.right.width : 0.0;
+    final width = _resolvedContentWidth() + borderH;
+    final buttonWidth = _controller.buttonWidth;
+    final isOpen = _controller.panelState == PanelState.open;
 
-    return desiredTop.clamp(minTop, maxTop);
+    double? left;
+    double? right;
+    if (_controller.isDockedRight) {
+      right = isOpen ? buttonWidth : -width;
+    } else {
+      left = isOpen ? buttonWidth : -width;
+    }
+
+    return (
+      left: left,
+      right: right,
+      top: top,
+      bottom: bottom,
+      width: width,
+      maxHeight: maxHeight,
+    );
   }
 
-  double get _panelHeight {
-    const minHeight = 60.0;
-    final viewportHeight = MediaQuery.sizeOf(context).height;
-    final viewPadding = MediaQuery.viewPaddingOf(context);
-    final availableHeight =
-        viewportHeight - viewPadding.top - viewPadding.bottom;
-    final maxHeight = availableHeight < minHeight ? minHeight : availableHeight;
-
-    if (widget.panelHeight != null) {
-      return widget.panelHeight!.clamp(minHeight, maxHeight);
-    }
+  /// Rough content-height estimate used only to pick the open side. The actual
+  /// panel sizes to its content, so this never has to be exact (and tolerates
+  /// custom item/button/content builders).
+  double get _estimatedContentHeight {
+    if (widget.panelHeight != null) return widget.panelHeight!;
 
     final theme = widget.theme;
     final buttonTheme = theme.effectiveButtonTheme;
     final itemTheme = theme.effectiveItemTheme;
+    final padding = theme.panelContentPadding;
 
     final singleButtonHeight = buttonTheme.height + theme.buttonSpacing;
     final buttonsHeight = widget.buttons.isNotEmpty
         ? widget.buttons.length * singleButtonHeight + theme.sectionSpacing
         : 0.0;
 
-    final padding = theme.panelContentPadding;
-    final itemSize = itemTheme.padding.vertical + 24.0; // Icon(24) + padding
+    final itemSize = itemTheme.padding.vertical + itemTheme.iconSize;
     final spacing = theme.itemSpacing;
-    final contentWidth = _controller.panelWidth - padding.horizontal;
-    final itemsPerRow = ((contentWidth + spacing) / (itemSize + spacing))
-        .floor()
-        .clamp(1, widget.items.length);
-    final rows = (widget.items.length / itemsPerRow).ceil();
+    final itemCount = widget.items.length;
+    final columns = _gridColumns();
+    final rows = columns == 0 ? 0 : (itemCount / columns).ceil();
     final itemsHeight = rows * itemSize + (rows - 1).clamp(0, rows) * spacing;
 
-    final totalHeight = itemsHeight + buttonsHeight + padding.vertical;
+    return itemsHeight + buttonsHeight + padding.vertical;
+  }
 
-    return totalHeight.clamp(minHeight, maxHeight);
+  /// Number of item columns, balanced so the last row isn't left half-empty.
+  ///
+  /// Fits as many fixed-size cells as the panel width allows, then redistributes
+  /// the items evenly across the resulting number of rows.
+  int _gridColumns() {
+    final itemCount = widget.items.length;
+    if (itemCount == 0) return 0;
+
+    final theme = widget.theme;
+    final itemTheme = theme.effectiveItemTheme;
+    final padding = theme.panelContentPadding;
+    final spacing = theme.itemSpacing;
+    final itemExtent = itemTheme.padding.horizontal + itemTheme.iconSize;
+    final available = _controller.panelWidth - padding.horizontal;
+
+    final maxColumns = ((available + spacing) / (itemExtent + spacing))
+        .floor()
+        .clamp(1, itemCount);
+    final rows = (itemCount / maxColumns).ceil();
+    return (itemCount / rows).ceil();
+  }
+
+  /// Width the panel hugs to. A uniform item grid shrinks to its balanced
+  /// column count; panels with action buttons, a custom content builder, or no
+  /// items use the full [DraggablePanelTheme.panelWidth].
+  double _resolvedContentWidth() {
+    final maxWidth = _controller.panelWidth;
+    if (widget.panelContentBuilder != null ||
+        widget.buttons.isNotEmpty ||
+        widget.items.isEmpty) {
+      return maxWidth;
+    }
+
+    final theme = widget.theme;
+    final itemTheme = theme.effectiveItemTheme;
+    final padding = theme.panelContentPadding;
+    final spacing = theme.itemSpacing;
+    final itemExtent = itemTheme.padding.horizontal + itemTheme.iconSize;
+    final columns = _gridColumns();
+    final contentWidth = columns * itemExtent + (columns - 1) * spacing;
+
+    return (contentWidth + padding.horizontal).clamp(0.0, maxWidth);
   }
 
   Color get _itemColor =>

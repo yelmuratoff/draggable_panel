@@ -15,6 +15,11 @@ final class PanelContentsWidget extends StatelessWidget {
     required this.onButtonTap,
     required this.onButtonLongPress,
     required this.theme,
+    this.itemBuilder,
+    this.buttonBuilder,
+    this.itemFrameBuilder,
+    this.buttonFrameBuilder,
+    this.contentBuilder,
     super.key,
   });
 
@@ -27,6 +32,11 @@ final class PanelContentsWidget extends StatelessWidget {
   final ValueChanged<DraggablePanelButtonItem> onButtonTap;
   final ValueChanged<DraggablePanelButtonItem> onButtonLongPress;
   final DraggablePanelTheme theme;
+  final DraggablePanelItemBuilder? itemBuilder;
+  final DraggablePanelButtonBuilder? buttonBuilder;
+  final DraggablePanelItemFrameBuilder? itemFrameBuilder;
+  final DraggablePanelButtonFrameBuilder? buttonFrameBuilder;
+  final DraggablePanelContentBuilder? contentBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -34,81 +44,159 @@ final class PanelContentsWidget extends StatelessWidget {
     final itemTheme = theme.effectiveItemTheme;
     final buttonTheme = theme.effectiveButtonTheme;
 
-    return Column(
-      mainAxisAlignment: hasButtons
-          ? MainAxisAlignment.spaceBetween
-          : MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Wrap(
-          runSpacing: theme.itemSpacing,
-          spacing: theme.itemSpacing,
-          children: [
-            for (final item in items)
-              PanelItemBadge(
-                item: item,
-                foregroundColor: itemForegroundColor,
-                itemColor: itemColor,
-                itemTheme: itemTheme,
-                onPressed: () => onItemTap(item),
-                onLongPress: item.description?.isNotEmpty ?? false
-                    ? () => onItemLongPress(item)
-                    : null,
-              ),
-          ],
+    final contentBuilder = this.contentBuilder;
+    if (contentBuilder != null) {
+      return contentBuilder(
+        context,
+        DraggablePanelContent(
+          items: items,
+          buttons: buttons,
+          buildItem: (ctx, item) => _buildItem(ctx, item, itemTheme),
+          buildButton: (ctx, button) => _buildButton(ctx, button, buttonTheme),
         ),
-        if (hasButtons) SizedBox(height: theme.sectionSpacing),
-        if (hasButtons)
-          Flexible(
-            child: Wrap(
+      );
+    }
+
+    // The surface gives this content an exact width (the panel hugs its items),
+    // so a centered Wrap fills full rows edge-to-edge and balances the last row.
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (items.isNotEmpty)
+            Wrap(
+              alignment: WrapAlignment.center,
+              runSpacing: theme.itemSpacing,
+              spacing: theme.itemSpacing,
+              children: [
+                for (final item in items) _buildItem(context, item, itemTheme),
+              ],
+            ),
+          if (hasButtons && items.isNotEmpty)
+            SizedBox(height: theme.sectionSpacing),
+          if (hasButtons)
+            Wrap(
               runSpacing: theme.buttonSpacing,
               children: [
                 for (final button in buttons)
-                  PanelButtonWidget(
-                    itemColor: itemColor,
-                    foregroundColor: itemForegroundColor,
-                    backgroundColor: theme.panelButtonColor,
-                    buttonTheme: buttonTheme,
-                    icon: button.icon,
-                    label: button.label,
-                    onTap: () => onButtonTap(button),
-                    onLongPress: button.description?.isNotEmpty ?? false
-                        ? () => onButtonLongPress(button)
-                        : null,
-                  ),
+                  _buildButton(context, button, buttonTheme),
               ],
             ),
-          ),
-      ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItem(
+    BuildContext context,
+    DraggablePanelItem item,
+    DraggablePanelItemThemeData itemTheme,
+  ) {
+    final foreground = item.foregroundColor ?? itemForegroundColor;
+    final background = item.color ?? itemColor;
+    final content = itemBuilder?.call(context, item) ??
+        Icon(item.icon, color: foreground, size: itemTheme.iconSize);
+    void onTap() => onItemTap(item);
+    final onLongPress = (item.description?.isNotEmpty ?? false)
+        ? () => onItemLongPress(item)
+        : null;
+
+    if (itemFrameBuilder != null) {
+      return itemFrameBuilder!(
+        context,
+        DraggablePanelItemRender(
+          item: item,
+          content: content,
+          onTap: onTap,
+          onLongPress: onLongPress,
+          color: background,
+          foregroundColor: foreground,
+          itemTheme: itemTheme,
+        ),
+      );
+    }
+
+    return PanelItemBadge(
+      item: item,
+      itemColor: background,
+      itemTheme: itemTheme,
+      onPressed: onTap,
+      onLongPress: onLongPress,
+      child: content,
+    );
+  }
+
+  Widget _buildButton(
+    BuildContext context,
+    DraggablePanelButtonItem button,
+    DraggablePanelButtonThemeData buttonTheme,
+  ) {
+    final content = buttonBuilder?.call(context, button) ??
+        PanelButtonContent(
+          icon: button.icon,
+          label: button.label,
+          foregroundColor: itemForegroundColor,
+          buttonTheme: buttonTheme,
+        );
+    void onTap() => onButtonTap(button);
+    final onLongPress = (button.description?.isNotEmpty ?? false)
+        ? () => onButtonLongPress(button)
+        : null;
+
+    if (buttonFrameBuilder != null) {
+      return buttonFrameBuilder!(
+        context,
+        DraggablePanelButtonRender(
+          button: button,
+          content: content,
+          onTap: onTap,
+          onLongPress: onLongPress,
+          backgroundColor: theme.panelButtonColor ?? itemColor,
+          foregroundColor: itemForegroundColor,
+          buttonTheme: buttonTheme,
+        ),
+      );
+    }
+
+    return PanelButtonWidget(
+      itemColor: itemColor,
+      backgroundColor: theme.panelButtonColor,
+      buttonTheme: buttonTheme,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: content,
     );
   }
 }
 
-/// Internal widget for a single panel item badge.
+/// Internal shell for a single panel item badge.
 @immutable
 final class PanelItemBadge extends StatelessWidget {
   const PanelItemBadge({
     required this.item,
     required this.itemColor,
-    required this.foregroundColor,
     required this.itemTheme,
     required this.onPressed,
+    required this.child,
     this.onLongPress,
     super.key,
   });
 
   final DraggablePanelItem item;
   final Color itemColor;
-  final Color foregroundColor;
   final DraggablePanelItemThemeData itemTheme;
+  final Widget child;
   final VoidCallback onPressed;
   final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) => Badge(
         isLabelVisible: item.enableBadge,
-        padding: EdgeInsets.zero,
-        smallSize: itemTheme.badgeSize,
+        backgroundColor: item.badgeColor,
+        label: item.badgeLabel != null ? Text(item.badgeLabel!) : null,
+        padding: item.badgeLabel != null ? null : EdgeInsets.zero,
+        smallSize: item.badgeLabel != null ? null : itemTheme.badgeSize,
         child: ClipRRect(
           borderRadius:
               BorderRadius.all(Radius.circular(itemTheme.borderRadius)),
@@ -121,10 +209,7 @@ final class PanelItemBadge extends StatelessWidget {
                 color: itemColor,
                 child: Padding(
                   padding: itemTheme.padding,
-                  child: Icon(
-                    item.icon,
-                    color: foregroundColor,
-                  ),
+                  child: child,
                 ),
               ),
             ),

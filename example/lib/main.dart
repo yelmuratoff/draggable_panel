@@ -103,6 +103,13 @@ class _AppState extends State<App> {
                       width: 2,
                     ),
                     panelWidth: 220,
+                    motion: const DraggablePanelMotion(
+                      buttonMoveDuration: Duration(milliseconds: 220),
+                      buttonMoveCurve: Curves.easeOutBack,
+                      panelMoveDuration: Duration(milliseconds: 260),
+                      panelMoveCurve: Curves.easeOutCubic,
+                      panelSwitchDuration: Duration(milliseconds: 180),
+                    ),
                     panelContentPadding: const EdgeInsets.all(12),
                     itemSpacing: 10,
                     buttonSpacing: 8,
@@ -137,12 +144,36 @@ class _AppState extends State<App> {
                     ),
                   )
                 : const DraggablePanelTheme(),
+            buttonFrameBuilder: useCustomTheme
+                ? (context, render) => OutlinedButton(
+                      onPressed: render.onTap,
+                      onLongPress: render.onLongPress,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: render.foregroundColor,
+                        side: BorderSide(color: render.foregroundColor),
+                      ),
+                      child: render.content,
+                    )
+                : null,
+            onShowTooltip: useCustomTheme
+                ? (context, data) => showDialog<void>(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        icon: data.icon != null ? Icon(data.icon) : null,
+                        content: Text(data.message),
+                      ),
+                    )
+                : null,
             items: [
               DraggablePanelItem(
-                enableBadge: false,
+                enableBadge: true,
                 icon: Icons.list,
                 onTap: (context) {},
                 description: 'This is a list item',
+                color: Colors.indigo,
+                foregroundColor: Colors.white,
+                badgeColor: Colors.red,
+                badgeLabel: '3',
               ),
               DraggablePanelItem(
                 enableBadge: false,
@@ -215,42 +246,42 @@ class _AppState extends State<App> {
                 label: 'Push token',
                 description: 'This is a push token button',
               ),
-              DraggablePanelButtonItem(
-                icon: Icons.copy,
-                onTap: (context) {
-                  // Hide
-                  controller.toggle(context);
-                },
-                label: 'Push token',
-                description: 'This is a push token button',
-              ),
-              DraggablePanelButtonItem(
-                icon: Icons.copy,
-                onTap: (context) {
-                  // Hide
-                  controller.toggle(context);
-                },
-                label: 'Push token',
-                description: 'This is a push token button',
-              ),
-              DraggablePanelButtonItem(
-                icon: Icons.copy,
-                onTap: (context) {
-                  // Hide
-                  controller.toggle(context);
-                },
-                label: 'Push token',
-                description: 'This is a push token button',
-              ),
-              DraggablePanelButtonItem(
-                icon: Icons.copy,
-                onTap: (context) {
-                  // Hide
-                  controller.toggle(context);
-                },
-                label: 'Push token',
-                description: 'This is a push token button',
-              ),
+              // DraggablePanelButtonItem(
+              //   icon: Icons.copy,
+              //   onTap: (context) {
+              //     // Hide
+              //     controller.toggle(context);
+              //   },
+              //   label: 'Push token',
+              //   description: 'This is a push token button',
+              // ),
+              // DraggablePanelButtonItem(
+              //   icon: Icons.copy,
+              //   onTap: (context) {
+              //     // Hide
+              //     controller.toggle(context);
+              //   },
+              //   label: 'Push token',
+              //   description: 'This is a push token button',
+              // ),
+              // DraggablePanelButtonItem(
+              //   icon: Icons.copy,
+              //   onTap: (context) {
+              //     // Hide
+              //     controller.toggle(context);
+              //   },
+              //   label: 'Push token',
+              //   description: 'This is a push token button',
+              // ),
+              // DraggablePanelButtonItem(
+              //   icon: Icons.copy,
+              //   onTap: (context) {
+              //     // Hide
+              //     controller.toggle(context);
+              //   },
+              //   label: 'Push token',
+              //   description: 'This is a push token button',
+              // ),
             ],
             controller: controller,
             child: child,

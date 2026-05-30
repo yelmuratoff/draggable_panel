@@ -130,13 +130,13 @@ final class _TooltipContent extends StatelessWidget {
                   iconBackgroundColor: iconBackgroundColor,
                   tooltipTheme: tooltipTheme,
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: tooltipTheme.iconSpacing),
               ],
               Flexible(
                 child: _MessageText(
                   message: message,
                   textColor: textColor,
-                  fontSize: tooltipTheme.fontSize,
+                  tooltipTheme: tooltipTheme,
                 ),
               ),
             ],
@@ -166,7 +166,8 @@ final class _IconContainer extends StatelessWidget {
           color: iconBackgroundColor ??
               tooltipTheme.iconBackgroundColor ??
               const Color.fromRGBO(255, 255, 255, 0.2),
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          borderRadius:
+              BorderRadius.all(Radius.circular(tooltipTheme.iconBorderRadius)),
         ),
         child: Icon(icon, color: iconColor, size: tooltipTheme.iconSize),
       );
@@ -177,23 +178,27 @@ final class _MessageText extends StatelessWidget {
   const _MessageText({
     required this.message,
     required this.textColor,
-    required this.fontSize,
+    required this.tooltipTheme,
   });
 
   final String message;
   final Color textColor;
-  final double fontSize;
+  final DraggablePanelTooltipThemeData tooltipTheme;
 
   @override
-  Widget build(BuildContext context) => Text(
-        message,
-        style: TextStyle(
-          color: textColor,
-          fontSize: fontSize,
+  Widget build(BuildContext context) {
+    final baseStyle = tooltipTheme.textStyle ??
+        TextStyle(
+          fontSize: tooltipTheme.fontSize,
           fontWeight: FontWeight.w500,
           height: 1.2,
-        ),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      );
+        );
+
+    return Text(
+      message,
+      style: baseStyle.copyWith(color: textColor),
+      maxLines: tooltipTheme.maxLines,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
 }

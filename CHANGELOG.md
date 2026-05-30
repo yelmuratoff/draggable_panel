@@ -1,3 +1,38 @@
+## 3.0.0
+
+Major release: open/hide stability, adaptive content-sized layout, and end-to-end customization.
+
+Fixes
+
+- Deterministic button hide/reveal — no more late or missing hide on open.
+- Resize (keyboard/rotation/split-screen) no longer pulls a hidden button back on-screen.
+- Single-frame open (removed the `await` between hide and reveal).
+- Off-screen position no longer persisted via position listeners.
+- No crash with an empty `items` list.
+
+Layout
+
+- Panel sizes to its content in both axes; `panelWidth` is now the maximum.
+- Item grid balances columns so the last row isn't half-empty; height caps to free space and scrolls.
+- Panel anchors flush to the button's inner edge.
+
+Customization
+
+- Motion via `DraggablePanelTheme.motion` (durations + curves).
+- Behavior flags on the controller: `tapToToggle`, `draggable`, `closeOnTapOutside`.
+- Content builders: `itemBuilder`, `buttonBuilder`, `handleBuilder`.
+- Shell builders: `itemFrameBuilder`, `buttonFrameBuilder`.
+- Panel builders: `panelBuilder` (surface), `panelContentBuilder` (layout).
+- Custom tooltip via `onShowTooltip`.
+- Per-item styling on `DraggablePanelItem`: `color`, `foregroundColor`, `badgeColor`, `badgeLabel`.
+- New theme tokens: handle drag icon/size, item `iconSize`, button `labelStyle`, tooltip text style.
+
+Breaking changes
+
+- Durations moved to `DraggablePanelTheme.motion`; controller `panelAnimDuration`/`dockAnimDuration` deprecated (no effect).
+- `DraggablePanelController.movementSpeed` deprecated in favor of `animateMovement`.
+- `DraggablePanelController.toggleMainButton` now returns `void` instead of `Future<void>`.
+
 ## 2.0.2
 
 - Fixed tooltip text color not adapting to light/dark theme.

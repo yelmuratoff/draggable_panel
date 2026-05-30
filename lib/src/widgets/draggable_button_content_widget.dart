@@ -43,6 +43,8 @@ final class DraggableButtonContentWidget extends StatelessWidget {
               buttonWidth: buttonWidth,
               buttonHeight: buttonHeight,
               color: color,
+              icon: handleTheme.dragIndicatorIcon,
+              iconSize: handleTheme.dragIndicatorSize,
             )
           : _DragHandle(
               key: const ValueKey('drag_handle'),
@@ -64,12 +66,16 @@ final class _DraggingIndicator extends StatelessWidget {
     required this.buttonWidth,
     required this.buttonHeight,
     required this.color,
+    required this.icon,
+    this.iconSize,
     super.key,
   });
 
   final double buttonWidth;
   final double buttonHeight;
   final Color color;
+  final IconData icon;
+  final double? iconSize;
 
   @override
   Widget build(BuildContext context) => Center(
@@ -77,8 +83,9 @@ final class _DraggingIndicator extends StatelessWidget {
           width: buttonWidth,
           height: buttonHeight,
           child: Icon(
-            Icons.drag_indicator_rounded,
+            icon,
             color: color,
+            size: iconSize,
           ),
         ),
       );
