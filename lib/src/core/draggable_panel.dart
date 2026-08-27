@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:draggable_panel/src/controller/draggable_panel_controller.dart';
 import 'package:draggable_panel/src/core/draggable_panel_scope.dart';
 import 'package:draggable_panel/src/core/panel_edge_handle.dart';
 import 'package:draggable_panel/src/core/panel_host.dart';
 import 'package:draggable_panel/src/core/panel_semantics.dart';
+import 'package:draggable_panel/src/core/render_panel_surface.dart';
 import 'package:draggable_panel/src/model/panel_behavior.dart';
 import 'package:draggable_panel/src/model/panel_edge.dart';
+import 'package:draggable_panel/src/model/panel_phase.dart';
 import 'package:draggable_panel/src/model/panel_placement.dart';
 import 'package:draggable_panel/src/model/panel_status.dart';
 import 'package:draggable_panel/src/motion/panel_motion_spec.dart';
@@ -79,9 +83,9 @@ final class DraggablePanel extends StatefulWidget {
 
   /// Builds the grab affordance on the sliver a parked panel leaves showing.
   ///
-  /// It cross-fades into [collapsedBuilder]'s content as the panel is pulled
-  /// out, so the two never swap abruptly. Defaults to a [PanelEdgeHandle]
-  /// tinted by `DraggablePanelThemeData.handleColor`.
+  /// It slides out through the edge as [collapsedBuilder]'s content arrives.
+  /// Defaults to a [PanelEdgeHandle] tinted by
+  /// `DraggablePanelThemeData.handleColor`.
   final PanelHandleBuilder? handleBuilder;
 
   /// Which interactions the panel accepts.
@@ -108,24 +112,66 @@ class _DraggablePanelState extends State<DraggablePanel> {
   late DraggablePanelController _controller;
   bool _ownsController = false;
 
+  final GlobalKey _surfaceKey = GlobalKey();
+  Timer? _idle;
+
   @override
   void initState() {
     super.initState();
     _attach(widget.controller);
+    _restartIdle();
   }
 
   @override
   void didUpdateWidget(DraggablePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.behavior != widget.behavior) _restartIdle();
     if (identical(oldWidget.controller, widget.controller)) return;
     _detach();
     _attach(widget.controller);
+    _restartIdle();
   }
 
   @override
   void dispose() {
+    _idle?.cancel();
     _detach();
     super.dispose();
+  }
+
+  /// Arms the inactivity timer, or cancels it while the panel is not out.
+  void _restartIdle() {
+    _idle?.cancel();
+    _idle = null;
+
+    final delay = widget.behavior.idleStashDelay;
+    if (delay == null || !widget.behavior.stashable) return;
+    if (_controller.phase != PanelPhase.collapsed) return;
+
+    _idle = Timer(delay, () {
+      if (!mounted || _controller.phase != PanelPhase.collapsed) return;
+      _controller.stash();
+    });
+  }
+
+  /// Treats a touch anywhere as activity, and one off the panel as dismissal.
+  ///
+  /// A [Listener] never enters the gesture arena, so whatever was tapped still
+  /// receives its own gesture.
+  void _onPointerDown(PointerDownEvent event) {
+    _restartIdle();
+
+    if (!widget.behavior.stashOnTapOutside) return;
+    if (!widget.behavior.stashable) return;
+    if (_controller.phase != PanelPhase.collapsed) return;
+    if (_panelRect()?.contains(event.position) ?? false) return;
+
+    _controller.stash();
+  }
+
+  Rect? _panelRect() {
+    final surface = _surfaceKey.currentContext?.findRenderObject();
+    return surface is RenderPanelSurface ? surface.paintedRect : null;
   }
 
   void _attach(DraggablePanelController? controller) {
@@ -144,7 +190,10 @@ class _DraggablePanelState extends State<DraggablePanel> {
     if (_ownsController) _controller.dispose();
   }
 
-  void _onStatus() => widget.onStatusChanged?.call(_controller.value);
+  void _onStatus() {
+    _restartIdle();
+    widget.onStatusChanged?.call(_controller.value);
+  }
 
   void _onPlacement() =>
       widget.onPlacementChanged?.call(_controller.placementListenable.value);
@@ -155,40 +204,44 @@ class _DraggablePanelState extends State<DraggablePanel> {
 
     return DraggablePanelScope(
       controller: _controller,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (widget.child case final child?) child,
-          if (widget.behavior.collapseOnTapOutside)
+      child: Listener(
+        onPointerDown: _onPointerDown,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (widget.child case final child?) child,
+            if (widget.behavior.collapseOnTapOutside)
+              ListenableBuilder(
+                listenable: _controller.phaseListenable,
+                builder: (context, _) => _controller.phase.isExpanding
+                    ? GestureDetector(
+                        onTap: _controller.collapse,
+                        behavior: HitTestBehavior.opaque,
+                      )
+                    : const SizedBox.shrink(),
+              ),
             ListenableBuilder(
               listenable: _controller.phaseListenable,
-              builder: (context, _) => _controller.phase.isExpanding
-                  ? GestureDetector(
-                      onTap: _controller.collapse,
-                      behavior: HitTestBehavior.opaque,
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ListenableBuilder(
-            listenable: _controller.phaseListenable,
-            builder: (context, _) => PanelHost(
-              controller: _controller,
-              behavior: widget.behavior,
-              style: style,
-              semantics: widget.semantics,
-              collapsed: widget.collapsedBuilder(context, _controller.value),
-              expanded: widget.expandedBuilder(context, _controller.value),
-              handle:
-                  widget.handleBuilder ??
-                  (context, edge) => PanelEdgeHandle(
-                    color: style.handleColor,
-                    pointsTowardStart: !edge.resolvesToLeft(
-                      Directionality.of(context),
+              builder: (context, _) => PanelHost(
+                controller: _controller,
+                behavior: widget.behavior,
+                style: style,
+                semantics: widget.semantics,
+                collapsed: widget.collapsedBuilder(context, _controller.value),
+                expanded: widget.expandedBuilder(context, _controller.value),
+                handle:
+                    widget.handleBuilder ??
+                    (context, edge) => PanelEdgeHandle(
+                      color: style.handleColor,
+                      pointsTowardStart: !edge.resolvesToLeft(
+                        Directionality.of(context),
+                      ),
                     ),
-                  ),
+                surfaceKey: _surfaceKey,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

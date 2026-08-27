@@ -45,6 +45,23 @@ void main() {
     await shoot(tester, '05-released');
   });
 
+  testWidgets('touching the page puts a drawn-out panel away', (tester) async {
+    app.main();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Developer tools'));
+    await tester.pumpAndSettle();
+
+    await tester.tapAt(tester.getCenter(find.byType(PanelEdgeHandle)));
+    await tester.pumpAndSettle();
+    expect(find.byType(PanelEdgeHandle), findsOneWidget);
+    await binding.takeScreenshot('07-drawn-out');
+
+    await tester.tapAt(const Offset(120, 300));
+    await tester.pumpAndSettle();
+    await binding.takeScreenshot('08-parked-again');
+  });
+
   testWidgets('the parked tab in dark mode', (tester) async {
     app.main();
     await tester.pumpAndSettle();

@@ -27,6 +27,8 @@ final class PanelBehavior {
     this.stashable = true,
     this.dismissible = false,
     this.collapseOnTapOutside = true,
+    this.stashOnTapOutside = true,
+    this.idleStashDelay = const Duration(seconds: 5),
     this.avoidKeyboard = true,
     this.hapticsEnabled = true,
     this.snapPolicy = PanelSnapPolicy.edges,
@@ -53,6 +55,18 @@ final class PanelBehavior {
   /// Whether tapping outside an expanded panel collapses it.
   final bool collapseOnTapOutside;
 
+  /// Whether touching anywhere off a collapsed panel parks it at its edge.
+  ///
+  /// Observed rather than intercepted, so the touch still reaches whatever it
+  /// landed on.
+  final bool stashOnTapOutside;
+
+  /// How long a collapsed panel waits, untouched, before parking itself.
+  ///
+  /// Null keeps it out until it is put away by hand. Only a collapsed panel
+  /// parks on its own: an expanded one is holding content someone is reading.
+  final Duration? idleStashDelay;
+
   /// Whether the panel keeps clear of the software keyboard while expanded.
   final bool avoidKeyboard;
 
@@ -71,6 +85,8 @@ final class PanelBehavior {
     bool? stashable,
     bool? dismissible,
     bool? collapseOnTapOutside,
+    bool? stashOnTapOutside,
+    Duration? idleStashDelay,
     bool? avoidKeyboard,
     bool? hapticsEnabled,
     PanelSnapPolicy? snapPolicy,
@@ -80,6 +96,8 @@ final class PanelBehavior {
     stashable: stashable ?? this.stashable,
     dismissible: dismissible ?? this.dismissible,
     collapseOnTapOutside: collapseOnTapOutside ?? this.collapseOnTapOutside,
+    stashOnTapOutside: stashOnTapOutside ?? this.stashOnTapOutside,
+    idleStashDelay: idleStashDelay ?? this.idleStashDelay,
     avoidKeyboard: avoidKeyboard ?? this.avoidKeyboard,
     hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
     snapPolicy: snapPolicy ?? this.snapPolicy,
@@ -94,6 +112,8 @@ final class PanelBehavior {
           other.stashable == stashable &&
           other.dismissible == dismissible &&
           other.collapseOnTapOutside == collapseOnTapOutside &&
+          other.stashOnTapOutside == stashOnTapOutside &&
+          other.idleStashDelay == idleStashDelay &&
           other.avoidKeyboard == avoidKeyboard &&
           other.hapticsEnabled == hapticsEnabled &&
           other.snapPolicy == snapPolicy;
@@ -105,6 +125,8 @@ final class PanelBehavior {
     stashable,
     dismissible,
     collapseOnTapOutside,
+    stashOnTapOutside,
+    idleStashDelay,
     avoidKeyboard,
     hapticsEnabled,
     snapPolicy,

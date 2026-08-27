@@ -197,8 +197,8 @@ DraggablePanelThemeData defaultPanelTheme(ColorScheme scheme) =>
       ),
       margin: const EdgeInsetsDirectional.all(16),
       stashedPeek: 26,
-      stashedSize: const Size(36, 72),
-      handleColor: scheme.onSurfaceVariant,
+      stashedSize: const Size(35, 70),
+      handleColor: scheme.onSurface.withValues(alpha: 0.5),
       minimumTapTarget: const Size(48, 48),
       motion: PanelMotionSpec(),
     );

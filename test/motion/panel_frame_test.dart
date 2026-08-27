@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:draggable_panel/src/motion/panel_frame.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,7 +22,7 @@ PanelFrame _frame({
   origin: origin,
   collapsedSize: collapsedSize,
   expandedSize: expandedSize,
-  stashedSize: const Size(36, 72),
+  stashedSize: const Size(35, 70),
   anchor: anchor,
   bounds: bounds,
   viewport: viewport ?? bounds,
@@ -163,7 +165,7 @@ void main() {
       final frame = _frame(origin: const Offset(-40, 720));
 
       expect(frame.emergence, 0);
-      expect(frame.rect.size, const Size(36, 72));
+      expect(frame.rect.size, const Size(35, 70));
       expect(frame.rect.right, closeTo(-40 + 64, 1e-9));
     });
 
@@ -177,7 +179,7 @@ void main() {
       expect(frame.rect.width, greaterThan(64));
       expect(
         frame.rect.size,
-        isNot(const Size(36, 72)),
+        isNot(const Size(35, 70)),
         reason: 'a rubber-banded expansion is not a park',
       );
     });
@@ -211,41 +213,89 @@ void main() {
     PanelFrame parkedBy(double pulledOut) =>
         _frame(origin: Offset(_bounds.right - 26 - pulledOut, 400));
 
-    test('a parked panel shows the handle and nothing else', () {
+    test('a parked panel shows the handle, with its face still outside', () {
       final frame = parkedBy(0);
 
       expect(frame.emergence, 0);
       expect(frame.handleOpacity, 1);
-      expect(frame.collapsedOpacity, 0);
+      expect(
+        frame.collapsedOrigin.dx + _collapsed.width,
+        lessThanOrEqualTo(frame.rect.left),
+        reason: 'the face has not entered the tab yet',
+      );
     });
 
-    test('a panel fully on screen shows its content and no handle', () {
+    test('a panel fully on screen shows its face and no handle', () {
       final frame = parkedBy(38);
 
       expect(frame.emergence, 1);
       expect(frame.handleOpacity, 0);
-      expect(frame.collapsedOpacity, 1);
+      expect(frame.collapsedOrigin.dx, closeTo(frame.rect.left, 1e-9));
     });
 
-    test('pulling it out cross-fades the two continuously', () {
-      var previous = parkedBy(0).collapsedOpacity;
+    test('the fade runs with the slide, one way each, to its ends', () {
+      expect(parkedBy(0).handleOpacity, 1);
+      expect(parkedBy(0).collapsedOpacity, 0);
+      expect(parkedBy(38).handleOpacity, 0);
+      expect(parkedBy(38).collapsedOpacity, 1);
+
+      var handle = 1.0;
+      var face = 0.0;
+      for (var pulled = 1.0; pulled <= 38; pulled++) {
+        final frame = parkedBy(pulled);
+        expect(
+          frame.handleOpacity,
+          lessThanOrEqualTo(handle),
+          reason: '$pulled',
+        );
+        expect(
+          frame.collapsedOpacity,
+          greaterThanOrEqualTo(face),
+          reason: '$pulled',
+        );
+        handle = frame.handleOpacity;
+        face = frame.collapsedOpacity;
+      }
+    });
+
+    test('the two are never both half-faded at once', () {
+      for (var pulled = 0.0; pulled <= 38; pulled += 0.5) {
+        final frame = parkedBy(pulled);
+        expect(
+          math.min(frame.handleOpacity, frame.collapsedOpacity),
+          lessThan(0.5),
+          reason: 'a ghosted double exposure at $pulled',
+        );
+      }
+    });
+
+    test('the two slide the same way, one out as the other arrives', () {
+      var face = parkedBy(0).collapsedOrigin.dx - parkedBy(0).rect.left;
+      var handle = parkedBy(0).handleOrigin.dx - parkedBy(0).rect.left;
 
       for (var pulled = 1.0; pulled <= 38; pulled++) {
         final frame = parkedBy(pulled);
-        expect(frame.collapsedOpacity, greaterThan(previous));
+        final nextFace = frame.collapsedOrigin.dx - frame.rect.left;
+        final nextHandle = frame.handleOrigin.dx - frame.rect.left;
+
+        expect(nextFace, greaterThan(face), reason: 'the face slides in');
         expect(
-          frame.handleOpacity,
-          closeTo(1 - frame.collapsedOpacity, 1e-9),
-          reason: 'the handle must give up exactly what the content takes',
+          nextHandle,
+          greaterThan(handle),
+          reason: 'the handle slides out',
         );
-        previous = frame.collapsedOpacity;
+        face = nextFace;
+        handle = nextHandle;
       }
+
+      expect(handle, closeTo(35, 1e-9), reason: 'clear of a 35-wide tab');
+      expect(face, closeTo(0, 1e-9));
     });
 
     test('the handle fills the sliver that stays on screen', () {
       final frame = parkedBy(0);
 
-      expect(frame.rect.size, const Size(36, 72));
+      expect(frame.rect.size, const Size(35, 70));
       expect(frame.handleOrigin.dx, frame.rect.left);
       expect(frame.handleOrigin.dx, closeTo(_bounds.right - 26, 1e-9));
       expect(

@@ -48,13 +48,23 @@ Added
   sliver; pull it back out and it returns. Both are ordinary drags rather than
   separate gestures. Start parked with
   `initialPlacement: PanelPlacement.stashed(...)`.
-- `stashedShape` — the shape a parked panel takes, a `StadiumBorder` by default,
-  so the sliver reads as a rounded tongue rather than a card the screen edge cut
-  in half. It un-rounds into `collapsedShape` as the panel is pulled out.
-- A parked panel draws its own grab affordance on the sliver it leaves showing:
-  a chevron pointing the way it comes out. It cross-fades into the collapsed
-  content by how far the panel has been pulled, so nothing appears at a
-  threshold. Retint it with `handleColor`, or replace it with `handleBuilder`.
+- `stashedSize` — the size a parked panel takes, `35x70` by default. A tab is
+  taller than it is wide, so it reads as something to pull rather than as the
+  panel with most of it missing. The panel shrinks into it as it is pushed off
+  the edge and unfolds out of it as it is drawn back.
+- A parked panel draws its own grab affordance on the tab: a curve leaning the
+  way it comes out. Retint it with `handleColor`, resize the curve on
+  `PanelEdgeHandle`, or replace the whole thing with `handleBuilder`.
+- `idleStashDelay` — a collapsed panel parks itself after five seconds
+  untouched. Null keeps it out until it is put away by hand; an expanded panel
+  never parks on its own, since someone is reading it.
+- `stashOnTapOutside` — touching anywhere off a collapsed panel parks it. The
+  touch is observed rather than intercepted, so whatever it landed on still
+  gets its own gesture.
+- Emerging from a park is a slide, not a cross-fade. The handle and the
+  collapsed face both hold still against the screen while the panel slides out
+  from under them, so the handle leaves through the edge exactly as the face
+  arrives, and neither is ever a translucent ghost of the other.
 - Pulling a parked panel out is one-to-one from the first pixel. The rubber
   band used to resist straight to the resting bounds, which yanked a parked
   panel inwards the moment a drag registered, and the platform pan slop was
@@ -62,7 +72,7 @@ Added
 - `stashedElevation` — a parked panel is tucked into the screen edge, so it
   casts a lighter shadow than one resting in the open. `stashedPeek` is now
   measured from the screen edge, not from inside `margin`, so the visible sliver
-  is exactly the token, and defaults to 34 so the affordance has room.
+  is exactly the token.
 - `surfaceFilter` — a frosted-glass seam applied inside the shape clip, so it
   composes with the morph rather than fighting it.
 - `expandTravelFraction` — how far a drag must travel to open or close.

@@ -39,6 +39,7 @@ final class PanelHost extends StatefulWidget {
     required this.collapsed,
     required this.expanded,
     required this.handle,
+    required this.surfaceKey,
     super.key,
   });
 
@@ -51,6 +52,10 @@ final class PanelHost extends StatefulWidget {
 
   /// Builds the grab affordance for whichever edge the panel is parked at.
   final Widget Function(BuildContext context, PanelEdge edge) handle;
+
+  /// Reaches the render object, so an ancestor can tell a touch on the panel
+  /// from one that landed elsewhere.
+  final GlobalKey surfaceKey;
 
   @override
   State<PanelHost> createState() => _PanelHostState();
@@ -544,6 +549,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
   Widget _buildSurface() {
     final phase = widget.controller.phase;
     return PanelSurface(
+      key: widget.surfaceKey,
       repaint: _repaint,
       style: widget.style,
       originOf: () => _driver.value,

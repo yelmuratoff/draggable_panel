@@ -494,7 +494,7 @@ void main() {
       int frames = 8,
     }) async {
       // A parked panel's centre is off screen; grab the sliver that is not.
-      final rect = _panelRect(tester);
+      final rect = _paintedRect(tester);
       final gesture = await tester.startGesture(
         Offset(rect.center.dx.clamp(8.0, 792.0), rect.center.dy),
       );
@@ -515,7 +515,94 @@ void main() {
       await _pumpPanel(tester, controller: controller);
 
       expect(controller.phase, PanelPhase.stashed);
-      expect(_panelRect(tester).right, greaterThan(800));
+      expect(_paintedRect(tester).right, greaterThan(800));
+    });
+
+    testWidgets('it parks itself once left alone', (tester) async {
+      final controller = await _pumpPanel(
+        tester,
+        behavior: const PanelBehavior(idleStashDelay: Duration(seconds: 3)),
+      );
+      expect(controller.phase, PanelPhase.collapsed);
+
+      await tester.pump(const Duration(seconds: 2));
+      expect(controller.phase, PanelPhase.collapsed, reason: 'not yet');
+
+      await tester.pump(const Duration(seconds: 2));
+      expect(controller.phase, PanelPhase.stashed);
+    });
+
+    testWidgets('touching it restarts the wait', (tester) async {
+      final controller = await _pumpPanel(
+        tester,
+        behavior: const PanelBehavior(idleStashDelay: Duration(seconds: 3)),
+      );
+
+      await tester.pump(const Duration(seconds: 2));
+      final panel = _paintedRect(tester).center;
+      await (await tester.startGesture(panel)).up();
+      await tester.pump(const Duration(seconds: 2));
+
+      expect(
+        controller.phase,
+        isNot(PanelPhase.stashed),
+        reason: 'the clock restarted when it was touched',
+      );
+    });
+
+    testWidgets('a null delay leaves it out indefinitely', (tester) async {
+      final controller = await _pumpPanel(
+        tester,
+        behavior: const PanelBehavior(idleStashDelay: null),
+      );
+
+      await tester.pump(const Duration(minutes: 5));
+
+      expect(controller.phase, PanelPhase.collapsed);
+    });
+
+    testWidgets('touching the page parks it, without eating the touch', (
+      tester,
+    ) async {
+      var pageTaps = 0;
+      final controller = DraggablePanelController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DraggablePanel(
+            controller: controller,
+            theme: DraggablePanelThemeData(motion: PanelMotionSpec.instant()),
+            collapsedBuilder: (context, status) => const SizedBox.shrink(),
+            expandedBuilder: (context, status) => const SizedBox.shrink(),
+            child: GestureDetector(
+              onTap: () => pageTaps++,
+              child: const ColoredBox(
+                key: _appKey,
+                color: Color(0xFFFFFFFF),
+                child: SizedBox.expand(),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(controller.phase, PanelPhase.collapsed);
+
+      await tester.tapAt(const Offset(80, 80));
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.stashed);
+      expect(pageTaps, 1, reason: 'the page still got its own tap');
+    });
+
+    testWidgets('touching the panel itself does not park it', (tester) async {
+      final controller = await _pumpPanel(tester);
+
+      await tester.tapAt(_paintedRect(tester).center);
+      await tester.pump();
+
+      expect(controller.phase, isNot(PanelPhase.stashed));
     });
 
     testWidgets('the sliver carries a grab affordance', (tester) async {
@@ -526,7 +613,7 @@ void main() {
       final handle = tester.getRect(find.byType(PanelEdgeHandle));
       expect(
         handle.size,
-        const Size(26, 72),
+        const Size(26, 70),
         reason: 'the handle fills only the sliver that stays on screen',
       );
       expect(handle.left, closeTo(_paintedRect(tester).left, 0.5));
@@ -596,7 +683,7 @@ void main() {
       await dragBy(tester, const Offset(-40, 0));
 
       expect(controller.phase, PanelPhase.collapsed);
-      expect(_panelRect(tester).right, lessThanOrEqualTo(800));
+      expect(_paintedRect(tester).right, lessThanOrEqualTo(800));
     });
 
     testWidgets('dragging it back against the edge parks it again', (

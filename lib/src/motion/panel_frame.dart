@@ -11,6 +11,16 @@ const Interval kPanelCollapsedFade = Interval(0, 0.25, curve: Curves.easeOut);
 /// How the expanded content fades in once the panel is most of the way open.
 const Interval kPanelExpandedFade = Interval(0.3, 0.7, curve: Curves.easeIn);
 
+/// How the edge handle fades out as the panel is drawn off its park.
+const Interval kPanelHandleFade = Interval(0, 0.55, curve: Curves.easeOut);
+
+/// How the collapsed face fades in as the panel arrives from a park.
+///
+/// Starts after [kPanelHandleFade] is well underway, so the two are never both
+/// half-there in the same place — the slide separates them, this keeps the
+/// overlap short.
+const Interval kPanelEmergeFade = Interval(0.35, 0.9, curve: Curves.easeIn);
+
 /// Everything needed to paint one frame of the panel.
 ///
 /// Produced by [computePanelFrame], which is a pure function of the panel's
@@ -142,18 +152,22 @@ PanelFrame computePanelFrame({
           emergence,
         )!;
 
+  final towardsEdge = collapsedBox.left < viewport.left ? -1.0 : 1.0;
+  final reel = Offset(towardsEdge * stashedSize.width, 0);
+
   return PanelFrame(
     rect: rect,
-    collapsedOrigin: _alignIn(rect, collapsedSize, anchor),
+    collapsedOrigin:
+        _alignIn(rect, collapsedSize, anchor) + reel * (emergence - 1),
     expandedOrigin: _alignIn(rect, expandedSize, anchor),
-    handleOrigin: _handleIn(
-      rect,
-      handleSizeFor(stashedSize, stashedPeek),
-      viewport,
-    ),
-    collapsedOpacity: (1 - kPanelCollapsedFade.transform(clamped)) * emergence,
-    expandedOpacity: kPanelExpandedFade.transform(clamped) * emergence,
-    handleOpacity: (1 - emergence) * (1 - clamped),
+    handleOrigin:
+        _handleIn(rect, handleSizeFor(stashedSize, stashedPeek), viewport) +
+        reel * emergence,
+    collapsedOpacity:
+        (1 - kPanelCollapsedFade.transform(clamped)) *
+        kPanelEmergeFade.transform(emergence),
+    expandedOpacity: kPanelExpandedFade.transform(clamped),
+    handleOpacity: (1 - kPanelHandleFade.transform(emergence)) * (1 - clamped),
     emergence: emergence,
     expansion: clamped,
   );
