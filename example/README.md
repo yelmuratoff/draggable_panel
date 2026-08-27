@@ -1,3 +1,7 @@
-# ispect_example
+# draggable_panel_example
 
-A new Flutter project.
+Demo app for the [`draggable_panel`](../) package.
+
+```sh
+flutter run
+```

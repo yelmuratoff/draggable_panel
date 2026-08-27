@@ -1,19 +1,27 @@
 name: draggable_panel
-description: A versatile floating panel widget that can be dragged around the screen and docked to edges. Perfect for displaying tools, actions, or additional content on demand.
-version: 3.0.0
+description: A floating panel that behaves like a system Picture-in-Picture window — drag it anywhere, spring-snap to corners, stash it off the edge, tap to grow it in place.
+version: 4.0.0
 homepage: https://github.com/yelmuratoff/draggable_panel.git
 issue_tracker: https://github.com/yelmuratoff/draggable_panel/issues
 
 topics:
   - draggable-panel
-  - draggable
-  - panel
+  - picture-in-picture
   - floating-panel
-  - floating-button
+  - animation
+  - accessibility
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
 
 environment:
-  sdk: ^3.2.0
-  flutter: "any"
+  sdk: ^3.8.0
+  flutter: ">=3.32.0"
 
 dependencies:
   flutter:
@@ -23,3 +31,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

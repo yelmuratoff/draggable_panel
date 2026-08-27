@@ -1,0 +1,570 @@
+import 'dart:math' as math;
+
+import 'package:draggable_panel/src/controller/draggable_panel_controller.dart';
+import 'package:draggable_panel/src/controller/panel_event.dart';
+import 'package:draggable_panel/src/core/panel_haptics.dart';
+import 'package:draggable_panel/src/core/panel_semantics.dart';
+import 'package:draggable_panel/src/core/panel_surface.dart';
+import 'package:draggable_panel/src/model/panel_behavior.dart';
+import 'package:draggable_panel/src/model/panel_corner.dart';
+import 'package:draggable_panel/src/model/panel_phase.dart';
+import 'package:draggable_panel/src/model/panel_placement.dart';
+import 'package:draggable_panel/src/model/panel_status.dart';
+import 'package:draggable_panel/src/model/panel_viewport.dart';
+import 'package:draggable_panel/src/motion/morph_controller.dart';
+import 'package:draggable_panel/src/motion/offset_spring_driver.dart';
+import 'package:draggable_panel/src/motion/panel_motion_spec.dart';
+import 'package:draggable_panel/src/motion/panel_physics.dart';
+import 'package:draggable_panel/src/motion/panel_release.dart';
+import 'package:draggable_panel/src/theme/panel_style.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart';
+
+/// Drives one panel: owns its motion, reads its gestures, and keeps its
+/// controller and the viewport in step.
+///
+/// Everything that moves per frame lives in the two motion objects here, which
+/// the render layer reads directly. The widget itself rebuilds only when the
+/// panel's phase or configuration changes — a handful of times per gesture.
+final class PanelHost extends StatefulWidget {
+  const PanelHost({
+    required this.controller,
+    required this.behavior,
+    required this.style,
+    required this.semantics,
+    required this.collapsed,
+    required this.expanded,
+    super.key,
+  });
+
+  final DraggablePanelController controller;
+  final PanelBehavior behavior;
+  final PanelStyle style;
+  final PanelSemantics semantics;
+  final Widget collapsed;
+  final Widget expanded;
+
+  @override
+  State<PanelHost> createState() => _PanelHostState();
+}
+
+class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
+  late final OffsetSpringDriver _driver;
+  late final MorphController _morph;
+  late final Listenable _repaint;
+
+  PanelViewport? _viewport;
+  Offset _raw = Offset.zero;
+  Offset _grab = Offset.zero;
+  Offset _carried = Offset.zero;
+  Duration _carriedAt = Duration.zero;
+  double _morphReleaseVelocity = 0;
+  Offset _settleVelocity = Offset.zero;
+  bool _placed = false;
+
+  final PanelHaptics _haptics = PanelHaptics();
+  PanelStatus? _previousStatus;
+
+  PanelMotionSpec get _spec => widget.style.motion;
+
+  Size get _panelSize => widget.style.collapsedSize;
+
+  @override
+  void initState() {
+    super.initState();
+    _driver = OffsetSpringDriver(
+      vsync: this,
+      spec: _spec,
+      onSettled: () => _dispatch(const PanelSettleCompleted()),
+    );
+    _morph = MorphController(
+      vsync: this,
+      spec: _spec,
+      initial: widget.controller.isExpanded ? 1 : 0,
+      onCompleted: () => _dispatch(const PanelMorphCompleted()),
+    );
+    _repaint = Listenable.merge([_driver, _morph]);
+    _previousStatus = widget.controller.value;
+    widget.controller.addListener(_onStatusChanged);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncViewport();
+  }
+
+  @override
+  void didUpdateWidget(PanelHost oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.controller, widget.controller)) {
+      oldWidget.controller.removeListener(_onStatusChanged);
+      widget.controller.addListener(_onStatusChanged);
+    }
+    _driver.spec = _spec;
+    _morph.spec = _spec;
+    widget.controller.behavior = widget.behavior;
+    if (oldWidget.style != widget.style) _syncViewport();
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onStatusChanged);
+    _driver.dispose();
+    _morph.dispose();
+    super.dispose();
+  }
+
+  void _dispatch(PanelEvent event) {
+    if (!mounted) return;
+    widget.controller.dispatch(event);
+  }
+
+  /// Recomputes the viewport and re-places the panel against it.
+  ///
+  /// Rotation, a resize, split-screen, and the keyboard all arrive here. Because
+  /// a placement is resolution-independent the panel keeps its corner and simply
+  /// springs to where that corner now is, carrying any velocity it already had.
+  void _syncViewport() {
+    final next = PanelViewport.of(
+      context,
+      margin: widget.style.margin,
+      avoidKeyboard: widget.behavior.avoidKeyboard,
+    );
+    widget.controller.behavior = widget.behavior;
+
+    final changed = _viewport != next;
+    _viewport = next;
+    _morph.travelPixels = math.max(
+      widget.style.collapsedSize.height,
+      next.bounds.height * _spec.expandTravelFraction,
+    );
+
+    if (!_placed) {
+      _placed = true;
+      _driver.jumpTo(_originOf(widget.controller.placement));
+      return;
+    }
+    if (!changed) return;
+
+    final target = _originOf(widget.controller.placement);
+    if (widget.controller.isDragging) return;
+    if (_driver.isAnimating) {
+      _driver.retarget(target);
+    } else {
+      _driver.jumpTo(target);
+    }
+  }
+
+  Offset _originOf(PanelPlacement placement) => placement.resolve(
+    _viewport!,
+    _panelSize,
+    stashedPeek: widget.style.stashedPeek,
+  );
+
+  void _onStatusChanged() {
+    final status = widget.controller.value;
+    final previous = _previousStatus;
+    _haptics.onTransition(
+      previous,
+      status,
+      enabled: widget.behavior.hapticsEnabled,
+    );
+    _previousStatus = status;
+    _followPlacement(previous, status);
+
+    switch (status.phase) {
+      case PanelPhase.settling:
+        _driver.settle(
+          target: _originOf(status.placement),
+          velocity: _settleVelocity,
+        );
+        _settleVelocity = Offset.zero;
+      case PanelPhase.expanding:
+        _morph.settleTo(1, pixelVelocity: _morphReleaseVelocity);
+        _morphReleaseVelocity = 0;
+      case PanelPhase.collapsing:
+        _morph.settleTo(0, pixelVelocity: _morphReleaseVelocity);
+        _morphReleaseVelocity = 0;
+      case PanelPhase.hidden:
+        _morph.jumpTo(0);
+      case PanelPhase.collapsed:
+      case PanelPhase.expanded:
+      case PanelPhase.stashed:
+      case PanelPhase.dragging:
+        break;
+    }
+    setState(() {});
+  }
+
+  void _onTapUp(TapDragUpDetails details) {
+    final controller = widget.controller;
+    if (controller.isStashed) {
+      controller.unstash();
+      return;
+    }
+    if (widget.behavior.tapToExpand) controller.toggle();
+  }
+
+  /// Whether a drag is currently moving the panel.
+  ///
+  /// An expanded panel is dragged without entering [PanelPhase.dragging]: the
+  /// window keeps showing its content while it travels, exactly as a system
+  /// Picture-in-Picture window does, so the phase must not be disturbed.
+  bool _isMoving = false;
+
+  void _onDragStart(TapDragStartDetails details) {
+    if (!widget.behavior.draggable) return;
+
+    _haptics.reset();
+    _isMoving = true;
+    _carried = _driver.interrupt();
+    _carriedAt = SchedulerBinding.instance.currentSystemFrameTimeStamp;
+    _raw = _driver.value;
+    _grab = details.globalPosition - _raw;
+    if (!widget.controller.phase.isExpanding) {
+      _dispatch(const PanelDragStarted());
+    }
+  }
+
+  void _onDragUpdate(TapDragUpdateDetails details) {
+    if (!_isMoving) return;
+
+    _raw = details.globalPosition - _grab;
+    _driver.drive(
+      PanelPhysics.resist(
+        _raw,
+        _viewport!.travelFor(_panelSize),
+        _viewport!.size,
+        coefficient: _spec.rubberBandCoefficient,
+      ),
+    );
+  }
+
+  void _onDragEnd(TapDragEndDetails details) {
+    final velocity = details.velocity.pixelsPerSecond;
+    if (!_isMoving) return;
+    _isMoving = false;
+
+    _settleVelocity = _releaseVelocity(velocity);
+
+    if (widget.behavior.dismissible && _projectsClearOfScreen()) {
+      widget.controller.dispatch(const PanelDismissRequested());
+      return;
+    }
+
+    final target = resolvePanelRelease(
+      topLeft: _driver.value,
+      velocity: _settleVelocity,
+      panelSize: _panelSize,
+      viewport: _viewport!,
+      behavior: widget.behavior,
+      motion: _spec,
+    );
+
+    if (widget.controller.phase.isExpanding) {
+      widget.controller.moveTo(target);
+      return;
+    }
+
+    widget.controller.dispatch(PanelDragSettled(target));
+  }
+
+  /// Moves the panel when its resting placement changed without a settle phase.
+  ///
+  /// Relocating an expanded panel keeps it open, so nothing drives the spring
+  /// through [PanelPhase.settling]; this does it instead.
+  void _followPlacement(PanelStatus? previous, PanelStatus status) {
+    if (previous == null) return;
+    if (previous.placement == status.placement) return;
+    if (status.phase == PanelPhase.settling || status.isDragging) return;
+
+    final target = _originOf(status.placement);
+    if (status.phase == PanelPhase.hidden) {
+      _driver.jumpTo(target);
+    } else {
+      _driver.settle(target: target);
+    }
+  }
+
+  /// Whether the throw would carry the panel entirely off the viewport.
+  ///
+  /// Requires the whole panel to clear the screen, not merely its edge, so a
+  /// hard flick towards a corner can never be mistaken for a dismissal.
+  bool _projectsClearOfScreen() {
+    final projected = PanelPhysics.projectOffset(
+      _driver.value,
+      _settleVelocity,
+      _spec.decelerationRate,
+    );
+    return !(projected & _panelSize).overlaps(Offset.zero & _viewport!.size);
+  }
+
+  void _onCancel() {
+    if (!_isMoving) return;
+    _isMoving = false;
+    if (widget.controller.isDragging) {
+      widget.controller.dispatch(const PanelDragCancelled());
+    } else {
+      _driver.settle(target: _originOf(widget.controller.placement));
+    }
+  }
+
+  /// Corrects the raw finger velocity before it enters a spring.
+  ///
+  /// Momentum captured from an interrupted settle is folded back in with an
+  /// exponential decay, and velocity outside the bounds is scaled by the
+  /// rubber band's slope — without that the surface visibly changes speed at
+  /// the moment the finger lets go.
+  Offset _releaseVelocity(Offset finger) {
+    final halfLife = _spec.momentumHalfLife.inMicroseconds;
+    var combined = finger;
+    if (halfLife > 0) {
+      final age =
+          (SchedulerBinding.instance.currentSystemFrameTimeStamp - _carriedAt)
+              .inMicroseconds /
+          halfLife;
+      combined += _carried * math.exp(-age);
+    }
+
+    final over = PanelPhysics.overshootOf(
+      _raw,
+      _viewport!.travelFor(_panelSize),
+    );
+    final size = _viewport!.size;
+    return Offset(
+      combined.dx *
+          PanelPhysics.rubberBandSlope(
+            over.dx,
+            size.width,
+            coefficient: _spec.rubberBandCoefficient,
+          ),
+      combined.dy *
+          PanelPhysics.rubberBandSlope(
+            over.dy,
+            size.height,
+            coefficient: _spec.rubberBandCoefficient,
+          ),
+    );
+  }
+
+  Alignment _anchor() {
+    final placement = widget.controller.placement;
+    final direction = _viewport!.direction;
+    return switch (placement) {
+      CornerPlacement(:final corner) => corner.resolve(direction),
+      StashedPlacement(:final edge, :final verticalAlignment) => Alignment(
+        edge.resolveX(direction),
+        verticalAlignment.clamp(-1.0, 1.0),
+      ),
+      FreePlacement(:final alignment) => alignment.resolve(direction),
+    };
+  }
+
+  /// Moves the panel one corner in [direction], if there is one that way.
+  void _moveByKeyboard(AxisDirection direction) {
+    final placement = widget.controller.placement;
+    if (placement is! CornerPlacement) {
+      widget.controller.moveTo(
+        const PanelPlacement.corner(PanelCorner.bottomEnd),
+      );
+      return;
+    }
+    final next = placement.corner.neighbour(direction, _viewport!.direction);
+    if (next != null) widget.controller.moveTo(PanelPlacement.corner(next));
+  }
+
+  void _dismissByKeyboard() {
+    final controller = widget.controller;
+    if (controller.phase.isExpanding) {
+      controller.collapse();
+    } else if (widget.behavior.stashable && !controller.isStashed) {
+      controller.stash();
+    }
+  }
+
+  /// Custom actions are the only way a four-corner drag model is operable
+  /// without dragging; they surface in VoiceOver's rotor and TalkBack's menu.
+  Map<CustomSemanticsAction, VoidCallback> _customActions() {
+    final labels = widget.semantics;
+    final actions = <CustomSemanticsAction, VoidCallback>{};
+
+    if (widget.controller.isStashed) {
+      actions[CustomSemanticsAction(label: labels.unstashAction)] =
+          widget.controller.unstash;
+    } else {
+      if (widget.behavior.stashable) {
+        actions[CustomSemanticsAction(label: labels.stashAction)] =
+            widget.controller.stash;
+      }
+      for (final corner in PanelCorner.values) {
+        if (widget.controller.placement == PanelPlacement.corner(corner)) {
+          continue;
+        }
+        final name = labels.nameOf(corner);
+        actions[CustomSemanticsAction(
+          label: '${labels.moveActionPrefix} $name',
+        )] = () =>
+            widget.controller.moveTo(PanelPlacement.corner(corner));
+      }
+    }
+    return actions;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.maybeOf(context);
+    final settings = media?.gestureSettings;
+    // Screen readers own drag gestures, so free dragging is unusable there.
+    final assistive = media?.accessibleNavigation ?? false;
+
+    // Not FocusableActionDetector: its MouseRegion is opaque to hit testing.
+    return Shortcuts(
+      shortcuts: const <ShortcutActivator, Intent>{
+        SingleActivator(LogicalKeyboardKey.arrowUp): _PanelMoveIntent(
+          AxisDirection.up,
+        ),
+        SingleActivator(LogicalKeyboardKey.arrowDown): _PanelMoveIntent(
+          AxisDirection.down,
+        ),
+        SingleActivator(LogicalKeyboardKey.arrowLeft): _PanelMoveIntent(
+          AxisDirection.left,
+        ),
+        SingleActivator(LogicalKeyboardKey.arrowRight): _PanelMoveIntent(
+          AxisDirection.right,
+        ),
+      },
+      child: Actions(
+        actions: <Type, Action<Intent>>{
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: (_) => widget.controller.toggle(),
+          ),
+          DismissIntent: CallbackAction<DismissIntent>(
+            onInvoke: (_) => _dismissByKeyboard(),
+          ),
+          _PanelMoveIntent: CallbackAction<_PanelMoveIntent>(
+            onInvoke: (intent) => _moveByKeyboard(intent.direction),
+          ),
+        },
+        child: Focus(
+          debugLabel: 'DraggablePanel',
+          child: _buildGestures(settings, assistive: assistive),
+        ),
+      ),
+    );
+  }
+
+  /// Annotates whichever face is currently showing.
+  ///
+  /// The annotation sits on the content rather than on this full-screen host,
+  /// so the semantics node reports the panel's own rect instead of claiming the
+  /// whole screen. The face that is not showing is excluded outright.
+  Widget _annotate(Widget child, {required bool active}) {
+    if (!active) return ExcludeSemantics(child: child);
+
+    final phase = widget.controller.phase;
+    return Semantics(
+      container: true,
+      explicitChildNodes: phase.isExpanding,
+      button: !phase.isExpanding,
+      label: widget.semantics.label,
+      hint: phase.isExpanding
+          ? widget.semantics.collapseHint
+          : widget.semantics.expandHint,
+      onTap: widget.behavior.tapToExpand ? widget.controller.toggle : null,
+      onDismiss: phase.isExpanding ? widget.controller.collapse : null,
+      customSemanticsActions: _customActions(),
+      child: child,
+    );
+  }
+
+  Widget _buildGestures(
+    DeviceGestureSettings? settings, {
+    required bool assistive,
+  }) {
+    if (assistive) return _buildSurface();
+
+    return RawGestureDetector(
+      behavior: HitTestBehavior.deferToChild,
+      gestures: <Type, GestureRecognizerFactory>{
+        TapAndPanGestureRecognizer:
+            GestureRecognizerFactoryWithHandlers<TapAndPanGestureRecognizer>(
+              TapAndPanGestureRecognizer.new,
+              (instance) => instance
+                // DragStartBehavior.start reports position at arena win.
+                ..dragStartBehavior = DragStartBehavior.down
+                ..gestureSettings = settings
+                ..onTapUp = _onTapUp
+                ..onDragStart = _onDragStart
+                ..onDragUpdate = _onDragUpdate
+                ..onDragEnd = _onDragEnd
+                ..onCancel = _onCancel,
+            ),
+      },
+      child: _buildSurface(),
+    );
+  }
+
+  Widget _buildSurface() {
+    final phase = widget.controller.phase;
+    return PanelSurface(
+      repaint: _repaint,
+      style: widget.style,
+      originOf: () => _driver.value,
+      expansionOf: () => _morph.value,
+      anchor: _anchor(),
+      bounds: _boundsInsets(),
+      isDragging: phase == PanelPhase.dragging,
+      reduceMotion: _spec.reduceMotion,
+      opacity: _opacityFor(phase),
+      collapsed: RepaintBoundary(
+        child: _surfaceContent(
+          _annotate(widget.collapsed, active: !phase.isExpanding),
+        ),
+      ),
+      expanded: RepaintBoundary(
+        child: _surfaceContent(
+          _annotate(widget.expanded, active: phase.isExpanding),
+        ),
+      ),
+    );
+  }
+
+  /// Gives caller-supplied content the Material context it expects.
+  ///
+  /// The panel paints its own surface, so without this a bare [Text] inside a
+  /// builder falls back to [DefaultTextStyle.fallback] and renders as oversized
+  /// debug type. Transparency keeps the painted surface visible while still
+  /// providing a text style, an icon theme, and a target for ink.
+  Widget _surfaceContent(Widget child) =>
+      Material(type: MaterialType.transparency, child: child);
+
+  double _opacityFor(PanelPhase phase) => switch (phase) {
+    PanelPhase.hidden => 0,
+    PanelPhase.stashed => widget.style.stashedOpacity,
+    _ => 1,
+  };
+
+  /// The viewport's usable rect, expressed as insets from this widget's box.
+  EdgeInsets _boundsInsets() {
+    final viewport = _viewport!;
+    final bounds = viewport.bounds;
+    return EdgeInsets.fromLTRB(
+      bounds.left,
+      bounds.top,
+      viewport.size.width - bounds.right,
+      viewport.size.height - bounds.bottom,
+    );
+  }
+}
+
+/// Moves the panel one corner in a direction, from the keyboard.
+@immutable
+final class _PanelMoveIntent extends Intent {
+  const _PanelMoveIntent(this.direction);
+
+  final AxisDirection direction;
+}

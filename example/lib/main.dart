@@ -1,293 +1,111 @@
 import 'package:draggable_panel/draggable_panel.dart';
+import 'package:draggable_panel_example/mini_player_demo.dart';
+import 'package:draggable_panel_example/theming_demo.dart';
+import 'package:draggable_panel_example/tools_demo.dart';
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(
-    const App(),
+void main() => runApp(const ExampleApp());
+
+/// Demonstrates the three shapes a [DraggablePanel] usually takes.
+class ExampleApp extends StatefulWidget {
+  const ExampleApp({super.key});
+
+  @override
+  State<ExampleApp> createState() => _ExampleAppState();
+}
+
+class _ExampleAppState extends State<ExampleApp> {
+  ThemeMode _themeMode = ThemeMode.system;
+
+  void _toggleBrightness() => setState(() {
+    _themeMode = _themeMode == ThemeMode.dark
+        ? ThemeMode.light
+        : ThemeMode.dark;
+  });
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    title: 'draggable_panel',
+    theme: ThemeData(colorSchemeSeed: Colors.indigo),
+    darkTheme: ThemeData(
+      colorSchemeSeed: Colors.indigo,
+      brightness: Brightness.dark,
+    ),
+    themeMode: _themeMode,
+    routes: {
+      '/player': (_) => const MiniPlayerDemo(),
+      '/tools': (_) => const ToolsDemo(),
+      '/theming': (_) => const ThemingDemo(),
+    },
+    home: _HomeScreen(onToggleBrightness: _toggleBrightness),
   );
 }
 
-class App extends StatefulWidget {
-  const App({super.key});
+class _HomeScreen extends StatelessWidget {
+  const _HomeScreen({required this.onToggleBrightness});
+
+  final VoidCallback onToggleBrightness;
 
   @override
-  State<App> createState() => _AppState();
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: const Text('draggable_panel'),
+      actions: [
+        IconButton(
+          onPressed: onToggleBrightness,
+          icon: const Icon(Icons.brightness_6_outlined),
+          tooltip: 'Toggle brightness',
+        ),
+      ],
+    ),
+    body: ListView(
+      padding: const EdgeInsets.all(16),
+      children: const [
+        _DemoTile(
+          route: '/player',
+          icon: Icons.play_circle_outline,
+          title: 'Mini player',
+          subtitle: 'Picture-in-Picture window over a scrolling page',
+        ),
+        _DemoTile(
+          route: '/tools',
+          icon: Icons.build_outlined,
+          title: 'Developer tools',
+          subtitle: 'An action grid that expands from the corner',
+        ),
+        _DemoTile(
+          route: '/theming',
+          icon: Icons.tune_outlined,
+          title: 'Theming playground',
+          subtitle: 'Shape, elevation and spring tuning side by side',
+        ),
+      ],
+    ),
+  );
 }
 
-class _AppState extends State<App> {
-  bool isEnabled = true;
-  bool isDarkMode = false;
-  bool useCustomTheme = false;
-  final controller = DraggablePanelController(initialPosition: (x: 40, y: 100));
+class _DemoTile extends StatelessWidget {
+  const _DemoTile({
+    required this.route,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final String route;
+  final IconData icon;
+  final String title;
+  final String subtitle;
 
   @override
-  void initState() {
-    super.initState();
-
-    controller.addPositionListener(_positionChanged);
-    controller.setPosition(x: 500, y: 500);
-  }
-
-  void _positionChanged(double x, double y) {
-    debugPrint('Position changed: ($x, $y)');
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    controller.removePositionListener(_positionChanged);
-    controller.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(
-        colorSchemeSeed: Colors.deepPurple,
-        brightness: Brightness.light,
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorSchemeSeed: Colors.deepPurple,
-        brightness: Brightness.dark,
-        useMaterial3: true,
-      ),
-      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      home: Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    isEnabled = !isEnabled;
-                  });
-                },
-                child: Text('Panel: ${isEnabled ? "ON" : "OFF"}'),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    isDarkMode = !isDarkMode;
-                  });
-                },
-                child: Text('Theme: ${isDarkMode ? "Dark" : "Light"}'),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    useCustomTheme = !useCustomTheme;
-                  });
-                },
-                child: Text('Colors: ${useCustomTheme ? "Custom" : "Default"}'),
-              ),
-            ],
-          ),
-        ),
-      ),
-      builder: (context, child) {
-        return Visibility(
-          visible: isEnabled,
-          replacement: child!,
-          child: DraggablePanel(
-            theme: useCustomTheme
-                ? DraggablePanelTheme(
-                    panelBackgroundColor:
-                        const Color(0xFF1E1E1E).withValues(alpha: 0.9),
-                    panelBorderRadius: BorderRadius.circular(24),
-                    panelBorder: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      width: 2,
-                    ),
-                    panelWidth: 220,
-                    motion: const DraggablePanelMotion(
-                      buttonMoveDuration: Duration(milliseconds: 220),
-                      buttonMoveCurve: Curves.easeOutBack,
-                      panelMoveDuration: Duration(milliseconds: 260),
-                      panelMoveCurve: Curves.easeOutCubic,
-                      panelSwitchDuration: Duration(milliseconds: 180),
-                    ),
-                    panelContentPadding: const EdgeInsets.all(12),
-                    itemSpacing: 10,
-                    buttonSpacing: 8,
-                    sectionSpacing: 12,
-                    panelItemColor:
-                        const Color(0xFF1E1E1E).withValues(alpha: 0.7),
-                    draggableButtonColor:
-                        const Color(0xFF1E1E1E).withValues(alpha: 0.9),
-                    foregroundColor: Colors.white,
-                    panelBoxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                    itemTheme: const DraggablePanelItemThemeData(
-                      borderRadius: 16,
-                      padding: EdgeInsets.all(10),
-                    ),
-                    buttonTheme: const DraggablePanelButtonThemeData(
-                      height: 48,
-                      borderRadius: 20,
-                      iconSize: 20,
-                    ),
-                    handleTheme: const DraggablePanelHandleThemeData(
-                      curveStrokeWidth: 4,
-                    ),
-                    tooltipTheme: const DraggablePanelTooltipThemeData(
-                      contentBorderRadius: 20,
-                      fontSize: 13,
-                    ),
-                  )
-                : const DraggablePanelTheme(),
-            buttonFrameBuilder: useCustomTheme
-                ? (context, render) => OutlinedButton(
-                      onPressed: render.onTap,
-                      onLongPress: render.onLongPress,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: render.foregroundColor,
-                        side: BorderSide(color: render.foregroundColor),
-                      ),
-                      child: render.content,
-                    )
-                : null,
-            onShowTooltip: useCustomTheme
-                ? (context, data) => showDialog<void>(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        icon: data.icon != null ? Icon(data.icon) : null,
-                        content: Text(data.message),
-                      ),
-                    )
-                : null,
-            items: [
-              DraggablePanelItem(
-                enableBadge: true,
-                icon: Icons.list,
-                onTap: (context) {},
-                description: 'This is a list item',
-                color: Colors.indigo,
-                foregroundColor: Colors.white,
-                badgeColor: Colors.red,
-                badgeLabel: '3',
-              ),
-              DraggablePanelItem(
-                enableBadge: false,
-                icon: Icons.color_lens,
-                onTap: (context) {},
-                description: 'This is a color lens item',
-              ),
-              DraggablePanelItem(
-                enableBadge: false,
-                icon: Icons.zoom_in,
-                onTap: (context) {},
-                description: 'This is a zoom in item',
-              ),
-              DraggablePanelItem(
-                enableBadge: false,
-                icon: Icons.token,
-                onTap: (context) {},
-              ),
-              DraggablePanelItem(
-                enableBadge: false,
-                icon: Icons.color_lens,
-                onTap: (context) {},
-                description: 'This is a color lens item',
-              ),
-              DraggablePanelItem(
-                enableBadge: false,
-                icon: Icons.zoom_in,
-                onTap: (context) {},
-                description: 'This is a zoom in item',
-              ),
-              DraggablePanelItem(
-                enableBadge: false,
-                icon: Icons.token,
-                onTap: (context) {},
-              ),
-              DraggablePanelItem(
-                enableBadge: false,
-                icon: Icons.color_lens,
-                onTap: (context) {},
-                description: 'This is a color lens item',
-              ),
-              DraggablePanelItem(
-                enableBadge: false,
-                icon: Icons.zoom_in,
-                onTap: (context) {},
-                description: 'This is a zoom in item',
-              ),
-              DraggablePanelItem(
-                enableBadge: false,
-                icon: Icons.token,
-                onTap: (context) {},
-              ),
-            ],
-            buttons: [
-              DraggablePanelButtonItem(
-                icon: Icons.copy,
-                onTap: (context) {
-                  // Hide
-                  controller.toggle(context);
-                },
-                label: 'Push token',
-                description: 'This is a push token button',
-              ),
-              DraggablePanelButtonItem(
-                icon: Icons.copy,
-                onTap: (context) {
-                  // Hide
-                  controller.toggle(context);
-                },
-                label: 'Push token',
-                description: 'This is a push token button',
-              ),
-              // DraggablePanelButtonItem(
-              //   icon: Icons.copy,
-              //   onTap: (context) {
-              //     // Hide
-              //     controller.toggle(context);
-              //   },
-              //   label: 'Push token',
-              //   description: 'This is a push token button',
-              // ),
-              // DraggablePanelButtonItem(
-              //   icon: Icons.copy,
-              //   onTap: (context) {
-              //     // Hide
-              //     controller.toggle(context);
-              //   },
-              //   label: 'Push token',
-              //   description: 'This is a push token button',
-              // ),
-              // DraggablePanelButtonItem(
-              //   icon: Icons.copy,
-              //   onTap: (context) {
-              //     // Hide
-              //     controller.toggle(context);
-              //   },
-              //   label: 'Push token',
-              //   description: 'This is a push token button',
-              // ),
-              // DraggablePanelButtonItem(
-              //   icon: Icons.copy,
-              //   onTap: (context) {
-              //     // Hide
-              //     controller.toggle(context);
-              //   },
-              //   label: 'Push token',
-              //   description: 'This is a push token button',
-              // ),
-            ],
-            controller: controller,
-            child: child,
-          ),
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => Card(
+    margin: const EdgeInsets.only(bottom: 12),
+    child: ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => Navigator.of(context).pushNamed(route),
+    ),
+  );
 }

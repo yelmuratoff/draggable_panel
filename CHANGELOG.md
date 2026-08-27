@@ -1,3 +1,80 @@
+## 4.0.0
+
+A rewrite. The panel is now a floating Picture-in-Picture window: drag it
+anywhere, release it and it springs to the nearest corner by projected velocity,
+flick it past an edge to park it off-screen, tap it to grow in place into a full
+panel. Material 3 visuals, Apple-grade motion.
+
+Breaking changes
+
+- `DraggablePanel` now takes `collapsedBuilder` + `expandedBuilder` and arbitrary
+  content. The icons-and-buttons shape lives on as the `DraggableActionPanel`
+  preset. See `MIGRATION.md` for the full mapping.
+- `onPositionChanged(x, y)` became `onPlacementChanged(PanelPlacement)`. Pixels
+  do not survive rotation or a different device; a corner does. Stored pixel
+  positions cannot be converted and should be dropped.
+- Every controller method that took a screen width is gone. `forceDock`,
+  `hidePanel`, `togglePanel`, `toggleMainButton`, `relayout` and
+  `recomputeDockSide` were layout math leaking into a state object.
+- `DraggablePanelTheme` became `DraggablePanelThemeData`, a `ThemeExtension`
+  with nullable tokens, so a call-site override no longer clobbers an app-wide
+  one. Sub-themes flattened into `DraggableActionPanelThemeData`.
+- `DraggablePanelMotion` (durations and curves) became `PanelMotionSpec`
+  (springs). There is no mechanical mapping — a tween cannot carry entry
+  velocity or be redirected mid-flight.
+- Removed: `MultiValueListenableBuilder`, `TooltipSnackBar`, `DockType`,
+  `PanelState`, and the already-deprecated `panelAnimDuration`,
+  `dockAnimDuration` and `movementSpeed`.
+- Minimum Flutter is now 3.32 (Dart 3.8). 3.x declared `flutter: any` while
+  already requiring 3.16 for its Material 3 colours.
+
+Added
+
+- Spring physics throughout: velocity projection from WWDC18 session 803,
+  Apple's critically damped 400 ms PiP spring, and the iOS rubber band.
+- Four-corner snapping, edge stashing, and grow-in-place expansion anchored at
+  the occupied corner.
+- Interruptible motion: grabbing a moving panel freezes it and folds its
+  momentum into the next throw; reversing an expansion halfway works.
+- `PanelPlacement` — resolution-independent resting positions with JSON
+  round-tripping.
+- Full accessibility: per-corner custom semantics actions, keyboard corner
+  navigation, dismiss action, screen-reader-aware drag suppression, and honoured
+  reduced-motion.
+- Committed-moment haptics, independent of the motion preference.
+- `DraggablePanelScope` for reaching the controller from panel content.
+- `PanelBehavior` for interaction flags, `PanelSemantics` for localizable copy.
+- Edge parking: push the panel against a side and it stays there as a grab-able
+  sliver; pull it back out and it returns. Both are ordinary drags rather than
+  separate gestures. Start parked with
+  `initialPlacement: PanelPlacement.stashed(...)`.
+- Content opacity follows how much of the panel is on screen, so a tab reveals
+  what it holds as it emerges.
+- `surfaceFilter` — a frosted-glass seam applied inside the shape clip, so it
+  composes with the morph rather than fighting it.
+- `expandTravelFraction` — how far a drag must travel to open or close.
+
+Changed
+
+- Motion is paint-only and isolated behind its own repaint boundary. A frame of
+  movement costs zero widget builds, zero layouts, and no repaint of the
+  application behind the panel — all three asserted by regression tests.
+- The host app subtree is never rebuilt by panel motion.
+- Rotation, resize, split-screen and the keyboard now re-place the panel by
+  re-resolving its placement, carrying velocity, instead of teleporting it.
+- The panel keeps clear of the software keyboard while expanded.
+
+Fixed
+
+- Panel content now sits inside a transparent `Material`, so a bare `Text` in a
+  builder inherits the app's text style instead of rendering as oversized debug
+  type, and an `InkWell` finds something to ink on.
+- Drag velocity is no longer discarded on release; a flick and a slow drop now
+  differ.
+- Bounds resist instead of clamping dead.
+- Theme changes crossfade the panel along with the rest of the app.
+- `panelSwitchInCurve` / `panelSwitchOutCurve` were inert public API in 3.x.
+
 ## 3.0.0
 
 Major release: open/hide stability, adaptive content-sized layout, and end-to-end customization.
