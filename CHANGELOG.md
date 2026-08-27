@@ -1,3 +1,16 @@
+## 4.0.0-beta.2
+
+Fixed
+
+- Panel content threw `No Overlay widget found` when the panel was mounted
+  through `MaterialApp.builder`. That is the position the README recommends, and
+  it sits above the `Navigator` that owns the app's only `Overlay`, so every
+  `Overlay.of` caller in a panel face — `Tooltip`, `DropdownButton`,
+  `PopupMenuButton` — had nowhere to render. `DraggableActionPanel` wraps every
+  action and button in a `Tooltip`, so its whole grid failed there. The panel now
+  hosts an unclipped `Overlay` for its faces. Neither the example nor the tests
+  had mounted a panel that way, which is why the suite stayed green.
+
 ## 4.0.0-beta.1
 
 A rewrite. The panel is now a floating window: drag it

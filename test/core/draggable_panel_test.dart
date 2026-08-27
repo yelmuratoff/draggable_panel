@@ -211,6 +211,47 @@ void main() {
       expect(taps, 1);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets(
+      'a Tooltip in panel content finds an Overlay under MaterialApp.builder',
+      (tester) async {
+        final controller = DraggablePanelController();
+        addTearDown(controller.dispose);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            builder: (context, child) => DraggablePanel(
+              controller: controller,
+              theme: DraggablePanelThemeData(motion: PanelMotionSpec.instant()),
+              collapsedBuilder: (context, status) =>
+                  const ColoredBox(color: Color(0xFF112233)),
+              expandedBuilder: (context, status) => const SizedBox(
+                width: 200,
+                height: 120,
+                child: Tooltip(
+                  key: _expandedKey,
+                  message: 'Logs',
+                  child: SizedBox.expand(),
+                ),
+              ),
+              child: child,
+            ),
+            home: const ColoredBox(key: _appKey, color: Color(0xFFFFFFFF)),
+          ),
+        );
+        controller.expand();
+        await tester.pump();
+
+        expect(tester.takeException(), isNull);
+
+        tester
+            .state<TooltipState>(find.byKey(_expandedKey))
+            .ensureTooltipVisible();
+        await tester.pump(const Duration(seconds: 1));
+
+        expect(find.text('Logs'), findsOneWidget);
+      },
+    );
   });
 
   group('expanding', () {

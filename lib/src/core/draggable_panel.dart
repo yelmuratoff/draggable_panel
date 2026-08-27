@@ -220,24 +220,31 @@ class _DraggablePanelState extends State<DraggablePanel> {
                       )
                     : const SizedBox.shrink(),
               ),
-            ListenableBuilder(
-              listenable: _controller.phaseListenable,
-              builder: (context, _) => PanelHost(
-                controller: _controller,
-                behavior: widget.behavior,
-                style: style,
-                semantics: widget.semantics,
-                collapsed: widget.collapsedBuilder(context, _controller.value),
-                expanded: widget.expandedBuilder(context, _controller.value),
-                handle:
-                    widget.handleBuilder ??
-                    (context, edge) => PanelEdgeHandle(
-                      color: style.handleColor,
-                      pointsTowardStart: !edge.resolvesToLeft(
-                        Directionality.of(context),
+            // MaterialApp.builder wraps the Navigator that owns the Overlay.
+            Overlay.wrap(
+              clipBehavior: Clip.none,
+              child: ListenableBuilder(
+                listenable: _controller.phaseListenable,
+                builder: (context, _) => PanelHost(
+                  controller: _controller,
+                  behavior: widget.behavior,
+                  style: style,
+                  semantics: widget.semantics,
+                  collapsed: widget.collapsedBuilder(
+                    context,
+                    _controller.value,
+                  ),
+                  expanded: widget.expandedBuilder(context, _controller.value),
+                  handle:
+                      widget.handleBuilder ??
+                      (context, edge) => PanelEdgeHandle(
+                        color: style.handleColor,
+                        pointsTowardStart: !edge.resolvesToLeft(
+                          Directionality.of(context),
+                        ),
                       ),
-                    ),
-                surfaceKey: _surfaceKey,
+                  surfaceKey: _surfaceKey,
+                ),
               ),
             ),
           ],
