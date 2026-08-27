@@ -63,6 +63,7 @@ final class RenderPanelSurface extends RenderBox
   final LayerHandle<OpacityLayer> _collapsedLayer = LayerHandle<OpacityLayer>();
   final LayerHandle<OpacityLayer> _expandedLayer = LayerHandle<OpacityLayer>();
   final LayerHandle<OpacityLayer> _handleLayer = LayerHandle<OpacityLayer>();
+  final LayerHandle<OpacityLayer> _borderLayer = LayerHandle<OpacityLayer>();
   final LayerHandle<BackdropFilterLayer> _backdropLayer =
       LayerHandle<BackdropFilterLayer>();
 
@@ -163,6 +164,7 @@ final class RenderPanelSurface extends RenderBox
   @override
   void dispose() {
     _clipLayer.layer = null;
+    _borderLayer.layer = null;
     _backdropLayer.layer = null;
     _collapsedLayer.layer = null;
     _expandedLayer.layer = null;
@@ -239,6 +241,7 @@ final class RenderPanelSurface extends RenderBox
     if (_opacity <= 0) {
       _paintedRect = Rect.zero;
       _clipLayer.layer = null;
+      _borderLayer.layer = null;
       _backdropLayer.layer = null;
       _collapsedLayer.layer = null;
       _expandedLayer.layer = null;
@@ -250,7 +253,7 @@ final class RenderPanelSurface extends RenderBox
     _paintedRect = frame.rect;
 
     final shape = _style.shapeAt(frame.expansion);
-    final outline = shape.getOuterPath(frame.rect.shift(offset));
+    final outline = _outlineOf(shape, frame.rect.shift(offset));
 
     _paintShadow(context, outline, frame);
 
@@ -258,11 +261,43 @@ final class RenderPanelSurface extends RenderBox
       needsCompositing,
       offset,
       frame.rect,
-      shape.getOuterPath(frame.rect),
+      _outlineOf(shape, frame.rect),
       (innerContext, innerOffset) =>
           _paintContents(innerContext, innerOffset, frame),
       clipBehavior: _style.clipBehavior,
       oldLayer: _clipLayer.layer,
+    );
+
+    _borderLayer.layer = _paintBorder(context, offset, frame, shape);
+  }
+
+  Path _outlineOf(ShapeBorder shape, Rect rect) =>
+      shape.getOuterPath(rect, textDirection: _style.textDirection);
+
+  /// Strokes whatever the shape draws through its side, over the clipped
+  /// contents — a stroke centred on the outline is half outside it.
+  OpacityLayer? _paintBorder(
+    PaintingContext context,
+    Offset offset,
+    PanelFrame frame,
+    ShapeBorder shape,
+  ) {
+    void paintBorder(PaintingContext innerContext, Offset innerOffset) =>
+        shape.paint(
+          innerContext.canvas,
+          frame.rect.shift(innerOffset),
+          textDirection: _style.textDirection,
+        );
+
+    if (_opacity >= 1) {
+      paintBorder(context, offset);
+      return null;
+    }
+    return context.pushOpacity(
+      offset,
+      (_opacity * 255).round(),
+      paintBorder,
+      oldLayer: _borderLayer.layer,
     );
   }
 
@@ -325,7 +360,7 @@ final class RenderPanelSurface extends RenderBox
 
     void paintFill(PaintingContext innerContext, Offset innerOffset) {
       innerContext.canvas.drawPath(
-        shape.getOuterPath(frame.rect.shift(innerOffset)),
+        _outlineOf(shape, frame.rect.shift(innerOffset)),
         fill,
       );
     }

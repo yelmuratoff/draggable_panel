@@ -31,6 +31,7 @@ final class PanelStyle {
     required this.stashedPeek,
     required this.stashedSize,
     required this.handleColor,
+    required this.textDirection,
     required this.motion,
   });
 
@@ -48,6 +49,7 @@ final class PanelStyle {
 
     final floor = tokens.minimumTapTarget ?? Size.zero;
     final collapsed = tokens.collapsedSize ?? Size.zero;
+    final textDirection = Directionality.of(context);
 
     return PanelStyle(
       collapsedShape: tokens.collapsedShape!,
@@ -66,10 +68,11 @@ final class PanelStyle {
         math.max(collapsed.height, floor.height),
       ),
       expandedExtent: tokens.expandedExtent!,
-      margin: tokens.margin!.resolve(Directionality.of(context)),
+      margin: tokens.margin!.resolve(textDirection),
       stashedPeek: tokens.stashedPeek!,
       stashedSize: tokens.stashedSize!,
       handleColor: tokens.handleColor!,
+      textDirection: textDirection,
       motion: tokens.motion!,
     );
   }
@@ -101,6 +104,10 @@ final class PanelStyle {
   /// Size the panel takes while parked at an edge.
   final Size stashedSize;
   final Color handleColor;
+
+  /// Direction the shape, margin, and any directional border resolve against.
+  final TextDirection textDirection;
+
   final PanelMotionSpec motion;
 
   /// The shape at a given expansion progress.
@@ -144,6 +151,7 @@ final class PanelStyle {
           other.stashedPeek == stashedPeek &&
           other.stashedSize == stashedSize &&
           other.handleColor == handleColor &&
+          other.textDirection == textDirection &&
           other.motion == motion;
 
   @override
@@ -165,6 +173,7 @@ final class PanelStyle {
     stashedPeek,
     stashedSize,
     handleColor,
+    textDirection,
     motion,
   );
 }

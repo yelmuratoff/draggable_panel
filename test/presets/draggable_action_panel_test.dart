@@ -259,6 +259,56 @@ void main() {
       expect(pressed, 1);
     });
 
+    testWidgets('the button style reaches the buttons', (tester) async {
+      final controller = await _pumpActionPanel(
+        tester,
+        actions: _actions(2),
+        buttons: [
+          PanelActionButton(
+            icon: Icons.share,
+            label: 'Share',
+            onPressed: () {},
+          ),
+        ],
+        actionTheme: DraggableActionPanelThemeData(
+          buttonStyle: FilledButton.styleFrom(
+            minimumSize: const Size(120, 64),
+            shape: const StadiumBorder(),
+          ),
+        ),
+      );
+      controller.expand();
+      await tester.pump();
+
+      expect(tester.getSize(find.byType(FilledButton)).height, 64);
+    });
+
+    testWidgets('a custom handleBuilder reaches the parked panel', (
+      tester,
+    ) async {
+      final controller = DraggablePanelController(
+        initialPlacement: const PanelPlacement.stashed(PanelEdge.end),
+      );
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DraggableActionPanel(
+            controller: controller,
+            actions: _actions(2),
+            theme: DraggablePanelThemeData(motion: PanelMotionSpec.instant()),
+            handleBuilder: (context, edge) =>
+                Text(edge.name, key: const Key('custom-handle')),
+            child: const ColoredBox(color: Color(0xFFFFFFFF)),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byKey(const Key('custom-handle')), findsOneWidget);
+      expect(find.byType(PanelEdgeHandle), findsNothing);
+    });
+
     testWidgets('the action theme retunes the grid', (tester) async {
       final controller = await _pumpActionPanel(
         tester,

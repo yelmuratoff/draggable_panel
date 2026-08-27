@@ -7,11 +7,20 @@ Fixed
   the icon's own strokes, and the tile's `Clip.antiAlias` ate whatever crossed
   its rounded corner. The badge now rides the tile's top-end corner, above the
   clip, at 18 pixels with a label and 10 as a dot.
+- A `ShapeBorder` carrying a `side` had its outline honoured but its stroke
+  dropped: the surface only ever asked the shape for `getOuterPath`, never
+  painted it. Panel borders now draw, over the content clip so the stroke is not
+  halved, and the shape resolves against the ambient `TextDirection`, which a
+  `BorderRadiusDirectional` needs.
 
 Added
 
 - `badgeSize` and `badgeDotSize` on `DraggableActionPanelThemeData`, joining
   `badgeColor`.
+- `buttonStyle` on `DraggableActionPanelThemeData`, so the panel's buttons can
+  take their own shape without retuning every `FilledButton` in the app.
+- `handleBuilder` on `DraggableActionPanel`, which the preset accepted nowhere
+  and so could not reach `DraggablePanel`.
 
 ## 4.0.0-beta.2
 

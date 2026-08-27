@@ -26,6 +26,7 @@ final class DraggableActionPanelThemeData
     this.buttonSpacing,
     this.sectionSpacing,
     this.maxColumns,
+    this.buttonStyle,
     this.buttonLabelStyle,
     this.actionLabelStyle,
     this.actionLabelSpacing,
@@ -97,6 +98,12 @@ final class DraggableActionPanelThemeData
   /// Upper bound on grid columns before actions wrap onto another row.
   final int? maxColumns;
 
+  /// Style of the labelled buttons, including their shape.
+  ///
+  /// Scoped to the panel, so retuning them does not reach the app's other
+  /// `FilledButton`s. Defaults to the ambient `FilledButtonThemeData`.
+  final ButtonStyle? buttonStyle;
+
   final TextStyle? buttonLabelStyle;
 
   /// Style of the caption under each action. Defaults to `labelSmall`.
@@ -143,6 +150,7 @@ final class DraggableActionPanelThemeData
           actionLabelMaxWidth: other.actionLabelMaxWidth,
           headerStyle: other.headerStyle,
           headerSpacing: other.headerSpacing,
+          buttonStyle: other.buttonStyle,
           buttonLabelStyle: other.buttonLabelStyle,
         );
 
@@ -167,6 +175,7 @@ final class DraggableActionPanelThemeData
     double? actionLabelMaxWidth,
     TextStyle? headerStyle,
     double? headerSpacing,
+    ButtonStyle? buttonStyle,
     TextStyle? buttonLabelStyle,
   }) => DraggableActionPanelThemeData(
     contentPadding: contentPadding ?? this.contentPadding,
@@ -188,6 +197,7 @@ final class DraggableActionPanelThemeData
     actionLabelMaxWidth: actionLabelMaxWidth ?? this.actionLabelMaxWidth,
     headerStyle: headerStyle ?? this.headerStyle,
     headerSpacing: headerSpacing ?? this.headerSpacing,
+    buttonStyle: buttonStyle ?? this.buttonStyle,
     buttonLabelStyle: buttonLabelStyle ?? this.buttonLabelStyle,
   );
 
@@ -243,6 +253,7 @@ final class DraggableActionPanelThemeData
       ),
       headerStyle: TextStyle.lerp(headerStyle, other.headerStyle, t),
       headerSpacing: lerpDouble(headerSpacing, other.headerSpacing, t),
+      buttonStyle: ButtonStyle.lerp(buttonStyle, other.buttonStyle, t),
       buttonLabelStyle: TextStyle.lerp(
         buttonLabelStyle,
         other.buttonLabelStyle,
@@ -274,10 +285,11 @@ final class DraggableActionPanelThemeData
           other.actionLabelMaxWidth == actionLabelMaxWidth &&
           other.headerStyle == headerStyle &&
           other.headerSpacing == headerSpacing &&
+          other.buttonStyle == buttonStyle &&
           other.buttonLabelStyle == buttonLabelStyle;
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     contentPadding,
     actionSize,
     actionIconSize,
@@ -297,6 +309,7 @@ final class DraggableActionPanelThemeData
     actionLabelMaxWidth,
     headerStyle,
     headerSpacing,
+    buttonStyle,
     buttonLabelStyle,
-  );
+  ]);
 }

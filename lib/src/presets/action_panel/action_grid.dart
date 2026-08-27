@@ -298,6 +298,7 @@ final class ActionButtonRow extends StatelessWidget {
     message: button.tooltip ?? '',
     child: FilledButton.tonalIcon(
       onPressed: button.onPressed,
+      style: theme.buttonStyle,
       icon: Icon(button.icon),
       label: Text(
         button.label,

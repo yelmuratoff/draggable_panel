@@ -92,6 +92,7 @@ Future<_Harness> _pumpSurface(
   VoidCallback? onBuild,
   Alignment anchor = Alignment.bottomRight,
   Size collapsedSize = const Size(64, 64),
+  ShapeBorder? collapsedShape,
 }) async {
   final harness = _Harness();
   addTearDown(harness.dispose);
@@ -105,7 +106,10 @@ Future<_Harness> _pumpSurface(
             repaint: harness.repaint,
             style: PanelStyle.resolve(
               context,
-              DraggablePanelThemeData(collapsedSize: collapsedSize),
+              DraggablePanelThemeData(
+                collapsedSize: collapsedSize,
+                collapsedShape: collapsedShape,
+              ),
             ),
             originOf: () => harness.driver.value,
             expansionOf: () => harness.morph.value,
@@ -151,6 +155,21 @@ void main() {
         _surface(tester).paintedRect,
         const Rect.fromLTWH(200, 400, 64, 64),
       );
+    });
+
+    testWidgets('a shape carrying a side is stroked over the panel', (
+      tester,
+    ) async {
+      await _pumpSurface(
+        tester,
+        collapsedShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+          side: BorderSide(color: Color(0xFFAABBCC), width: 2),
+        ),
+      );
+      await tester.pump();
+
+      expect(_surface(tester), paints..drrect(color: const Color(0xFFAABBCC)));
     });
 
     testWidgets('expanding grows the rect from the anchored corner', (

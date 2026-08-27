@@ -41,6 +41,7 @@ final class DraggableActionPanel extends StatelessWidget {
     this.behavior = const PanelBehavior(),
     this.semantics = const PanelSemantics(),
     this.collapsedBuilder,
+    this.handleBuilder,
     this.headerBuilder,
     this.actionBuilder,
     this.buttonBuilder,
@@ -79,6 +80,9 @@ final class DraggableActionPanel extends StatelessWidget {
   /// Replaces the collapsed face entirely.
   final PanelChildBuilder? collapsedBuilder;
 
+  /// Replaces the grab affordance shown while the panel is parked at an edge.
+  final PanelHandleBuilder? handleBuilder;
+
   /// Replaces the header row.
   final WidgetBuilder? headerBuilder;
 
@@ -100,6 +104,7 @@ final class DraggableActionPanel extends StatelessWidget {
     theme: theme,
     behavior: behavior,
     semantics: semantics,
+    handleBuilder: handleBuilder,
     onStatusChanged: onStatusChanged,
     onPlacementChanged: onPlacementChanged,
     collapsedBuilder:
