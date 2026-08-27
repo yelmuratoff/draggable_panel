@@ -16,6 +16,7 @@ final class PanelStyle {
   const PanelStyle({
     required this.collapsedShape,
     required this.shape,
+    required this.stashedShape,
     required this.clipBehavior,
     required this.surfaceColor,
     required this.surfaceFilter,
@@ -31,6 +32,8 @@ final class PanelStyle {
     required this.stashedPeek,
     required this.stashedSize,
     required this.handleColor,
+    required this.handleSize,
+    required this.handleStrokeWidth,
     required this.textDirection,
     required this.motion,
   });
@@ -54,6 +57,7 @@ final class PanelStyle {
     return PanelStyle(
       collapsedShape: tokens.collapsedShape!,
       shape: tokens.shape!,
+      stashedShape: tokens.stashedShape!,
       clipBehavior: tokens.clipBehavior!,
       surfaceColor: tokens.surfaceColor!,
       surfaceFilter: tokens.surfaceFilter,
@@ -72,6 +76,8 @@ final class PanelStyle {
       stashedPeek: tokens.stashedPeek!,
       stashedSize: tokens.stashedSize!,
       handleColor: tokens.handleColor!,
+      handleSize: tokens.handleSize!,
+      handleStrokeWidth: tokens.handleStrokeWidth!,
       textDirection: textDirection,
       motion: tokens.motion!,
     );
@@ -79,6 +85,7 @@ final class PanelStyle {
 
   final ShapeBorder collapsedShape;
   final ShapeBorder shape;
+  final ShapeBorder stashedShape;
   final Clip clipBehavior;
   final Color surfaceColor;
 
@@ -105,14 +112,28 @@ final class PanelStyle {
   final Size stashedSize;
   final Color handleColor;
 
+  /// Box the grab affordance's curve is drawn in.
+  final Size handleSize;
+
+  final double handleStrokeWidth;
+
   /// Direction the shape, margin, and any directional border resolve against.
   final TextDirection textDirection;
 
   final PanelMotionSpec motion;
 
   /// The shape at a given expansion progress.
-  ShapeBorder shapeAt(double expansion) =>
-      ShapeBorder.lerp(collapsedShape, shape, expansion.clamp(0.0, 1.0))!;
+  ///
+  /// [emergence] runs from `0` while parked at an edge to `1` once the panel is
+  /// clear of it, carrying [stashedShape] across to [collapsedShape].
+  ShapeBorder shapeAt(double expansion, {double emergence = 1}) {
+    final resting = ShapeBorder.lerp(
+      stashedShape,
+      collapsedShape,
+      emergence.clamp(0.0, 1.0),
+    )!;
+    return ShapeBorder.lerp(resting, shape, expansion.clamp(0.0, 1.0))!;
+  }
 
   /// The elevation at a given expansion progress.
   ///
@@ -136,6 +157,7 @@ final class PanelStyle {
       other is PanelStyle &&
           other.collapsedShape == collapsedShape &&
           other.shape == shape &&
+          other.stashedShape == stashedShape &&
           other.clipBehavior == clipBehavior &&
           other.surfaceColor == surfaceColor &&
           other.surfaceFilter == surfaceFilter &&
@@ -151,13 +173,16 @@ final class PanelStyle {
           other.stashedPeek == stashedPeek &&
           other.stashedSize == stashedSize &&
           other.handleColor == handleColor &&
+          other.handleSize == handleSize &&
+          other.handleStrokeWidth == handleStrokeWidth &&
           other.textDirection == textDirection &&
           other.motion == motion;
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     collapsedShape,
     shape,
+    stashedShape,
     clipBehavior,
     surfaceColor,
     surfaceFilter,
@@ -173,9 +198,11 @@ final class PanelStyle {
     stashedPeek,
     stashedSize,
     handleColor,
+    handleSize,
+    handleStrokeWidth,
     textDirection,
     motion,
-  );
+  ]);
 }
 
 /// The built-in tokens, derived from [scheme] so the panel sits in the app's
@@ -190,6 +217,9 @@ DraggablePanelThemeData defaultPanelTheme(ColorScheme scheme) =>
       ),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(24)),
+      ),
+      stashedShape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
       ),
       clipBehavior: Clip.antiAlias,
       surfaceColor: scheme.surfaceContainerHigh,
@@ -208,6 +238,8 @@ DraggablePanelThemeData defaultPanelTheme(ColorScheme scheme) =>
       stashedPeek: 26,
       stashedSize: const Size(35, 70),
       handleColor: scheme.onSurface.withValues(alpha: 0.5),
+      handleSize: const Size(20, 65),
+      handleStrokeWidth: 5,
       minimumTapTarget: const Size(48, 48),
       motion: PanelMotionSpec(),
     );

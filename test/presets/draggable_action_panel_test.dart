@@ -1,5 +1,6 @@
 import 'package:draggable_panel/draggable_panel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Future<DraggablePanelController> _pumpActionPanel(
@@ -499,6 +500,198 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('every visual reaches its token', () {
+    testWidgets('the collapsed glyph takes its size and colour', (
+      tester,
+    ) async {
+      await _pumpActionPanel(
+        tester,
+        actions: _actions(2),
+        actionTheme: const DraggableActionPanelThemeData(
+          collapsedIconSize: 36,
+          collapsedIconColor: Color(0xFF00FF00),
+        ),
+      );
+
+      final glyph = tester.widget<Icon>(
+        find.byIcon(Icons.zoom_out_map_rounded),
+      );
+
+      expect(glyph.size, 36);
+      expect(glyph.color, const Color(0xFF00FF00));
+    });
+
+    testWidgets('the close control takes its glyph and style', (tester) async {
+      final controller = DraggablePanelController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DraggableActionPanel(
+            controller: controller,
+            actions: _actions(2),
+            onClose: controller.collapse,
+            theme: DraggablePanelThemeData(motion: PanelMotionSpec.instant()),
+            actionTheme: DraggableActionPanelThemeData(
+              closeIcon: Icons.cancel_outlined,
+              closeButtonStyle: IconButton.styleFrom(
+                minimumSize: const Size(56, 56),
+              ),
+            ),
+            child: const ColoredBox(color: Color(0xFFFFFFFF)),
+          ),
+        ),
+      );
+      controller.expand();
+      await tester.pump();
+
+      expect(find.byIcon(Icons.cancel_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      expect(tester.getSize(find.byType(IconButton)).height, 56);
+    });
+
+    testWidgets('a badge label takes its text style', (tester) async {
+      final controller = await _pumpActionPanel(
+        tester,
+        actions: [
+          PanelAction(
+            icon: Icons.mail,
+            badge: const PanelBadge(label: '3'),
+            onPressed: () {},
+          ),
+        ],
+        actionTheme: const DraggableActionPanelThemeData(
+          badgeSize: 24,
+          badgeTextStyle: TextStyle(fontSize: 15),
+        ),
+      );
+      controller.expand();
+      await tester.pump();
+
+      final label = tester.renderObject<RenderParagraph>(find.text('3'));
+
+      expect(label.text.style?.fontSize, 15);
+      expect(tester.getSize(find.byType(Badge)).height, 24);
+    });
+
+    testWidgets('a badge label takes its colour, per theme and per badge', (
+      tester,
+    ) async {
+      Future<Color?> labelColour(PanelBadge badge) async {
+        final controller = await _pumpActionPanel(
+          tester,
+          actions: [
+            PanelAction(icon: Icons.mail, badge: badge, onPressed: () {}),
+          ],
+          actionTheme: const DraggableActionPanelThemeData(
+            badgeForegroundColor: Color(0xFF001122),
+          ),
+        );
+        controller.expand();
+        await tester.pump();
+        return tester
+            .renderObject<RenderParagraph>(find.text('3'))
+            .text
+            .style
+            ?.color;
+      }
+
+      expect(
+        await labelColour(const PanelBadge(label: '3')),
+        const Color(0xFF001122),
+      );
+      expect(
+        await labelColour(
+          const PanelBadge(label: '3', foregroundColor: Color(0xFFAA00AA)),
+        ),
+        const Color(0xFFAA00AA),
+        reason: 'a badge overrides the theme it sits in',
+      );
+    });
+
+    testWidgets('a badge takes its offset from the tile corner', (
+      tester,
+    ) async {
+      final controller = await _pumpActionPanel(
+        tester,
+        actions: [
+          PanelAction(
+            icon: Icons.mail,
+            badge: const PanelBadge.dot(),
+            onPressed: () {},
+          ),
+        ],
+        actionTheme: const DraggableActionPanelThemeData(
+          actionShape: CircleBorder(),
+          badgeOffset: Offset(6, 4),
+        ),
+      );
+      controller.expand();
+      await tester.pump();
+
+      final cell = tester.getRect(find.byType(ActionCell));
+      final badge = tester.getRect(find.byType(Badge));
+
+      expect(cell.right - badge.right, closeTo(6, 0.5));
+      expect(badge.top - cell.top, closeTo(4, 0.5));
+    });
+
+    testWidgets('a tile takes its ink overlay', (tester) async {
+      final overlay = WidgetStateProperty.all(const Color(0x22FF0000));
+      final controller = await _pumpActionPanel(
+        tester,
+        actions: _actions(2),
+        actionTheme: DraggableActionPanelThemeData(actionOverlayColor: overlay),
+      );
+      controller.expand();
+      await tester.pump();
+
+      expect(
+        tester.widget<InkWell>(find.byType(InkWell).first).overlayColor,
+        same(overlay),
+      );
+    });
+
+    testWidgets('the parked handle takes its size and stroke', (tester) async {
+      final controller = DraggablePanelController(
+        initialPlacement: const PanelPlacement.stashed(PanelEdge.end),
+      );
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DraggableActionPanel(
+            controller: controller,
+            actions: _actions(2),
+            theme: DraggablePanelThemeData(
+              motion: PanelMotionSpec.instant(),
+              handleSize: const Size(12, 40),
+              handleStrokeWidth: 3,
+            ),
+            child: const ColoredBox(color: Color(0xFFFFFFFF)),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final handle = tester.widget<PanelEdgeHandle>(
+        find.byType(PanelEdgeHandle),
+      );
+
+      expect(handle.curveSize, const Size(12, 40));
+      expect(handle.strokeWidth, 3);
+      expect(
+        tester.getSize(
+          find.descendant(
+            of: find.byType(PanelEdgeHandle),
+            matching: find.byType(CustomPaint),
+          ),
+        ),
+        const Size(12, 40),
+      );
     });
   });
 }

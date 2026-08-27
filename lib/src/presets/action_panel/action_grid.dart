@@ -178,11 +178,9 @@ final class ActionPanelHeader extends StatelessWidget {
         if (onClose case final onClose?)
           IconButton(
             onPressed: onClose,
-            visualDensity: VisualDensity.compact,
-            iconSize: 20,
-            color: scheme.onSurfaceVariant,
+            style: theme.closeButtonStyle,
             tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-            icon: const Icon(Icons.close_rounded),
+            icon: Icon(theme.closeIcon ?? Icons.close_rounded),
           ),
       ],
     );
@@ -226,24 +224,31 @@ final class ActionCell extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: action.onPressed,
+          overlayColor: theme.actionOverlayColor,
           child: Center(child: glyph),
         ),
       ),
     );
 
     if (action.badge case final badge?) {
+      final offset = theme.badgeOffset ?? Offset.zero;
       tile = Stack(
         children: [
           tile,
           PositionedDirectional(
-            top: 0,
-            end: 0,
+            top: offset.dy,
+            end: offset.dx,
             child: IgnorePointer(
               child: Badge(
                 label: badge.label == null ? null : Text(badge.label!),
                 backgroundColor: badge.color ?? theme.badgeColor,
                 largeSize: theme.badgeSize,
                 smallSize: theme.badgeDotSize,
+                textStyle: theme.badgeTextStyle,
+                textColor:
+                    badge.foregroundColor ??
+                    theme.badgeForegroundColor ??
+                    theme.badgeTextStyle?.color,
               ),
             ),
           ),

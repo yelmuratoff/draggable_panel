@@ -24,6 +24,7 @@ final class DraggablePanelThemeData
   const DraggablePanelThemeData({
     this.collapsedShape,
     this.shape,
+    this.stashedShape,
     this.clipBehavior,
     this.surfaceColor,
     this.surfaceFilter,
@@ -39,6 +40,8 @@ final class DraggablePanelThemeData
     this.stashedPeek,
     this.stashedSize,
     this.handleColor,
+    this.handleSize,
+    this.handleStrokeWidth,
     this.minimumTapTarget,
     this.motion,
   });
@@ -52,6 +55,13 @@ final class DraggablePanelThemeData
   /// Shape of the panel while expanded, interpolated towards from
   /// [collapsedShape] as the panel grows.
   final ShapeBorder? shape;
+
+  /// Shape of the panel while parked at an edge, interpolated towards
+  /// [collapsedShape] as it is drawn out.
+  ///
+  /// A tab tucked into the screen usually wants its outer corners flattened,
+  /// which the collapsed shape has no way to express.
+  final ShapeBorder? stashedShape;
 
   final Clip? clipBehavior;
 
@@ -113,6 +123,12 @@ final class DraggablePanelThemeData
   /// Colour of the grab affordance drawn on that tab.
   final Color? handleColor;
 
+  /// Box the grab affordance's curve is drawn in, centred on the tab.
+  final Size? handleSize;
+
+  /// Stroke width of that curve.
+  final double? handleStrokeWidth;
+
   /// Lower bound applied to [collapsedSize] so the panel stays tappable.
   final Size? minimumTapTarget;
 
@@ -125,6 +141,7 @@ final class DraggablePanelThemeData
     return copyWith(
       collapsedShape: other.collapsedShape,
       shape: other.shape,
+      stashedShape: other.stashedShape,
       clipBehavior: other.clipBehavior,
       surfaceColor: other.surfaceColor,
       surfaceFilter: other.surfaceFilter,
@@ -140,6 +157,8 @@ final class DraggablePanelThemeData
       stashedPeek: other.stashedPeek,
       stashedSize: other.stashedSize,
       handleColor: other.handleColor,
+      handleSize: other.handleSize,
+      handleStrokeWidth: other.handleStrokeWidth,
       minimumTapTarget: other.minimumTapTarget,
       motion: other.motion,
     );
@@ -149,6 +168,7 @@ final class DraggablePanelThemeData
   DraggablePanelThemeData copyWith({
     ShapeBorder? collapsedShape,
     ShapeBorder? shape,
+    ShapeBorder? stashedShape,
     Clip? clipBehavior,
     Color? surfaceColor,
     ImageFilter? surfaceFilter,
@@ -164,11 +184,14 @@ final class DraggablePanelThemeData
     double? stashedPeek,
     Size? stashedSize,
     Color? handleColor,
+    Size? handleSize,
+    double? handleStrokeWidth,
     Size? minimumTapTarget,
     PanelMotionSpec? motion,
   }) => DraggablePanelThemeData(
     collapsedShape: collapsedShape ?? this.collapsedShape,
     shape: shape ?? this.shape,
+    stashedShape: stashedShape ?? this.stashedShape,
     clipBehavior: clipBehavior ?? this.clipBehavior,
     surfaceColor: surfaceColor ?? this.surfaceColor,
     surfaceFilter: surfaceFilter ?? this.surfaceFilter,
@@ -184,6 +207,8 @@ final class DraggablePanelThemeData
     stashedPeek: stashedPeek ?? this.stashedPeek,
     stashedSize: stashedSize ?? this.stashedSize,
     handleColor: handleColor ?? this.handleColor,
+    handleSize: handleSize ?? this.handleSize,
+    handleStrokeWidth: handleStrokeWidth ?? this.handleStrokeWidth,
     minimumTapTarget: minimumTapTarget ?? this.minimumTapTarget,
     motion: motion ?? this.motion,
   );
@@ -199,6 +224,7 @@ final class DraggablePanelThemeData
     return DraggablePanelThemeData(
       collapsedShape: ShapeBorder.lerp(collapsedShape, other.collapsedShape, t),
       shape: ShapeBorder.lerp(shape, other.shape, t),
+      stashedShape: ShapeBorder.lerp(stashedShape, other.stashedShape, t),
       clipBehavior: t < 0.5 ? clipBehavior : other.clipBehavior,
       surfaceColor: Color.lerp(surfaceColor, other.surfaceColor, t),
       surfaceFilter: t < 0.5 ? surfaceFilter : other.surfaceFilter,
@@ -222,6 +248,12 @@ final class DraggablePanelThemeData
       stashedPeek: lerpDouble(stashedPeek, other.stashedPeek, t),
       stashedSize: Size.lerp(stashedSize, other.stashedSize, t),
       handleColor: Color.lerp(handleColor, other.handleColor, t),
+      handleSize: Size.lerp(handleSize, other.handleSize, t),
+      handleStrokeWidth: lerpDouble(
+        handleStrokeWidth,
+        other.handleStrokeWidth,
+        t,
+      ),
       minimumTapTarget: Size.lerp(minimumTapTarget, other.minimumTapTarget, t),
       motion: PanelMotionSpec.lerp(motion, other.motion, t),
     );
@@ -240,6 +272,13 @@ final class DraggablePanelThemeData
       )
       ..add(
         DiagnosticsProperty<ShapeBorder>('shape', shape, defaultValue: null),
+      )
+      ..add(
+        DiagnosticsProperty<ShapeBorder>(
+          'stashedShape',
+          stashedShape,
+          defaultValue: null,
+        ),
       )
       ..add(
         EnumProperty<Clip>('clipBehavior', clipBehavior, defaultValue: null),
@@ -295,6 +334,16 @@ final class DraggablePanelThemeData
       )
       ..add(ColorProperty('handleColor', handleColor, defaultValue: null))
       ..add(
+        DiagnosticsProperty<Size>('handleSize', handleSize, defaultValue: null),
+      )
+      ..add(
+        DoubleProperty(
+          'handleStrokeWidth',
+          handleStrokeWidth,
+          defaultValue: null,
+        ),
+      )
+      ..add(
         DiagnosticsProperty<Size>(
           'minimumTapTarget',
           minimumTapTarget,
@@ -316,6 +365,7 @@ final class DraggablePanelThemeData
       other is DraggablePanelThemeData &&
           other.collapsedShape == collapsedShape &&
           other.shape == shape &&
+          other.stashedShape == stashedShape &&
           other.clipBehavior == clipBehavior &&
           other.surfaceColor == surfaceColor &&
           other.surfaceFilter == surfaceFilter &&
@@ -331,13 +381,16 @@ final class DraggablePanelThemeData
           other.stashedPeek == stashedPeek &&
           other.stashedSize == stashedSize &&
           other.handleColor == handleColor &&
+          other.handleSize == handleSize &&
+          other.handleStrokeWidth == handleStrokeWidth &&
           other.minimumTapTarget == minimumTapTarget &&
           other.motion == motion;
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     collapsedShape,
     shape,
+    stashedShape,
     clipBehavior,
     surfaceColor,
     surfaceFilter,
@@ -353,7 +406,9 @@ final class DraggablePanelThemeData
     stashedPeek,
     stashedSize,
     handleColor,
+    handleSize,
+    handleStrokeWidth,
     minimumTapTarget,
     motion,
-  );
+  ]);
 }

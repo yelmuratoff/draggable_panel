@@ -252,7 +252,7 @@ final class RenderPanelSurface extends RenderBox
     final frame = _frame();
     _paintedRect = frame.rect;
 
-    final shape = _style.shapeAt(frame.expansion);
+    final shape = _style.shapeAt(frame.expansion, emergence: frame.emergence);
     final outline = _outlineOf(shape, frame.rect.shift(offset));
 
     _paintShadow(context, outline, frame);
@@ -263,7 +263,7 @@ final class RenderPanelSurface extends RenderBox
       frame.rect,
       _outlineOf(shape, frame.rect),
       (innerContext, innerOffset) =>
-          _paintContents(innerContext, innerOffset, frame),
+          _paintContents(innerContext, innerOffset, frame, shape),
       clipBehavior: _style.clipBehavior,
       oldLayer: _clipLayer.layer,
     );
@@ -321,8 +321,9 @@ final class RenderPanelSurface extends RenderBox
     PaintingContext context,
     Offset offset,
     PanelFrame frame,
+    ShapeBorder shape,
   ) {
-    _paintFill(context, offset, frame);
+    _paintFill(context, offset, frame, shape);
 
     _expandedLayer.layer = _paintSlot(
       context,
@@ -351,12 +352,16 @@ final class RenderPanelSurface extends RenderBox
   ///
   /// Runs inside the shape clip, so the filter reaches only the panel's own
   /// footprint rather than the whole screen.
-  void _paintFill(PaintingContext context, Offset offset, PanelFrame frame) {
+  void _paintFill(
+    PaintingContext context,
+    Offset offset,
+    PanelFrame frame,
+    ShapeBorder shape,
+  ) {
     final fill = Paint()
       ..color = _style.surfaceColor.withValues(
         alpha: _style.surfaceColor.a * _opacity,
       );
-    final shape = _style.shapeAt(frame.expansion);
 
     void paintFill(PaintingContext innerContext, Offset innerOffset) {
       innerContext.canvas.drawPath(

@@ -239,6 +239,8 @@ class _DraggablePanelState extends State<DraggablePanel> {
                       widget.handleBuilder ??
                       (context, edge) => PanelEdgeHandle(
                         color: style.handleColor,
+                        curveSize: style.handleSize,
+                        strokeWidth: style.handleStrokeWidth,
                         pointsTowardStart: !edge.resolvesToLeft(
                           Directionality.of(context),
                         ),

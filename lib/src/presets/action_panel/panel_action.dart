@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 /// A small count or dot drawn over an action.
 @immutable
 final class PanelBadge {
-  const PanelBadge({this.label, this.color});
+  const PanelBadge({this.label, this.color, this.foregroundColor});
 
   /// A plain dot, for "something changed" without a count.
   const PanelBadge.dot({Color? color}) : this(color: color);
@@ -13,13 +13,19 @@ final class PanelBadge {
 
   final Color? color;
 
+  /// Colour of [label]. Overrides whatever the theme resolves.
+  final Color? foregroundColor;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PanelBadge && other.label == label && other.color == color;
+      other is PanelBadge &&
+          other.label == label &&
+          other.color == color &&
+          other.foregroundColor == foregroundColor;
 
   @override
-  int get hashCode => Object.hash(label, color);
+  int get hashCode => Object.hash(label, color, foregroundColor);
 }
 
 /// One icon action in a `DraggableActionPanel` grid.

@@ -216,6 +216,29 @@ void main() {
       );
     });
 
+    testWidgets('shapeAt carries the stashed shape out of the edge', (
+      tester,
+    ) async {
+      final style = await _resolve(
+        tester,
+        override: const DraggablePanelThemeData(
+          stashedShape: RoundedRectangleBorder(),
+        ),
+      );
+      const box = Rect.fromLTWH(0, 0, 64, 64);
+
+      expect(cornerInsetOf(style.shapeAt(0, emergence: 0), box), 0);
+      expect(
+        cornerInsetOf(style.shapeAt(0), box),
+        closeTo(cornerInsetOf(style.collapsedShape, box), 0.5),
+      );
+      expect(
+        cornerInsetOf(style.shapeAt(0, emergence: 0.5), box),
+        greaterThan(0),
+        reason: 'the tab rounds as it is pulled out, not on arrival',
+      );
+    });
+
     testWidgets('elevationAt lifts while dragging, whatever the expansion', (
       tester,
     ) async {

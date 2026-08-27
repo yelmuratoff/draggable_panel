@@ -241,6 +241,36 @@ The filter is clipped to the panel's shape and applied inside `paint`, so it
 composes with the morph instead of fighting it. It costs a backdrop pass every
 moving frame; the default is null.
 
+**Every visual is a token.** Nothing the panel paints is hardcoded past its
+default, so a surface can be retuned without forking a widget or reaching for a
+builder:
+
+| Group | `DraggablePanelThemeData` |
+| --- | --- |
+| Shape | `collapsedShape`, `shape`, `stashedShape`, `clipBehavior` |
+| Surface | `surfaceColor`, `surfaceFilter`, `shadowColor` |
+| Elevation | `elevation`, `draggingElevation`, `expandedElevation`, `stashedElevation`, `stashedOpacity` |
+| Size | `collapsedSize`, `expandedExtent`, `margin`, `minimumTapTarget` |
+| Parked tab | `stashedSize`, `stashedPeek`, `handleColor`, `handleSize`, `handleStrokeWidth` |
+| Motion | `motion` |
+
+Each of the three shapes carries its own `side`, so a border follows the panel
+through the morph rather than being painted around it.
+
+| Group | `DraggableActionPanelThemeData` |
+| --- | --- |
+| Collapsed face | `collapsedIconSize`, `collapsedIconColor` |
+| Tiles | `actionSize`, `actionIconSize`, `actionShape`, `actionBackgroundColor`, `actionForegroundColor`, `actionOverlayColor` |
+| Captions | `actionLabelStyle`, `actionLabelSpacing`, `actionLabelMaxLines`, `actionLabelMaxWidth` |
+| Badges | `badgeColor`, `badgeSize`, `badgeDotSize`, `badgeTextStyle`, `badgeOffset` |
+| Header | `headerStyle`, `headerSpacing`, `closeIcon`, `closeButtonStyle` |
+| Buttons | `buttonStyle`, `buttonLabelStyle`, `buttonSpacing` |
+| Layout | `contentPadding`, `actionSpacing`, `sectionSpacing`, `maxColumns` |
+
+Where a token cannot express what you want, a builder replaces the widget
+outright: `collapsedBuilder`, `expandedBuilder`, `handleBuilder`,
+`headerBuilder`, `actionBuilder`, `buttonBuilder`.
+
 **Retuning the springs** uses the duration-and-bounce model designers reason in:
 
 ```dart

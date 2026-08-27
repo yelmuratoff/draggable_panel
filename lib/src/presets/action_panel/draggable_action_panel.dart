@@ -109,9 +109,19 @@ final class DraggableActionPanel extends StatelessWidget {
     onPlacementChanged: onPlacementChanged,
     collapsedBuilder:
         collapsedBuilder ??
-        (context, status) => Center(
-          child: Icon(icon, color: Theme.of(context).colorScheme.onSurface),
-        ),
+        (context, status) {
+          final theme = DraggableActionPanelThemeData.resolve(
+            context,
+            actionTheme,
+          );
+          return Center(
+            child: Icon(
+              icon,
+              color: theme.collapsedIconColor,
+              size: theme.collapsedIconSize,
+            ),
+          );
+        },
     expandedBuilder:
         expandedBuilder ??
         (context, status) => ActionPanelContent(

@@ -21,6 +21,15 @@ Added
   take their own shape without retuning every `FilledButton` in the app.
 - `handleBuilder` on `DraggableActionPanel`, which the preset accepted nowhere
   and so could not reach `DraggablePanel`.
+- A token for every remaining visual, so nothing the panel paints is fixed past
+  its default. On `DraggablePanelThemeData`: `stashedShape`, which carries into
+  `collapsedShape` as the tab is drawn out, plus `handleSize` and
+  `handleStrokeWidth`. On `DraggableActionPanelThemeData`: `collapsedIconSize`,
+  `collapsedIconColor`, `actionOverlayColor`, `badgeTextStyle`,
+  `badgeForegroundColor`, `badgeOffset`, `closeIcon`, and `closeButtonStyle`.
+- `PanelBadge.foregroundColor`, for a badge whose colour needs its own label
+  colour. Material resolves a badge's text colour outside its text style, so one
+  set through `badgeTextStyle` alone was being dropped.
 
 ## 4.0.0-beta.2
 

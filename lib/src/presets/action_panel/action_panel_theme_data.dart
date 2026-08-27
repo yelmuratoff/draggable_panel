@@ -14,15 +14,21 @@ final class DraggableActionPanelThemeData
     with Diagnosticable {
   const DraggableActionPanelThemeData({
     this.contentPadding,
+    this.collapsedIconSize,
+    this.collapsedIconColor,
     this.actionSize,
     this.actionIconSize,
     this.actionSpacing,
     this.actionShape,
     this.actionBackgroundColor,
     this.actionForegroundColor,
+    this.actionOverlayColor,
     this.badgeColor,
     this.badgeSize,
     this.badgeDotSize,
+    this.badgeTextStyle,
+    this.badgeForegroundColor,
+    this.badgeOffset,
     this.buttonSpacing,
     this.sectionSpacing,
     this.maxColumns,
@@ -34,12 +40,16 @@ final class DraggableActionPanelThemeData
     this.actionLabelMaxWidth,
     this.headerStyle,
     this.headerSpacing,
+    this.closeIcon,
+    this.closeButtonStyle,
   });
 
   /// Built-in tokens, derived from [scheme].
   factory DraggableActionPanelThemeData.defaults(ColorScheme scheme) =>
       DraggableActionPanelThemeData(
         contentPadding: const EdgeInsets.all(12),
+        collapsedIconSize: 24,
+        collapsedIconColor: scheme.onSurface,
         actionSize: 48,
         actionIconSize: 24,
         actionSpacing: 8,
@@ -49,6 +59,7 @@ final class DraggableActionPanelThemeData
         badgeColor: scheme.error,
         badgeSize: 18,
         badgeDotSize: 10,
+        badgeOffset: Offset.zero,
         buttonSpacing: 8,
         sectionSpacing: 12,
         maxColumns: 4,
@@ -57,6 +68,12 @@ final class DraggableActionPanelThemeData
         actionLabelSpacing: 6,
         actionLabelMaxLines: 2,
         headerSpacing: 12,
+        closeIcon: Icons.close_rounded,
+        closeButtonStyle: IconButton.styleFrom(
+          foregroundColor: scheme.onSurfaceVariant,
+          iconSize: 20,
+          visualDensity: VisualDensity.compact,
+        ),
       );
 
   /// Resolves defaults, then the app-wide extension, then [override].
@@ -71,6 +88,13 @@ final class DraggableActionPanelThemeData
   }
 
   final EdgeInsetsGeometry? contentPadding;
+
+  /// Size of the glyph on the collapsed face.
+  final double? collapsedIconSize;
+
+  /// Colour of that glyph.
+  final Color? collapsedIconColor;
+
   final double? actionSize;
 
   /// Size of the glyph inside an action's tile.
@@ -82,6 +106,10 @@ final class DraggableActionPanelThemeData
   final ShapeBorder? actionShape;
   final Color? actionBackgroundColor;
   final Color? actionForegroundColor;
+
+  /// Ink drawn over a tile as it is pressed, hovered, or focused.
+  final WidgetStateProperty<Color?>? actionOverlayColor;
+
   final Color? badgeColor;
 
   /// Height of a badge carrying a label.
@@ -89,6 +117,22 @@ final class DraggableActionPanelThemeData
 
   /// Diameter of a badge with no label.
   final double? badgeDotSize;
+
+  /// Style of a badge's label. Defaults to Material's own badge text style.
+  ///
+  /// Material resolves a badge's text colour separately, so a colour set here
+  /// only lands through [badgeForegroundColor].
+  final TextStyle? badgeTextStyle;
+
+  /// Colour of a badge's label. Defaults to `onError`, matching [badgeColor].
+  final Color? badgeForegroundColor;
+
+  /// Shifts a badge in from the top-end corner of its tile.
+  ///
+  /// `dx` insets it from the end edge and `dy` from the top; negative values
+  /// hang it over the corner. A round [actionShape] usually wants a few pixels
+  /// here, since the corner it hugs is empty.
+  final Offset? badgeOffset;
 
   final double? buttonSpacing;
 
@@ -127,20 +171,32 @@ final class DraggableActionPanelThemeData
   /// Gap between the header and the content below it.
   final double? headerSpacing;
 
+  /// Glyph on the header's close control.
+  final IconData? closeIcon;
+
+  /// Style of that control, including its shape, size, and colours.
+  final ButtonStyle? closeButtonStyle;
+
   DraggableActionPanelThemeData merge(DraggableActionPanelThemeData? other) =>
       other == null
       ? this
       : copyWith(
           contentPadding: other.contentPadding,
+          collapsedIconSize: other.collapsedIconSize,
+          collapsedIconColor: other.collapsedIconColor,
           actionSize: other.actionSize,
           actionIconSize: other.actionIconSize,
           actionSpacing: other.actionSpacing,
           actionShape: other.actionShape,
           actionBackgroundColor: other.actionBackgroundColor,
           actionForegroundColor: other.actionForegroundColor,
+          actionOverlayColor: other.actionOverlayColor,
           badgeColor: other.badgeColor,
           badgeSize: other.badgeSize,
           badgeDotSize: other.badgeDotSize,
+          badgeTextStyle: other.badgeTextStyle,
+          badgeForegroundColor: other.badgeForegroundColor,
+          badgeOffset: other.badgeOffset,
           buttonSpacing: other.buttonSpacing,
           sectionSpacing: other.sectionSpacing,
           maxColumns: other.maxColumns,
@@ -150,6 +206,8 @@ final class DraggableActionPanelThemeData
           actionLabelMaxWidth: other.actionLabelMaxWidth,
           headerStyle: other.headerStyle,
           headerSpacing: other.headerSpacing,
+          closeIcon: other.closeIcon,
+          closeButtonStyle: other.closeButtonStyle,
           buttonStyle: other.buttonStyle,
           buttonLabelStyle: other.buttonLabelStyle,
         );
@@ -157,15 +215,21 @@ final class DraggableActionPanelThemeData
   @override
   DraggableActionPanelThemeData copyWith({
     EdgeInsetsGeometry? contentPadding,
+    double? collapsedIconSize,
+    Color? collapsedIconColor,
     double? actionSize,
     double? actionIconSize,
     double? actionSpacing,
     ShapeBorder? actionShape,
     Color? actionBackgroundColor,
     Color? actionForegroundColor,
+    WidgetStateProperty<Color?>? actionOverlayColor,
     Color? badgeColor,
     double? badgeSize,
     double? badgeDotSize,
+    TextStyle? badgeTextStyle,
+    Color? badgeForegroundColor,
+    Offset? badgeOffset,
     double? buttonSpacing,
     double? sectionSpacing,
     int? maxColumns,
@@ -175,19 +239,27 @@ final class DraggableActionPanelThemeData
     double? actionLabelMaxWidth,
     TextStyle? headerStyle,
     double? headerSpacing,
+    IconData? closeIcon,
+    ButtonStyle? closeButtonStyle,
     ButtonStyle? buttonStyle,
     TextStyle? buttonLabelStyle,
   }) => DraggableActionPanelThemeData(
     contentPadding: contentPadding ?? this.contentPadding,
+    collapsedIconSize: collapsedIconSize ?? this.collapsedIconSize,
+    collapsedIconColor: collapsedIconColor ?? this.collapsedIconColor,
     actionSize: actionSize ?? this.actionSize,
     actionIconSize: actionIconSize ?? this.actionIconSize,
     actionSpacing: actionSpacing ?? this.actionSpacing,
     actionShape: actionShape ?? this.actionShape,
     actionBackgroundColor: actionBackgroundColor ?? this.actionBackgroundColor,
     actionForegroundColor: actionForegroundColor ?? this.actionForegroundColor,
+    actionOverlayColor: actionOverlayColor ?? this.actionOverlayColor,
     badgeColor: badgeColor ?? this.badgeColor,
     badgeSize: badgeSize ?? this.badgeSize,
     badgeDotSize: badgeDotSize ?? this.badgeDotSize,
+    badgeTextStyle: badgeTextStyle ?? this.badgeTextStyle,
+    badgeForegroundColor: badgeForegroundColor ?? this.badgeForegroundColor,
+    badgeOffset: badgeOffset ?? this.badgeOffset,
     buttonSpacing: buttonSpacing ?? this.buttonSpacing,
     sectionSpacing: sectionSpacing ?? this.sectionSpacing,
     maxColumns: maxColumns ?? this.maxColumns,
@@ -197,6 +269,8 @@ final class DraggableActionPanelThemeData
     actionLabelMaxWidth: actionLabelMaxWidth ?? this.actionLabelMaxWidth,
     headerStyle: headerStyle ?? this.headerStyle,
     headerSpacing: headerSpacing ?? this.headerSpacing,
+    closeIcon: closeIcon ?? this.closeIcon,
+    closeButtonStyle: closeButtonStyle ?? this.closeButtonStyle,
     buttonStyle: buttonStyle ?? this.buttonStyle,
     buttonLabelStyle: buttonLabelStyle ?? this.buttonLabelStyle,
   );
@@ -213,6 +287,16 @@ final class DraggableActionPanelThemeData
         other.contentPadding,
         t,
       ),
+      collapsedIconSize: lerpDouble(
+        collapsedIconSize,
+        other.collapsedIconSize,
+        t,
+      ),
+      collapsedIconColor: Color.lerp(
+        collapsedIconColor,
+        other.collapsedIconColor,
+        t,
+      ),
       actionSize: lerpDouble(actionSize, other.actionSize, t),
       actionIconSize: lerpDouble(actionIconSize, other.actionIconSize, t),
       actionSpacing: lerpDouble(actionSpacing, other.actionSpacing, t),
@@ -227,9 +311,19 @@ final class DraggableActionPanelThemeData
         other.actionForegroundColor,
         t,
       ),
+      actionOverlayColor: t < 0.5
+          ? actionOverlayColor
+          : other.actionOverlayColor,
       badgeColor: Color.lerp(badgeColor, other.badgeColor, t),
       badgeSize: lerpDouble(badgeSize, other.badgeSize, t),
       badgeDotSize: lerpDouble(badgeDotSize, other.badgeDotSize, t),
+      badgeTextStyle: TextStyle.lerp(badgeTextStyle, other.badgeTextStyle, t),
+      badgeForegroundColor: Color.lerp(
+        badgeForegroundColor,
+        other.badgeForegroundColor,
+        t,
+      ),
+      badgeOffset: Offset.lerp(badgeOffset, other.badgeOffset, t),
       buttonSpacing: lerpDouble(buttonSpacing, other.buttonSpacing, t),
       sectionSpacing: lerpDouble(sectionSpacing, other.sectionSpacing, t),
       maxColumns: t < 0.5 ? maxColumns : other.maxColumns,
@@ -253,6 +347,12 @@ final class DraggableActionPanelThemeData
       ),
       headerStyle: TextStyle.lerp(headerStyle, other.headerStyle, t),
       headerSpacing: lerpDouble(headerSpacing, other.headerSpacing, t),
+      closeIcon: t < 0.5 ? closeIcon : other.closeIcon,
+      closeButtonStyle: ButtonStyle.lerp(
+        closeButtonStyle,
+        other.closeButtonStyle,
+        t,
+      ),
       buttonStyle: ButtonStyle.lerp(buttonStyle, other.buttonStyle, t),
       buttonLabelStyle: TextStyle.lerp(
         buttonLabelStyle,
@@ -267,15 +367,21 @@ final class DraggableActionPanelThemeData
       identical(this, other) ||
       other is DraggableActionPanelThemeData &&
           other.contentPadding == contentPadding &&
+          other.collapsedIconSize == collapsedIconSize &&
+          other.collapsedIconColor == collapsedIconColor &&
           other.actionSize == actionSize &&
           other.actionIconSize == actionIconSize &&
           other.actionSpacing == actionSpacing &&
           other.actionShape == actionShape &&
           other.actionBackgroundColor == actionBackgroundColor &&
           other.actionForegroundColor == actionForegroundColor &&
+          other.actionOverlayColor == actionOverlayColor &&
           other.badgeColor == badgeColor &&
           other.badgeSize == badgeSize &&
           other.badgeDotSize == badgeDotSize &&
+          other.badgeTextStyle == badgeTextStyle &&
+          other.badgeForegroundColor == badgeForegroundColor &&
+          other.badgeOffset == badgeOffset &&
           other.buttonSpacing == buttonSpacing &&
           other.sectionSpacing == sectionSpacing &&
           other.maxColumns == maxColumns &&
@@ -285,21 +391,29 @@ final class DraggableActionPanelThemeData
           other.actionLabelMaxWidth == actionLabelMaxWidth &&
           other.headerStyle == headerStyle &&
           other.headerSpacing == headerSpacing &&
+          other.closeIcon == closeIcon &&
+          other.closeButtonStyle == closeButtonStyle &&
           other.buttonStyle == buttonStyle &&
           other.buttonLabelStyle == buttonLabelStyle;
 
   @override
   int get hashCode => Object.hashAll([
     contentPadding,
+    collapsedIconSize,
+    collapsedIconColor,
     actionSize,
     actionIconSize,
     actionSpacing,
     actionShape,
     actionBackgroundColor,
     actionForegroundColor,
+    actionOverlayColor,
     badgeColor,
     badgeSize,
     badgeDotSize,
+    badgeTextStyle,
+    badgeForegroundColor,
+    badgeOffset,
     buttonSpacing,
     sectionSpacing,
     maxColumns,
@@ -309,6 +423,8 @@ final class DraggableActionPanelThemeData
     actionLabelMaxWidth,
     headerStyle,
     headerSpacing,
+    closeIcon,
+    closeButtonStyle,
     buttonStyle,
     buttonLabelStyle,
   ]);
