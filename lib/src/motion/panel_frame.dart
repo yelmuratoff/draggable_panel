@@ -141,8 +141,6 @@ PanelFrame computePanelFrame({
     size.height,
   );
 
-  // A drag is resisted at the origin, so nudging the rect as well would clamp
-  // it dead against the edge while the finger kept going.
   final open = isDragging
       ? grown
       : Rect.lerp(grown, _nudgeInto(grown, bounds), clamped)!;

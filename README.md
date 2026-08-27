@@ -184,6 +184,8 @@ DraggablePanel(
     stashable: true,             // push it against an edge to park it there
     dismissible: false,          // PiP uses an explicit close, not a fling-away
     collapseOnTapOutside: true,
+    stashOnTapOutside: true,     // touching the page puts a collapsed panel away
+    idleStashDelay: Duration(seconds: 5),  // null to keep it out indefinitely
     avoidKeyboard: true,
     hapticsEnabled: true,
     snapPolicy: PanelSnapPolicy.edges,    // edges | corners | free
@@ -191,6 +193,11 @@ DraggablePanel(
   // …
 )
 ```
+
+`stashable: false` switches parking off outright — the panel then stays where it
+was left, and no idle timer, tap on the page, drag against an edge, keyboard
+dismissal, screen-reader action, or `controller.stash()` will put it away.
+Parking is on by default.
 
 ## Theming
 

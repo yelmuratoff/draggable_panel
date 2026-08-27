@@ -1,4 +1,4 @@
-## 4.0.0
+## 4.0.0-beta.1
 
 A rewrite. The panel is now a floating window: drag it
 anywhere, release it and it springs to the nearest corner by projected velocity,
@@ -61,8 +61,14 @@ Added
   last of which bounds a grid column so one long label cannot stretch the panel.
 - `actionIconSize` — the glyph inside a tile, separate from `actionSize` because
   the tile is the tap target and has a 48-pixel floor while the glyph does not.
+- The preset's default collapsed icon is now `Icons.zoom_out_map_rounded`. `Icons.apps`
+  described what the panel held, but the contents belong to the caller; an
+  expand glyph says what a tap does.
 - `DraggableActionPanel.title` and `onClose` put a header above the grid, giving
   the panel a visible way out instead of only a tap on the page.
+- A grid row fills to `maxColumns` before the next one starts. Five actions are
+  4 + 1; the old layout balanced them into 3 + 2, which made the row count less
+  predictable than the column count.
 - Grid columns are equal shares of the row, so they line up between rows and a
   full row leaves no slack at its trailing end. The grid never claims more
   columns than it has actions, and the panel's width follows: two actions make a
@@ -81,6 +87,11 @@ Added
   collapsed face both hold still against the screen while the panel slides out
   from under them, so the handle leaves through the edge exactly as the face
   arrives, and neither is ever a translucent ghost of the other.
+- An expanded panel released on the far side stays there. Which side it settles
+  on was decided from the collapsed box the origin describes, whose centre sits
+  a window's width away from the panel's own — so on a phone-width screen a
+  window carried to the left flew back to the right, while a desktop window was
+  wide enough for the same arithmetic to land right by accident.
 - Carrying an expanded panel to the other side no longer jerks. The origin
   describes the collapsed box and the expanded rect hangs off it by the anchor,
   so swapping sides used to move the window by the whole difference in size the

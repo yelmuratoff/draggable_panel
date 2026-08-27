@@ -33,7 +33,7 @@ final class DraggableActionPanel extends StatelessWidget {
     this.buttons = const [],
     this.child,
     this.controller,
-    this.icon = Icons.apps,
+    this.icon = Icons.zoom_out_map_rounded,
     this.title,
     this.onClose,
     this.theme,
@@ -59,6 +59,9 @@ final class DraggableActionPanel extends StatelessWidget {
   final DraggablePanelController? controller;
 
   /// Icon shown while collapsed. Ignored when [collapsedBuilder] is given.
+  ///
+  /// The default says what a tap does rather than what the panel holds, since
+  /// the preset's contents are the caller's.
   final IconData icon;
 
   /// Title shown in the header. A header appears when this, [onClose], or

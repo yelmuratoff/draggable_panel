@@ -69,30 +69,38 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('balances the last row instead of leaving it near-empty', (
+    testWidgets('a row fills to maxColumns before the next one starts', (
       tester,
     ) async {
       final controller = await _pumpActionPanel(tester, actions: _actions(5));
       controller.expand();
       await tester.pump();
 
-      final rows = <double>{
-        for (final cell in tester.widgetList<ActionCell>(
-          find.byType(ActionCell),
-        ))
-          tester.getTopLeft(find.byWidget(cell)).dy,
-      };
-      final firstRow = tester
-          .widgetList<ActionCell>(find.byType(ActionCell))
-          .where(
-            (cell) =>
-                tester.getTopLeft(find.byWidget(cell)).dy ==
-                rows.reduce((a, b) => a < b ? a : b),
-          )
-          .length;
+      final tops = [
+        for (var i = 0; i < 5; i++)
+          tester.getTopLeft(find.byType(ActionCell).at(i)).dy,
+      ];
+      final firstRow = tops.reduce((a, b) => a < b ? a : b);
 
-      expect(rows.length, 2);
-      expect(firstRow, 3, reason: 'five actions read better as 3 + 2');
+      expect(tops.where((top) => top == firstRow), hasLength(4));
+      expect(tops.toSet(), hasLength(2), reason: 'five actions are 4 + 1');
+    });
+
+    testWidgets('maxColumns retunes how many fit on a row', (tester) async {
+      final controller = await _pumpActionPanel(
+        tester,
+        actions: _actions(6),
+        actionTheme: const DraggableActionPanelThemeData(maxColumns: 2),
+      );
+      controller.expand();
+      await tester.pump();
+
+      final tops = <double>{
+        for (var i = 0; i < 6; i++)
+          tester.getTopLeft(find.byType(ActionCell).at(i)).dy,
+      };
+
+      expect(tops, hasLength(3), reason: 'six actions over two columns');
     });
 
     testWidgets('a single short row is not split', (tester) async {
@@ -154,7 +162,7 @@ void main() {
     ) async {
       final controller = await _pumpActionPanel(tester, actions: _actions(3));
 
-      await tester.tap(find.byIcon(Icons.apps));
+      await tester.tap(find.byIcon(Icons.zoom_out_map_rounded));
       await tester.pump();
 
       expect(controller.phase, PanelPhase.expanded);

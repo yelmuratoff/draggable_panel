@@ -30,10 +30,6 @@ class _ToolsDemoState extends State<ToolsDemo> {
   @override
   Widget build(BuildContext context) => DraggableActionPanel(
     controller: _controller,
-    collapsedBuilder: (context, status) => Icon(
-      Icons.build_outlined,
-      color: Theme.of(context).colorScheme.onSurface,
-    ),
     theme: const DraggablePanelThemeData(collapsedSize: Size(56, 56)),
     title: 'Developer tools',
     onClose: _controller.collapse,

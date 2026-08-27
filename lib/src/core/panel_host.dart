@@ -304,6 +304,13 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
     );
   }
 
+  Rect? get _paintedRect {
+    final surface = widget.surfaceKey.currentContext?.findRenderObject();
+    if (surface is! RenderPanelSurface) return null;
+    final rect = surface.paintedRect;
+    return rect.isEmpty ? null : rect;
+  }
+
   Size? get _expandedSize {
     final surface = widget.surfaceKey.currentContext?.findRenderObject();
     return surface is RenderPanelSurface ? surface.expandedSize : null;
@@ -321,10 +328,11 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
       return;
     }
 
+    final rect = _paintedRect ?? _driver.value & _panelSize;
     final target = resolvePanelRelease(
-      topLeft: _driver.value,
+      topLeft: rect.topLeft,
       velocity: _settleVelocity,
-      panelSize: _panelSize,
+      panelSize: rect.size,
       viewport: _viewport!,
       behavior: widget.behavior,
       motion: _spec,

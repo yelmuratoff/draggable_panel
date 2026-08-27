@@ -2,6 +2,7 @@ import 'package:draggable_panel/draggable_panel.dart';
 import 'package:draggable_panel/src/core/panel_surface.dart';
 import 'package:draggable_panel/src/core/render_panel_surface.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _collapsedKey = ValueKey('collapsed');
@@ -685,6 +686,72 @@ void main() {
       );
 
       await tester.pumpAndSettle();
+    });
+
+    group('switched off', () {
+      const settled = PanelBehavior(stashable: false);
+
+      testWidgets('the idle timer leaves it out', (tester) async {
+        final controller = await _pumpPanel(
+          tester,
+          behavior: const PanelBehavior(
+            stashable: false,
+            idleStashDelay: Duration(seconds: 1),
+          ),
+        );
+
+        await tester.pump(const Duration(seconds: 5));
+
+        expect(controller.phase, PanelPhase.collapsed);
+      });
+
+      testWidgets('touching the page leaves it out', (tester) async {
+        final controller = await _pumpPanel(tester, behavior: settled);
+
+        await tester.tapAt(const Offset(80, 80));
+        await tester.pump();
+
+        expect(controller.phase, PanelPhase.collapsed);
+      });
+
+      testWidgets('shoving it at the edge only rubber-bands it', (
+        tester,
+      ) async {
+        final controller = await _pumpPanel(tester, behavior: settled);
+
+        await dragBy(tester, const Offset(60, 0));
+
+        expect(controller.phase, PanelPhase.collapsed);
+        expect(_paintedRect(tester).right, lessThanOrEqualTo(800));
+      });
+
+      testWidgets('stash() is a no-op', (tester) async {
+        final controller = await _pumpPanel(tester, behavior: settled);
+
+        controller.stash();
+        await tester.pump();
+
+        expect(controller.phase, PanelPhase.collapsed);
+        expect(controller.placement, isNot(isA<StashedPlacement>()));
+      });
+
+      testWidgets('assistive technology is not offered the action', (
+        tester,
+      ) async {
+        final handle = tester.ensureSemantics();
+        await _pumpPanel(tester, behavior: settled);
+
+        final actions = tester
+            .getSemantics(find.byKey(_collapsedKey))
+            .getSemanticsData()
+            .customSemanticsActionIds!
+            .map(CustomSemanticsAction.getAction)
+            .map((action) => action?.label);
+
+        expect(actions, isNot(contains(const PanelSemantics().stashAction)));
+
+        handle.dispose();
+      });
     });
 
     testWidgets('it parks at the side it was dragged to, not the one it '

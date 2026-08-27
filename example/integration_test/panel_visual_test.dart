@@ -45,6 +45,17 @@ void main() {
     await shoot(tester, '05-released');
   });
 
+  testWidgets('the default collapsed face', (tester) async {
+    app.main();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Developer tools'));
+    await tester.pumpAndSettle();
+    await tester.tapAt(tester.getCenter(find.byType(PanelEdgeHandle)));
+    await tester.pumpAndSettle();
+
+    await binding.takeScreenshot('14-default-icon');
+  });
+
   testWidgets('the expanded action grid', (tester) async {
     app.main();
     await tester.pumpAndSettle();
@@ -53,7 +64,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tapAt(tester.getCenter(find.byType(PanelEdgeHandle)));
     await tester.pumpAndSettle();
-    await tester.tapAt(tester.getCenter(find.byIcon(Icons.build_outlined)));
+    await tester.tapAt(tester.getCenter(find.byIcon(Icons.zoom_out_map_rounded)));
     await tester.pumpAndSettle();
 
     await binding.takeScreenshot('09-expanded-grid');
@@ -66,7 +77,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tapAt(tester.getCenter(find.byType(PanelEdgeHandle)));
     await tester.pumpAndSettle();
-    await tester.tapAt(tester.getCenter(find.byIcon(Icons.build_outlined)));
+    await tester.tapAt(tester.getCenter(find.byIcon(Icons.zoom_out_map_rounded)));
     await tester.pumpAndSettle();
 
     final grip = tester.getCenter(find.text('Developer tools').last);
@@ -86,6 +97,24 @@ void main() {
 
     await tester.pumpAndSettle();
     await binding.takeScreenshot('12-crossing-settled');
+  });
+
+  testWidgets('parking switched off keeps the panel out', (tester) async {
+    app.main();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Theming playground'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Stash off the edge'));
+    await tester.pumpAndSettle();
+    await tester.tapAt(tester.getCenter(find.byType(PanelEdgeHandle)));
+    await tester.pumpAndSettle();
+
+    await tester.pump(const Duration(seconds: 9));
+    await tester.tapAt(const Offset(120, 260));
+    await tester.pumpAndSettle();
+
+    await binding.takeScreenshot('13-parking-off');
   });
 
   testWidgets('touching the page puts a drawn-out panel away', (tester) async {

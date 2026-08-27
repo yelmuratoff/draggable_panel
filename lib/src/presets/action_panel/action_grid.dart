@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:draggable_panel/src/presets/action_panel/action_panel_theme_data.dart';
 import 'package:draggable_panel/src/presets/action_panel/panel_action.dart';
 import 'package:flutter/material.dart';
@@ -38,14 +40,10 @@ final class ActionPanelContent extends StatelessWidget {
 
   /// How many columns the grid uses.
   ///
-  /// Never more than there are actions, so a panel holding two of them is two
-  /// cells wide rather than a mostly empty four.
-  int get _columns {
-    final ceiling = theme.maxColumns ?? 4;
-    if (actions.length <= ceiling) return actions.length;
-    final rows = (actions.length / ceiling).ceil();
-    return (actions.length / rows).ceil();
-  }
+  /// A row fills to [DraggableActionPanelThemeData.maxColumns] before the next
+  /// one starts, and the count never exceeds the actions there are — so a panel
+  /// holding two is two cells wide rather than a mostly empty four.
+  int get _columns => math.min(actions.length, theme.maxColumns ?? 4);
 
   bool get _hasHeader =>
       headerBuilder != null || title != null || onClose != null;
