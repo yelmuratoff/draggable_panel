@@ -62,6 +62,8 @@ Future<DraggablePanelController> _pumpPanel(
   return panelController;
 }
 
+Duration _at(int frame) => Duration(milliseconds: 16 * frame);
+
 Rect _panelRect(WidgetTester tester) =>
     tester.getRect(find.byKey(_collapsedKey));
 
@@ -594,6 +596,95 @@ void main() {
 
       expect(controller.phase, PanelPhase.stashed);
       expect(pageTaps, 1, reason: 'the page still got its own tap');
+    });
+
+    testWidgets('an expanded panel crosses the screen without stalling', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester);
+      controller.expand();
+      await tester.pump();
+      expect(controller.phase, PanelPhase.expanded);
+
+      final start = _paintedRect(tester).center;
+      final gesture = await tester.startGesture(start);
+      await gesture.moveBy(const Offset(-40, 0), timeStamp: _at(1));
+
+      final travelled = <double>[];
+      var previous = _paintedRect(tester).left;
+      for (var frame = 2; frame <= 9; frame++) {
+        await gesture.moveBy(const Offset(-40, 0), timeStamp: _at(frame));
+        await tester.pump();
+        final left = _paintedRect(tester).left;
+        travelled.add(previous - left);
+        previous = left;
+      }
+      await gesture.up();
+
+      expect(
+        travelled.where((step) => step <= 0.5),
+        isEmpty,
+        reason: 'the rect stalled while the finger kept moving: $travelled',
+      );
+    });
+
+    testWidgets('an expanded panel released on the left stays left, even on a '
+        'narrow screen', (tester) async {
+      tester.view
+        ..physicalSize = const Size(393 * 3, 852 * 3)
+        ..devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+
+      final controller = await _pumpPanel(tester);
+      controller.expand();
+      await tester.pump();
+
+      final gesture = await tester.startGesture(_paintedRect(tester).center);
+      for (var frame = 1; frame <= 3; frame++) {
+        await gesture.moveBy(const Offset(-30, 0), timeStamp: _at(frame));
+        await tester.pump();
+      }
+      final held = _paintedRect(tester);
+      expect(held.center.dx, lessThan(393 / 2), reason: 'it is on the left');
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(
+        _paintedRect(tester).center.dx,
+        lessThan(393 / 2),
+        reason: 'it flew back across the screen',
+      );
+    });
+
+    testWidgets('releasing an expanded panel does not teleport it', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(
+        tester,
+        theme: DraggablePanelThemeData(motion: PanelMotionSpec()),
+      );
+      controller.expand();
+      await tester.pumpAndSettle();
+
+      final gesture = await tester.startGesture(_paintedRect(tester).center);
+      for (var frame = 1; frame <= 10; frame++) {
+        await gesture.moveBy(const Offset(-45, 0), timeStamp: _at(frame));
+        await tester.pump();
+      }
+      final held = _paintedRect(tester);
+
+      await gesture.up();
+      await tester.pump();
+      final released = _paintedRect(tester);
+
+      expect(
+        (released.left - held.left).abs(),
+        lessThan(24),
+        reason: 'the rect jumped $held -> $released on the frame after release',
+      );
+
+      await tester.pumpAndSettle();
     });
 
     testWidgets('it parks at the side it was dragged to, not the one it '

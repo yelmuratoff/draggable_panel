@@ -81,6 +81,13 @@ Added
   collapsed face both hold still against the screen while the panel slides out
   from under them, so the handle leaves through the edge exactly as the face
   arrives, and neither is ever a translucent ghost of the other.
+- Carrying an expanded panel to the other side no longer jerks. The origin
+  describes the collapsed box and the expanded rect hangs off it by the anchor,
+  so swapping sides used to move the window by the whole difference in size the
+  instant the placement changed — a jump of a window's width, then a spring back
+  over it. The driver is now rebased through the anchor change, and an expanded
+  drag is bounded by the size it actually occupies rather than by the collapsed
+  one.
 - A panel dragged to the other side now parks on that side. `stash()` without an
   edge read a free placement as the end edge whatever the panel's alignment, so
   one pulled across to the left flew back to the right.

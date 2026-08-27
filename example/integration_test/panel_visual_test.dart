@@ -59,6 +59,35 @@ void main() {
     await binding.takeScreenshot('09-expanded-grid');
   });
 
+  testWidgets('an expanded panel crossing to the other side', (tester) async {
+    app.main();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Developer tools'));
+    await tester.pumpAndSettle();
+    await tester.tapAt(tester.getCenter(find.byType(PanelEdgeHandle)));
+    await tester.pumpAndSettle();
+    await tester.tapAt(tester.getCenter(find.byIcon(Icons.build_outlined)));
+    await tester.pumpAndSettle();
+
+    final grip = tester.getCenter(find.text('Developer tools').last);
+    final gesture = await tester.startGesture(grip);
+    for (var frame = 1; frame <= 8; frame++) {
+      await gesture.moveBy(
+        const Offset(-40, 0),
+        timeStamp: Duration(milliseconds: 16 * frame),
+      );
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await binding.takeScreenshot('10-crossing-held');
+
+    await gesture.up();
+    await tester.pump(const Duration(milliseconds: 16));
+    await binding.takeScreenshot('11-crossing-released');
+
+    await tester.pumpAndSettle();
+    await binding.takeScreenshot('12-crossing-settled');
+  });
+
   testWidgets('touching the page puts a drawn-out panel away', (tester) async {
     app.main();
     await tester.pumpAndSettle();

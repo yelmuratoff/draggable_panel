@@ -116,6 +116,7 @@ PanelFrame computePanelFrame({
   required Rect viewport,
   required double stashedPeek,
   required double expansion,
+  bool isDragging = false,
   bool reduceMotion = false,
 }) {
   final clamped = expansion.clamp(0.0, 1.0);
@@ -140,7 +141,11 @@ PanelFrame computePanelFrame({
     size.height,
   );
 
-  final open = Rect.lerp(grown, _nudgeInto(grown, bounds), clamped)!;
+  // A drag is resisted at the origin, so nudging the rect as well would clamp
+  // it dead against the edge while the finger kept going.
+  final open = isDragging
+      ? grown
+      : Rect.lerp(grown, _nudgeInto(grown, bounds), clamped)!;
 
   final collapsedBox = origin & collapsedSize;
   final emergence = _emergence(collapsedBox, viewport, stashedPeek);

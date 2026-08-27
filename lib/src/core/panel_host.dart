@@ -5,6 +5,7 @@ import 'package:draggable_panel/src/controller/panel_event.dart';
 import 'package:draggable_panel/src/core/panel_haptics.dart';
 import 'package:draggable_panel/src/core/panel_semantics.dart';
 import 'package:draggable_panel/src/core/panel_surface.dart';
+import 'package:draggable_panel/src/core/render_panel_surface.dart';
 import 'package:draggable_panel/src/model/panel_behavior.dart';
 import 'package:draggable_panel/src/model/panel_corner.dart';
 import 'package:draggable_panel/src/model/panel_edge.dart';
@@ -266,13 +267,46 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
   /// them would yank it inwards the moment a drag registers. Extending the
   /// range to wherever the drag began keeps pulling it out one-to-one.
   Rect _dragTravel() {
-    final travel = _viewport!.travelFor(_panelSize);
+    final travel = _restingTravel();
     return Rect.fromLTRB(
       math.min(travel.left, _dragOrigin.dx),
       math.min(travel.top, _dragOrigin.dy),
       math.max(travel.right, _dragOrigin.dx),
       math.max(travel.bottom, _dragOrigin.dy),
     );
+  }
+
+  /// Where the driver's origin may sit while the panel stays inside its bounds.
+  ///
+  /// An expanded panel is much larger than the collapsed box the origin
+  /// describes, so measuring against the collapsed size lets the finger carry it
+  /// far past anywhere it can legally rest.
+  Rect _restingTravel() {
+    final collapsed = _viewport!.travelFor(_panelSize);
+    if (!widget.controller.phase.isExpanding) return collapsed;
+
+    final expanded = _expandedSize;
+    if (expanded == null) return collapsed;
+
+    final bounds = _viewport!.bounds;
+    final anchor = _anchor();
+    final lead = Offset(
+      (anchor.x + 1) / 2 * (expanded.width - _panelSize.width),
+      (anchor.y + 1) / 2 * (expanded.height - _panelSize.height),
+    );
+    final left = bounds.left + lead.dx;
+    final top = bounds.top + lead.dy;
+    return Rect.fromLTRB(
+      left,
+      top,
+      math.max(left, bounds.right - expanded.width + lead.dx),
+      math.max(top, bounds.bottom - expanded.height + lead.dy),
+    );
+  }
+
+  Size? get _expandedSize {
+    final surface = widget.surfaceKey.currentContext?.findRenderObject();
+    return surface is RenderPanelSurface ? surface.expandedSize : null;
   }
 
   void _onDragEnd(TapDragEndDetails details) {
@@ -313,6 +347,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
     if (previous.placement == status.placement) return;
     if (status.phase == PanelPhase.settling || status.isDragging) return;
 
+    _rebaseForAnchor(previous.placement, status.placement);
     final target = _originOf(status.placement);
     if (status.phase == PanelPhase.hidden) {
       _driver.jumpTo(target);
@@ -379,8 +414,34 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
     );
   }
 
-  Alignment _anchor() {
-    final placement = widget.controller.placement;
+  /// Shifts the driver so a change of anchor leaves the painted rect alone.
+  ///
+  /// The origin describes the collapsed box, and the expanded rect hangs off it
+  /// by the anchor. Swapping the anchor therefore moves the rect by the whole
+  /// difference in size the instant the placement changes — the panel jumps a
+  /// window's width, then springs back over it.
+  void _rebaseForAnchor(PanelPlacement from, PanelPlacement to) {
+    if (!widget.controller.phase.isExpanding) return;
+
+    final expanded = _expandedSize;
+    if (expanded == null) return;
+
+    final before = _anchorOf(from);
+    final after = _anchorOf(to);
+    if (before == after) return;
+
+    _driver.jumpTo(
+      _driver.value +
+          Offset(
+            (after.x - before.x) / 2 * (expanded.width - _panelSize.width),
+            (after.y - before.y) / 2 * (expanded.height - _panelSize.height),
+          ),
+    );
+  }
+
+  Alignment _anchor() => _anchorOf(widget.controller.placement);
+
+  Alignment _anchorOf(PanelPlacement placement) {
     final direction = _viewport!.direction;
     return switch (placement) {
       CornerPlacement(:final corner) => corner.resolve(direction),
@@ -558,7 +619,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
       expansionOf: () => _morph.value,
       anchor: _anchor(),
       bounds: _boundsInsets(),
-      isDragging: phase == PanelPhase.dragging,
+      isDragging: _isMoving,
       isStashed: phase == PanelPhase.stashed,
       reduceMotion: _spec.reduceMotion,
       opacity: _opacityFor(phase),

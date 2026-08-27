@@ -66,6 +66,9 @@ final class RenderPanelSurface extends RenderBox
   final LayerHandle<BackdropFilterLayer> _backdropLayer =
       LayerHandle<BackdropFilterLayer>();
 
+  /// The size the expanded content was laid out at.
+  Size get expandedSize => _expandedSize;
+
   /// The rect the panel occupied when it was last painted.
   ///
   /// Hit testing and the gesture layer both work from this, so a tap outside
@@ -226,6 +229,7 @@ final class RenderPanelSurface extends RenderBox
     bounds: _freeRect,
     viewport: Offset.zero & size,
     stashedPeek: _style.stashedPeek,
+    isDragging: _isDragging,
     expansion: expansionOf(),
     reduceMotion: _reduceMotion,
   );
