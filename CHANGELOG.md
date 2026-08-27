@@ -1,3 +1,18 @@
+## 4.0.0-beta.3
+
+Fixed
+
+- An action's badge was all but invisible. It wrapped the glyph, so Material
+  anchored it to the 24-pixel icon rather than the tile — a 6-pixel dot landed on
+  the icon's own strokes, and the tile's `Clip.antiAlias` ate whatever crossed
+  its rounded corner. The badge now rides the tile's top-end corner, above the
+  clip, at 18 pixels with a label and 10 as a dot.
+
+Added
+
+- `badgeSize` and `badgeDotSize` on `DraggableActionPanelThemeData`, joining
+  `badgeColor`.
+
 ## 4.0.0-beta.2
 
 Fixed

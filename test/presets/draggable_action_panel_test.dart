@@ -188,6 +188,77 @@ void main() {
       expect(find.text('3'), findsOneWidget);
     });
 
+    testWidgets('a badge sits in the tile corner, off the glyph', (
+      tester,
+    ) async {
+      final controller = await _pumpActionPanel(
+        tester,
+        actions: [
+          PanelAction(
+            icon: Icons.mail,
+            badge: const PanelBadge(label: '3'),
+            onPressed: () {},
+          ),
+        ],
+      );
+      controller.expand();
+      await tester.pump();
+
+      final cell = tester.getRect(find.byType(ActionCell));
+      final badge = tester.getRect(find.byType(Badge));
+      final glyph = tester.getRect(find.byIcon(Icons.mail));
+
+      expect(badge.right, closeTo(cell.right, 0.5));
+      expect(badge.top, closeTo(cell.top, 0.5));
+      expect(
+        badge.contains(glyph.center),
+        isFalse,
+        reason: 'the badge rides the tile, not the icon',
+      );
+    });
+
+    testWidgets('a dot badge is drawn without a label', (tester) async {
+      final controller = await _pumpActionPanel(
+        tester,
+        actions: [
+          PanelAction(
+            icon: Icons.mail,
+            badge: const PanelBadge.dot(),
+            onPressed: () {},
+          ),
+        ],
+      );
+      controller.expand();
+      await tester.pump();
+
+      final cell = tester.getRect(find.byType(ActionCell));
+      final badge = tester.getRect(find.byType(Badge));
+
+      expect(badge.right, closeTo(cell.right, 0.5));
+      expect(badge.top, closeTo(cell.top, 0.5));
+    });
+
+    testWidgets('tapping over a badge still runs its action', (tester) async {
+      var pressed = 0;
+      final controller = await _pumpActionPanel(
+        tester,
+        actions: [
+          PanelAction(
+            icon: Icons.mail,
+            badge: const PanelBadge(label: '3'),
+            onPressed: () => pressed++,
+          ),
+        ],
+      );
+      controller.expand();
+      await tester.pump();
+
+      await tester.tapAt(tester.getRect(find.byType(Badge)).center);
+      await tester.pump();
+
+      expect(pressed, 1);
+    });
+
     testWidgets('the action theme retunes the grid', (tester) async {
       final controller = await _pumpActionPanel(
         tester,
@@ -356,7 +427,15 @@ void main() {
     ) async {
       final controller = await _pumpActionPanel(
         tester,
-        actions: _actions(6),
+        actions: [
+          PanelAction(
+            icon: Icons.mail,
+            label: 'Inbox',
+            badge: const PanelBadge(label: '12'),
+            onPressed: () {},
+          ),
+          ..._actions(5),
+        ],
         buttons: [
           PanelActionButton(
             icon: Icons.share,

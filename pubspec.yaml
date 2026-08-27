@@ -1,6 +1,6 @@
 name: draggable_panel
 description: A floating panel that behaves like a system Picture-in-Picture window — drag it anywhere, spring-snap to corners, stash it off the edge, tap to grow it in place.
-version: 4.0.0-beta.2
+version: 4.0.0-beta.3
 homepage: https://github.com/yelmuratoff/draggable_panel.git
 issue_tracker: https://github.com/yelmuratoff/draggable_panel/issues
 

@@ -21,6 +21,8 @@ final class DraggableActionPanelThemeData
     this.actionBackgroundColor,
     this.actionForegroundColor,
     this.badgeColor,
+    this.badgeSize,
+    this.badgeDotSize,
     this.buttonSpacing,
     this.sectionSpacing,
     this.maxColumns,
@@ -44,6 +46,8 @@ final class DraggableActionPanelThemeData
           borderRadius: BorderRadius.all(Radius.circular(14)),
         ),
         badgeColor: scheme.error,
+        badgeSize: 18,
+        badgeDotSize: 10,
         buttonSpacing: 8,
         sectionSpacing: 12,
         maxColumns: 4,
@@ -78,6 +82,13 @@ final class DraggableActionPanelThemeData
   final Color? actionBackgroundColor;
   final Color? actionForegroundColor;
   final Color? badgeColor;
+
+  /// Height of a badge carrying a label.
+  final double? badgeSize;
+
+  /// Diameter of a badge with no label.
+  final double? badgeDotSize;
+
   final double? buttonSpacing;
 
   /// Gap between the action grid and the button column.
@@ -121,6 +132,8 @@ final class DraggableActionPanelThemeData
           actionBackgroundColor: other.actionBackgroundColor,
           actionForegroundColor: other.actionForegroundColor,
           badgeColor: other.badgeColor,
+          badgeSize: other.badgeSize,
+          badgeDotSize: other.badgeDotSize,
           buttonSpacing: other.buttonSpacing,
           sectionSpacing: other.sectionSpacing,
           maxColumns: other.maxColumns,
@@ -143,6 +156,8 @@ final class DraggableActionPanelThemeData
     Color? actionBackgroundColor,
     Color? actionForegroundColor,
     Color? badgeColor,
+    double? badgeSize,
+    double? badgeDotSize,
     double? buttonSpacing,
     double? sectionSpacing,
     int? maxColumns,
@@ -162,6 +177,8 @@ final class DraggableActionPanelThemeData
     actionBackgroundColor: actionBackgroundColor ?? this.actionBackgroundColor,
     actionForegroundColor: actionForegroundColor ?? this.actionForegroundColor,
     badgeColor: badgeColor ?? this.badgeColor,
+    badgeSize: badgeSize ?? this.badgeSize,
+    badgeDotSize: badgeDotSize ?? this.badgeDotSize,
     buttonSpacing: buttonSpacing ?? this.buttonSpacing,
     sectionSpacing: sectionSpacing ?? this.sectionSpacing,
     maxColumns: maxColumns ?? this.maxColumns,
@@ -201,6 +218,8 @@ final class DraggableActionPanelThemeData
         t,
       ),
       badgeColor: Color.lerp(badgeColor, other.badgeColor, t),
+      badgeSize: lerpDouble(badgeSize, other.badgeSize, t),
+      badgeDotSize: lerpDouble(badgeDotSize, other.badgeDotSize, t),
       buttonSpacing: lerpDouble(buttonSpacing, other.buttonSpacing, t),
       sectionSpacing: lerpDouble(sectionSpacing, other.sectionSpacing, t),
       maxColumns: t < 0.5 ? maxColumns : other.maxColumns,
@@ -244,6 +263,8 @@ final class DraggableActionPanelThemeData
           other.actionBackgroundColor == actionBackgroundColor &&
           other.actionForegroundColor == actionForegroundColor &&
           other.badgeColor == badgeColor &&
+          other.badgeSize == badgeSize &&
+          other.badgeDotSize == badgeDotSize &&
           other.buttonSpacing == buttonSpacing &&
           other.sectionSpacing == sectionSpacing &&
           other.maxColumns == maxColumns &&
@@ -265,6 +286,8 @@ final class DraggableActionPanelThemeData
     actionBackgroundColor,
     actionForegroundColor,
     badgeColor,
+    badgeSize,
+    badgeDotSize,
     buttonSpacing,
     sectionSpacing,
     maxColumns,

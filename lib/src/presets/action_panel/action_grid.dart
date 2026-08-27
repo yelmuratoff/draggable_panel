@@ -205,20 +205,13 @@ final class ActionCell extends StatelessWidget {
         theme.actionForegroundColor ??
         scheme.onSurfaceVariant;
 
-    Widget glyph = Icon(
+    final glyph = Icon(
       action.icon,
       color: foreground,
       size: theme.actionIconSize ?? size * 0.5,
     );
-    if (action.badge case final badge?) {
-      glyph = Badge(
-        label: badge.label == null ? null : Text(badge.label!),
-        backgroundColor: badge.color ?? theme.badgeColor,
-        child: glyph,
-      );
-    }
 
-    final tile = SizedBox.square(
+    Widget tile = SizedBox.square(
       dimension: size,
       child: Material(
         color:
@@ -237,6 +230,26 @@ final class ActionCell extends StatelessWidget {
         ),
       ),
     );
+
+    if (action.badge case final badge?) {
+      tile = Stack(
+        children: [
+          tile,
+          PositionedDirectional(
+            top: 0,
+            end: 0,
+            child: IgnorePointer(
+              child: Badge(
+                label: badge.label == null ? null : Text(badge.label!),
+                backgroundColor: badge.color ?? theme.badgeColor,
+                largeSize: theme.badgeSize,
+                smallSize: theme.badgeDotSize,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
     return Tooltip(
       message: action.tooltip ?? action.label ?? '',
