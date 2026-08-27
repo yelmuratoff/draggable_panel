@@ -46,7 +46,7 @@ Everything else falls out of where you let go:
 
 | Release the panel… | and it… |
 | --- | --- |
-| anywhere on screen | springs to the nearest corner by projected velocity |
+| anywhere on screen | springs to the nearest side, at the height you left it |
 | against a side edge | parks there, leaving a sliver you can grab |
 | clear off screen (`dismissible`) | goes away |
 
@@ -62,14 +62,16 @@ DraggablePanelController(
 )
 ```
 
-Give the sliver something to grab — `status.placement` tells the builder when to
-draw a grip:
+The sliver draws its own grab affordance — a curve pointing the way the panel
+comes out — which cross-fades into `collapsedBuilder`'s content as you pull, so
+nothing appears at a threshold. Retint it with the `handleColor` token, or
+replace it outright:
 
 ```dart
-collapsedBuilder: (context, status) => switch (status.placement) {
-  StashedPlacement() => const EdgeGrip(),
-  _ => const Icon(Icons.play_arrow),
-},
+DraggablePanel(
+  handleBuilder: (context, edge) => const Icon(Icons.drag_indicator),
+  // …
+)
 ```
 
 ## The motion
@@ -184,7 +186,7 @@ DraggablePanel(
     collapseOnTapOutside: true,
     avoidKeyboard: true,
     hapticsEnabled: true,
-    snapPolicy: PanelSnapPolicy.corners,  // corners | edges | free
+    snapPolicy: PanelSnapPolicy.edges,    // edges | corners | free
   ),
   // …
 )

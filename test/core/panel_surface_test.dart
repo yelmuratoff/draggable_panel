@@ -112,6 +112,8 @@ Future<_Harness> _pumpSurface(
             anchor: anchor,
             bounds: const EdgeInsets.all(16),
             isDragging: false,
+            isStashed: false,
+            handle: const SizedBox.shrink(),
             reduceMotion: false,
             opacity: 1,
             collapsed: collapsedLayouts == null
@@ -289,6 +291,8 @@ void main() {
                   anchor: Alignment.bottomRight,
                   bounds: const EdgeInsets.all(16),
                   isDragging: false,
+                  isStashed: false,
+                  handle: const SizedBox.shrink(),
                   reduceMotion: false,
                   opacity: 1,
                   collapsed: const ColoredBox(color: Color(0xFF112233)),

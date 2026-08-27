@@ -48,8 +48,21 @@ Added
   sliver; pull it back out and it returns. Both are ordinary drags rather than
   separate gestures. Start parked with
   `initialPlacement: PanelPlacement.stashed(...)`.
-- Content opacity follows how much of the panel is on screen, so a tab reveals
-  what it holds as it emerges.
+- `stashedShape` — the shape a parked panel takes, a `StadiumBorder` by default,
+  so the sliver reads as a rounded tongue rather than a card the screen edge cut
+  in half. It un-rounds into `collapsedShape` as the panel is pulled out.
+- A parked panel draws its own grab affordance on the sliver it leaves showing:
+  a chevron pointing the way it comes out. It cross-fades into the collapsed
+  content by how far the panel has been pulled, so nothing appears at a
+  threshold. Retint it with `handleColor`, or replace it with `handleBuilder`.
+- Pulling a parked panel out is one-to-one from the first pixel. The rubber
+  band used to resist straight to the resting bounds, which yanked a parked
+  panel inwards the moment a drag registered, and the platform pan slop was
+  wider than the whole pull-out.
+- `stashedElevation` — a parked panel is tucked into the screen edge, so it
+  casts a lighter shadow than one resting in the open. `stashedPeek` is now
+  measured from the screen edge, not from inside `margin`, so the visible sliver
+  is exactly the token, and defaults to 34 so the affordance has room.
 - `surfaceFilter` — a frosted-glass seam applied inside the shape clip, so it
   composes with the morph rather than fighting it.
 - `expandTravelFraction` — how far a drag must travel to open or close.

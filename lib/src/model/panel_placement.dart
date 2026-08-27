@@ -179,10 +179,11 @@ final class StashedPlacement extends PanelPlacement {
     double stashedPeek = 0,
   }) {
     final travel = viewport.travelFor(panelSize);
-    final hidden = (panelSize.width - stashedPeek).clamp(0.0, panelSize.width);
+    final peek = stashedPeek.clamp(0.0, panelSize.width);
+
     final x = edge.resolvesToLeft(viewport.direction)
-        ? travel.left - hidden
-        : travel.right + hidden;
+        ? peek - panelSize.width
+        : viewport.size.width - peek;
     return Offset(x, _pick(verticalAlignment, travel.top, travel.bottom));
   }
 

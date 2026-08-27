@@ -1,5 +1,4 @@
 import 'package:draggable_panel/draggable_panel.dart';
-import 'package:draggable_panel_example/edge_grip.dart';
 import 'package:flutter/material.dart';
 
 /// The `DraggableActionPanel` preset: an action grid that grows from a corner.
@@ -31,12 +30,9 @@ class _ToolsDemoState extends State<ToolsDemo> {
   @override
   Widget build(BuildContext context) => DraggableActionPanel(
     controller: _controller,
-    collapsedBuilder: (context, status) => collapsedFace(
-      status,
-      Icon(
-        Icons.build_outlined,
-        color: Theme.of(context).colorScheme.onSurface,
-      ),
+    collapsedBuilder: (context, status) => Icon(
+      Icons.build_outlined,
+      color: Theme.of(context).colorScheme.onSurface,
     ),
     theme: const DraggablePanelThemeData(collapsedSize: Size(56, 56)),
     actions: [

@@ -17,10 +17,12 @@ final class PanelSurface
     required this.anchor,
     required this.bounds,
     required this.isDragging,
+    required this.isStashed,
     required this.reduceMotion,
     required this.opacity,
     required this.collapsed,
     required this.expanded,
+    required this.handle,
     super.key,
   });
 
@@ -42,6 +44,7 @@ final class PanelSurface
   final EdgeInsets bounds;
 
   final bool isDragging;
+  final bool isStashed;
   final bool reduceMotion;
 
   /// Overall opacity, used to fade the panel out when hidden.
@@ -50,6 +53,9 @@ final class PanelSurface
   final Widget collapsed;
   final Widget expanded;
 
+  /// The grab affordance painted over the sliver a parked panel leaves showing.
+  final Widget handle;
+
   @override
   Iterable<PanelSlot> get slots => PanelSlot.values;
 
@@ -57,6 +63,7 @@ final class PanelSurface
   Widget? childForSlot(PanelSlot slot) => switch (slot) {
     PanelSlot.collapsed => collapsed,
     PanelSlot.expanded => expanded,
+    PanelSlot.handle => handle,
   };
 
   @override
@@ -70,6 +77,7 @@ final class PanelSurface
         collapsedSize: style.collapsedSize,
         bounds: bounds,
         isDragging: isDragging,
+        isStashed: isStashed,
         reduceMotion: reduceMotion,
         opacity: opacity,
       );
@@ -88,6 +96,7 @@ final class PanelSurface
       ..collapsedSize = style.collapsedSize
       ..bounds = bounds
       ..isDragging = isDragging
+      ..isStashed = isStashed
       ..reduceMotion = reduceMotion
       ..opacity = opacity;
   }

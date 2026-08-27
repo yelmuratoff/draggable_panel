@@ -4,6 +4,7 @@ library;
 export 'src/controller/draggable_panel_controller.dart';
 export 'src/core/draggable_panel.dart';
 export 'src/core/draggable_panel_scope.dart';
+export 'src/core/panel_edge_handle.dart';
 export 'src/core/panel_semantics.dart';
 export 'src/model/panel_behavior.dart';
 export 'src/model/panel_corner.dart';

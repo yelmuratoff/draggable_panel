@@ -23,7 +23,9 @@ PanelViewport _viewport({TextDirection direction = TextDirection.ltr}) =>
 PanelPlacement _release(
   Offset topLeft, {
   Offset velocity = Offset.zero,
-  PanelBehavior behavior = const PanelBehavior(),
+  PanelBehavior behavior = const PanelBehavior(
+    snapPolicy: PanelSnapPolicy.corners,
+  ),
   TextDirection direction = TextDirection.ltr,
 }) => resolvePanelRelease(
   topLeft: topLeft,
@@ -49,13 +51,21 @@ void main() {
 
     test('a flick lands where it was aimed, not where it was released', () {
       const nearTopLeft = Offset(60, 60);
+      const noStash = PanelBehavior(
+        snapPolicy: PanelSnapPolicy.corners,
+        stashable: false,
+      );
 
       expect(
-        _release(nearTopLeft),
+        _release(nearTopLeft, behavior: noStash),
         const PanelPlacement.corner(PanelCorner.topStart),
       );
       expect(
-        _release(nearTopLeft, velocity: const Offset(1200, 1600)),
+        _release(
+          nearTopLeft,
+          velocity: const Offset(1200, 1600),
+          behavior: noStash,
+        ),
         const PanelPlacement.corner(PanelCorner.bottomEnd),
       );
     });
@@ -94,10 +104,26 @@ void main() {
       );
     });
 
-    test('a mostly vertical flick never stashes', () {
+    test('a flick that stays on screen does not park', () {
       expect(
-        _release(const Offset(30, 400), velocity: const Offset(-400, 1500)),
+        _release(const Offset(160, 400), velocity: const Offset(0, 900)),
         isA<CornerPlacement>(),
+      );
+    });
+
+    test('letting go at the resting edge does not park it', () {
+      expect(_release(const Offset(16, 400)), isA<CornerPlacement>());
+      expect(
+        _release(const Offset(16, 400), velocity: const Offset(-20, 0)),
+        isA<CornerPlacement>(),
+      );
+    });
+
+    test('pushing it a quarter of its width past the edge parks it', () {
+      expect(
+        _release(const Offset(-4, 400), velocity: const Offset(-120, 90)),
+        isA<StashedPlacement>(),
+        reason: 'a sideways push with a little downward drift must still park',
       );
     });
 
@@ -120,7 +146,10 @@ void main() {
         _release(
           const Offset(30, 400),
           velocity: const Offset(-1500, 0),
-          behavior: const PanelBehavior(stashable: false),
+          behavior: const PanelBehavior(
+            stashable: false,
+            snapPolicy: PanelSnapPolicy.corners,
+          ),
         ),
         isA<CornerPlacement>(),
       );
@@ -143,10 +172,10 @@ void main() {
   });
 
   group('snap policies', () {
-    test('edges keeps the vertical position and picks a side', () {
+    test('edges, the default, keeps the height and picks a side', () {
       final placement = _release(
         const Offset(300, 500),
-        behavior: const PanelBehavior(snapPolicy: PanelSnapPolicy.edges),
+        behavior: const PanelBehavior(),
       );
 
       expect(placement, isA<FreePlacement>());

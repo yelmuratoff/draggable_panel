@@ -31,11 +31,14 @@ final class DraggablePanelThemeData
     this.elevation,
     this.draggingElevation,
     this.expandedElevation,
+    this.stashedElevation,
     this.stashedOpacity,
     this.collapsedSize,
     this.expandedExtent,
     this.margin,
     this.stashedPeek,
+    this.stashedSize,
+    this.handleColor,
     this.minimumTapTarget,
     this.motion,
   });
@@ -81,6 +84,10 @@ final class DraggablePanelThemeData
   /// Elevation while expanded.
   final double? expandedElevation;
 
+  /// Elevation while parked at an edge, where the panel is tucked into the
+  /// screen rather than hovering over the page.
+  final double? stashedElevation;
+
   /// Opacity applied while the panel is stashed against an edge.
   final double? stashedOpacity;
 
@@ -95,6 +102,16 @@ final class DraggablePanelThemeData
 
   /// How much of a stashed panel stays on-screen as a grab tab.
   final double? stashedPeek;
+
+  /// Size the panel takes while parked at an edge.
+  ///
+  /// A tab is taller than it is wide, so it reads as something to pull rather
+  /// than as the panel with most of it missing. Interpolated towards
+  /// [collapsedSize] as the panel is drawn out.
+  final Size? stashedSize;
+
+  /// Colour of the grab affordance drawn on that tab.
+  final Color? handleColor;
 
   /// Lower bound applied to [collapsedSize] so the panel stays tappable.
   final Size? minimumTapTarget;
@@ -115,11 +132,14 @@ final class DraggablePanelThemeData
       elevation: other.elevation,
       draggingElevation: other.draggingElevation,
       expandedElevation: other.expandedElevation,
+      stashedElevation: other.stashedElevation,
       stashedOpacity: other.stashedOpacity,
       collapsedSize: other.collapsedSize,
       expandedExtent: other.expandedExtent,
       margin: other.margin,
       stashedPeek: other.stashedPeek,
+      stashedSize: other.stashedSize,
+      handleColor: other.handleColor,
       minimumTapTarget: other.minimumTapTarget,
       motion: other.motion,
     );
@@ -136,11 +156,14 @@ final class DraggablePanelThemeData
     double? elevation,
     double? draggingElevation,
     double? expandedElevation,
+    double? stashedElevation,
     double? stashedOpacity,
     Size? collapsedSize,
     PanelExtent? expandedExtent,
     EdgeInsetsGeometry? margin,
     double? stashedPeek,
+    Size? stashedSize,
+    Color? handleColor,
     Size? minimumTapTarget,
     PanelMotionSpec? motion,
   }) => DraggablePanelThemeData(
@@ -153,11 +176,14 @@ final class DraggablePanelThemeData
     elevation: elevation ?? this.elevation,
     draggingElevation: draggingElevation ?? this.draggingElevation,
     expandedElevation: expandedElevation ?? this.expandedElevation,
+    stashedElevation: stashedElevation ?? this.stashedElevation,
     stashedOpacity: stashedOpacity ?? this.stashedOpacity,
     collapsedSize: collapsedSize ?? this.collapsedSize,
     expandedExtent: expandedExtent ?? this.expandedExtent,
     margin: margin ?? this.margin,
     stashedPeek: stashedPeek ?? this.stashedPeek,
+    stashedSize: stashedSize ?? this.stashedSize,
+    handleColor: handleColor ?? this.handleColor,
     minimumTapTarget: minimumTapTarget ?? this.minimumTapTarget,
     motion: motion ?? this.motion,
   );
@@ -188,11 +214,14 @@ final class DraggablePanelThemeData
         other.expandedElevation,
         t,
       ),
+      stashedElevation: lerpDouble(stashedElevation, other.stashedElevation, t),
       stashedOpacity: lerpDouble(stashedOpacity, other.stashedOpacity, t),
       collapsedSize: Size.lerp(collapsedSize, other.collapsedSize, t),
       expandedExtent: t < 0.5 ? expandedExtent : other.expandedExtent,
       margin: EdgeInsetsGeometry.lerp(margin, other.margin, t),
       stashedPeek: lerpDouble(stashedPeek, other.stashedPeek, t),
+      stashedSize: Size.lerp(stashedSize, other.stashedSize, t),
+      handleColor: Color.lerp(handleColor, other.handleColor, t),
       minimumTapTarget: Size.lerp(minimumTapTarget, other.minimumTapTarget, t),
       motion: PanelMotionSpec.lerp(motion, other.motion, t),
     );
@@ -259,6 +288,14 @@ final class DraggablePanelThemeData
       ..add(DoubleProperty('stashedPeek', stashedPeek, defaultValue: null))
       ..add(
         DiagnosticsProperty<Size>(
+          'stashedSize',
+          stashedSize,
+          defaultValue: null,
+        ),
+      )
+      ..add(ColorProperty('handleColor', handleColor, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<Size>(
           'minimumTapTarget',
           minimumTapTarget,
           defaultValue: null,
@@ -286,11 +323,14 @@ final class DraggablePanelThemeData
           other.elevation == elevation &&
           other.draggingElevation == draggingElevation &&
           other.expandedElevation == expandedElevation &&
+          other.stashedElevation == stashedElevation &&
           other.stashedOpacity == stashedOpacity &&
           other.collapsedSize == collapsedSize &&
           other.expandedExtent == expandedExtent &&
           other.margin == margin &&
           other.stashedPeek == stashedPeek &&
+          other.stashedSize == stashedSize &&
+          other.handleColor == handleColor &&
           other.minimumTapTarget == minimumTapTarget &&
           other.motion == motion;
 
@@ -305,11 +345,14 @@ final class DraggablePanelThemeData
     elevation,
     draggingElevation,
     expandedElevation,
+    stashedElevation,
     stashedOpacity,
     collapsedSize,
     expandedExtent,
     margin,
     stashedPeek,
+    stashedSize,
+    handleColor,
     minimumTapTarget,
     motion,
   );

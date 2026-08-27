@@ -1,7 +1,6 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:draggable_panel/draggable_panel.dart';
-import 'package:draggable_panel_example/edge_grip.dart';
 import 'package:flutter/material.dart';
 
 /// Retunes the panel's shape and springs live, so the difference is felt
@@ -68,10 +67,8 @@ class _ThemingDemoState extends State<ThemingDemo> {
     controller: _controller,
     theme: _themeOf(context),
     behavior: PanelBehavior(stashable: _stashable),
-    collapsedBuilder: (context, status) => collapsedFace(
-      status,
-      Icon(Icons.tune, color: Theme.of(context).colorScheme.onSurface),
-    ),
+    collapsedBuilder: (context, status) =>
+        Icon(Icons.tune, color: Theme.of(context).colorScheme.onSurface),
     expandedBuilder: (context, status) => Padding(
       padding: const EdgeInsets.all(16),
       child: Column(

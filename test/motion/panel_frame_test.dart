@@ -11,6 +11,8 @@ PanelFrame _frame({
   Alignment anchor = Alignment.bottomRight,
   double expansion = 0,
   Rect bounds = _bounds,
+  Rect? viewport,
+  double stashedPeek = 26,
   bool reduceMotion = false,
   Size collapsedSize = _collapsed,
   Size expandedSize = _expanded,
@@ -18,8 +20,11 @@ PanelFrame _frame({
   origin: origin,
   collapsedSize: collapsedSize,
   expandedSize: expandedSize,
+  stashedSize: const Size(36, 72),
   anchor: anchor,
   bounds: bounds,
+  viewport: viewport ?? bounds,
+  stashedPeek: stashedPeek,
   expansion: expansion,
   reduceMotion: reduceMotion,
 );
@@ -154,10 +159,27 @@ void main() {
       expect(frame.rect.bottom, lessThanOrEqualTo(_bounds.bottom));
     });
 
-    test('a collapsed rubber-banded panel is left where the finger put it', () {
+    test('a collapsed panel pushed off the edge shrinks into its tab', () {
       final frame = _frame(origin: const Offset(-40, 720));
 
-      expect(frame.rect.left, -40);
+      expect(frame.emergence, 0);
+      expect(frame.rect.size, const Size(36, 72));
+      expect(frame.rect.right, closeTo(-40 + 64, 1e-9));
+    });
+
+    test('an expanding panel keeps its full rect past the edge', () {
+      final frame = _frame(
+        origin: const Offset(-40, 720),
+        expansion: 0.25,
+        bounds: const Rect.fromLTWH(-10000, -10000, 20000, 20000),
+      );
+
+      expect(frame.rect.width, greaterThan(64));
+      expect(
+        frame.rect.size,
+        isNot(const Size(36, 72)),
+        reason: 'a rubber-banded expansion is not a park',
+      );
     });
 
     test('containment fades in with the growth', () {
@@ -181,6 +203,61 @@ void main() {
       );
 
       expect(frame.rect.left, _bounds.left);
+    });
+  });
+
+  group('emerging from a park', () {
+    // Parked at the end edge: 26 of the 64-wide panel left on screen.
+    PanelFrame parkedBy(double pulledOut) =>
+        _frame(origin: Offset(_bounds.right - 26 - pulledOut, 400));
+
+    test('a parked panel shows the handle and nothing else', () {
+      final frame = parkedBy(0);
+
+      expect(frame.emergence, 0);
+      expect(frame.handleOpacity, 1);
+      expect(frame.collapsedOpacity, 0);
+    });
+
+    test('a panel fully on screen shows its content and no handle', () {
+      final frame = parkedBy(38);
+
+      expect(frame.emergence, 1);
+      expect(frame.handleOpacity, 0);
+      expect(frame.collapsedOpacity, 1);
+    });
+
+    test('pulling it out cross-fades the two continuously', () {
+      var previous = parkedBy(0).collapsedOpacity;
+
+      for (var pulled = 1.0; pulled <= 38; pulled++) {
+        final frame = parkedBy(pulled);
+        expect(frame.collapsedOpacity, greaterThan(previous));
+        expect(
+          frame.handleOpacity,
+          closeTo(1 - frame.collapsedOpacity, 1e-9),
+          reason: 'the handle must give up exactly what the content takes',
+        );
+        previous = frame.collapsedOpacity;
+      }
+    });
+
+    test('the handle fills the sliver that stays on screen', () {
+      final frame = parkedBy(0);
+
+      expect(frame.rect.size, const Size(36, 72));
+      expect(frame.handleOrigin.dx, frame.rect.left);
+      expect(frame.handleOrigin.dx, closeTo(_bounds.right - 26, 1e-9));
+      expect(
+        _bounds.right - frame.rect.left,
+        closeTo(26, 1e-9),
+        reason: 'exactly the peek shows',
+      );
+    });
+
+    test('expanding hides the handle regardless of emergence', () {
+      expect(parkedBy(0).handleOpacity, 1);
+      expect(_frame(expansion: 1).handleOpacity, 0);
     });
   });
 

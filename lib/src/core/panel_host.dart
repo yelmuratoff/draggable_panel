@@ -7,6 +7,7 @@ import 'package:draggable_panel/src/core/panel_semantics.dart';
 import 'package:draggable_panel/src/core/panel_surface.dart';
 import 'package:draggable_panel/src/model/panel_behavior.dart';
 import 'package:draggable_panel/src/model/panel_corner.dart';
+import 'package:draggable_panel/src/model/panel_edge.dart';
 import 'package:draggable_panel/src/model/panel_phase.dart';
 import 'package:draggable_panel/src/model/panel_placement.dart';
 import 'package:draggable_panel/src/model/panel_status.dart';
@@ -37,6 +38,7 @@ final class PanelHost extends StatefulWidget {
     required this.semantics,
     required this.collapsed,
     required this.expanded,
+    required this.handle,
     super.key,
   });
 
@@ -46,6 +48,9 @@ final class PanelHost extends StatefulWidget {
   final PanelSemantics semantics;
   final Widget collapsed;
   final Widget expanded;
+
+  /// Builds the grab affordance for whichever edge the panel is parked at.
+  final Widget Function(BuildContext context, PanelEdge edge) handle;
 
   @override
   State<PanelHost> createState() => _PanelHostState();
@@ -216,6 +221,9 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
   /// Picture-in-Picture window does, so the phase must not be disturbed.
   bool _isMoving = false;
 
+  /// Where the panel sat when the current drag began.
+  Offset _dragOrigin = Offset.zero;
+
   void _onDragStart(TapDragStartDetails details) {
     if (!widget.behavior.draggable) return;
 
@@ -224,6 +232,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
     _carried = _driver.interrupt();
     _carriedAt = SchedulerBinding.instance.currentSystemFrameTimeStamp;
     _raw = _driver.value;
+    _dragOrigin = _raw;
     _grab = details.globalPosition - _raw;
     if (!widget.controller.phase.isExpanding) {
       _dispatch(const PanelDragStarted());
@@ -237,10 +246,25 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
     _driver.drive(
       PanelPhysics.resist(
         _raw,
-        _viewport!.travelFor(_panelSize),
+        _dragTravel(),
         _viewport!.size,
         coefficient: _spec.rubberBandCoefficient,
       ),
+    );
+  }
+
+  /// The range a drag moves through freely, before the rubber band resists.
+  ///
+  /// A parked panel rests outside the inset bounds, so resisting straight to
+  /// them would yank it inwards the moment a drag registers. Extending the
+  /// range to wherever the drag began keeps pulling it out one-to-one.
+  Rect _dragTravel() {
+    final travel = _viewport!.travelFor(_panelSize);
+    return Rect.fromLTRB(
+      math.min(travel.left, _dragOrigin.dx),
+      math.min(travel.top, _dragOrigin.dy),
+      math.max(travel.right, _dragOrigin.dx),
+      math.max(travel.bottom, _dragOrigin.dy),
     );
   }
 
@@ -330,10 +354,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
       combined += _carried * math.exp(-age);
     }
 
-    final over = PanelPhysics.overshootOf(
-      _raw,
-      _viewport!.travelFor(_panelSize),
-    );
+    final over = PanelPhysics.overshootOf(_raw, _dragTravel());
     final size = _viewport!.size;
     return Offset(
       combined.dx *
@@ -481,6 +502,18 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
     );
   }
 
+  /// Halves the platform slop for this panel.
+  ///
+  /// [DeviceGestureSettings.panSlop] derives from the touch slop at twice its
+  /// value — 36 logical pixels by default, tuned for committing to a scroll
+  /// axis. A parked panel has less travel than that between its tab and its
+  /// resting place, so at the platform value the whole pull-out is spent before
+  /// the drag registers.
+  DeviceGestureSettings _panelGestureSettings(
+    DeviceGestureSettings? settings,
+  ) =>
+      DeviceGestureSettings(touchSlop: (settings?.touchSlop ?? kTouchSlop) / 2);
+
   Widget _buildGestures(
     DeviceGestureSettings? settings, {
     required bool assistive,
@@ -496,7 +529,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
               (instance) => instance
                 // DragStartBehavior.start reports position at arena win.
                 ..dragStartBehavior = DragStartBehavior.down
-                ..gestureSettings = settings
+                ..gestureSettings = _panelGestureSettings(settings)
                 ..onTapUp = _onTapUp
                 ..onDragStart = _onDragStart
                 ..onDragUpdate = _onDragUpdate
@@ -518,6 +551,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
       anchor: _anchor(),
       bounds: _boundsInsets(),
       isDragging: phase == PanelPhase.dragging,
+      isStashed: phase == PanelPhase.stashed,
       reduceMotion: _spec.reduceMotion,
       opacity: _opacityFor(phase),
       collapsed: RepaintBoundary(
@@ -530,7 +564,20 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
           _annotate(widget.expanded, active: phase.isExpanding),
         ),
       ),
+      handle: RepaintBoundary(
+        child: ExcludeSemantics(child: widget.handle(context, _handleEdge())),
+      ),
     );
+  }
+
+  /// Which edge the panel is resting against, as a directional edge.
+  ///
+  /// Derived from the resolved anchor rather than read off the placement, so a
+  /// panel dragged out of a park keeps pointing the way it came out.
+  PanelEdge _handleEdge() {
+    final onLeft = _anchor().x < 0;
+    final startIsLeft = _viewport!.direction == TextDirection.ltr;
+    return onLeft == startIsLeft ? PanelEdge.start : PanelEdge.end;
   }
 
   /// Gives caller-supplied content the Material context it expects.

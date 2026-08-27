@@ -23,11 +23,14 @@ final class PanelStyle {
     required this.elevation,
     required this.draggingElevation,
     required this.expandedElevation,
+    required this.stashedElevation,
     required this.stashedOpacity,
     required this.collapsedSize,
     required this.expandedExtent,
     required this.margin,
     required this.stashedPeek,
+    required this.stashedSize,
+    required this.handleColor,
     required this.motion,
   });
 
@@ -56,6 +59,7 @@ final class PanelStyle {
       elevation: tokens.elevation!,
       draggingElevation: tokens.draggingElevation!,
       expandedElevation: tokens.expandedElevation!,
+      stashedElevation: tokens.stashedElevation!,
       stashedOpacity: tokens.stashedOpacity!,
       collapsedSize: Size(
         math.max(collapsed.width, floor.width),
@@ -64,6 +68,8 @@ final class PanelStyle {
       expandedExtent: tokens.expandedExtent!,
       margin: tokens.margin!.resolve(Directionality.of(context)),
       stashedPeek: tokens.stashedPeek!,
+      stashedSize: tokens.stashedSize!,
+      handleColor: tokens.handleColor!,
       motion: tokens.motion!,
     );
   }
@@ -79,6 +85,10 @@ final class PanelStyle {
   final double elevation;
   final double draggingElevation;
   final double expandedElevation;
+
+  /// Elevation while parked at an edge.
+  final double stashedElevation;
+
   final double stashedOpacity;
 
   /// Collapsed size, already floored by the minimum tap target.
@@ -87,15 +97,27 @@ final class PanelStyle {
   final PanelExtent expandedExtent;
   final EdgeInsets margin;
   final double stashedPeek;
+
+  /// Size the panel takes while parked at an edge.
+  final Size stashedSize;
+  final Color handleColor;
   final PanelMotionSpec motion;
 
   /// The shape at a given expansion progress.
   ShapeBorder shapeAt(double expansion) =>
       ShapeBorder.lerp(collapsedShape, shape, expansion.clamp(0.0, 1.0))!;
 
-  /// The elevation at a given expansion progress, lifted while dragging.
-  double elevationAt(double expansion, {required bool isDragging}) {
+  /// The elevation at a given expansion progress.
+  ///
+  /// [isDragging] and [isStashed] each override the progress, returning
+  /// [draggingElevation] and [stashedElevation]; dragging takes precedence.
+  double elevationAt(
+    double expansion, {
+    required bool isDragging,
+    bool isStashed = false,
+  }) {
     if (isDragging) return draggingElevation;
+    if (isStashed) return stashedElevation;
     return _lerp(elevation, expandedElevation, expansion.clamp(0.0, 1.0));
   }
 
@@ -114,11 +136,14 @@ final class PanelStyle {
           other.elevation == elevation &&
           other.draggingElevation == draggingElevation &&
           other.expandedElevation == expandedElevation &&
+          other.stashedElevation == stashedElevation &&
           other.stashedOpacity == stashedOpacity &&
           other.collapsedSize == collapsedSize &&
           other.expandedExtent == expandedExtent &&
           other.margin == margin &&
           other.stashedPeek == stashedPeek &&
+          other.stashedSize == stashedSize &&
+          other.handleColor == handleColor &&
           other.motion == motion;
 
   @override
@@ -132,11 +157,14 @@ final class PanelStyle {
     elevation,
     draggingElevation,
     expandedElevation,
+    stashedElevation,
     stashedOpacity,
     collapsedSize,
     expandedExtent,
     margin,
     stashedPeek,
+    stashedSize,
+    handleColor,
     motion,
   );
 }
@@ -160,14 +188,17 @@ DraggablePanelThemeData defaultPanelTheme(ColorScheme scheme) =>
       elevation: 6,
       draggingElevation: 12,
       expandedElevation: 8,
-      stashedOpacity: 0.85,
+      stashedElevation: 6,
+      stashedOpacity: 1,
       collapsedSize: const Size(64, 64),
       expandedExtent: const PanelExtent.content(
         maxWidth: 360,
         maxHeightFraction: 0.6,
       ),
       margin: const EdgeInsetsDirectional.all(16),
-      stashedPeek: 16,
+      stashedPeek: 26,
+      stashedSize: const Size(36, 72),
+      handleColor: scheme.onSurfaceVariant,
       minimumTapTarget: const Size(48, 48),
       motion: PanelMotionSpec(),
     );

@@ -22,8 +22,11 @@ final class PanelFrame {
     required this.rect,
     required this.collapsedOrigin,
     required this.expandedOrigin,
+    required this.handleOrigin,
     required this.collapsedOpacity,
     required this.expandedOpacity,
+    required this.handleOpacity,
+    required this.emergence,
     required this.expansion,
   });
 
@@ -36,8 +39,15 @@ final class PanelFrame {
   /// Where the expanded content is painted, in the same space as [rect].
   final Offset expandedOrigin;
 
+  /// Where the edge handle is painted, centred on the part still on screen.
+  final Offset handleOrigin;
+
   final double collapsedOpacity;
   final double expandedOpacity;
+  final double handleOpacity;
+
+  /// How far the panel has been pulled out from a parked position, `0` to `1`.
+  final double emergence;
 
   /// Progress clamped to `0..1`, for shape and elevation interpolation.
   final double expansion;
@@ -49,8 +59,11 @@ final class PanelFrame {
           other.rect == rect &&
           other.collapsedOrigin == collapsedOrigin &&
           other.expandedOrigin == expandedOrigin &&
+          other.handleOrigin == handleOrigin &&
           other.collapsedOpacity == collapsedOpacity &&
           other.expandedOpacity == expandedOpacity &&
+          other.handleOpacity == handleOpacity &&
+          other.emergence == emergence &&
           other.expansion == expansion;
 
   @override
@@ -58,8 +71,11 @@ final class PanelFrame {
     rect,
     collapsedOrigin,
     expandedOrigin,
+    handleOrigin,
     collapsedOpacity,
     expandedOpacity,
+    handleOpacity,
+    emergence,
     expansion,
   );
 
@@ -84,8 +100,11 @@ PanelFrame computePanelFrame({
   required Offset origin,
   required Size collapsedSize,
   required Size expandedSize,
+  required Size stashedSize,
   required Alignment anchor,
   required Rect bounds,
+  required Rect viewport,
+  required double stashedPeek,
   required double expansion,
   bool reduceMotion = false,
 }) {
@@ -111,29 +130,68 @@ PanelFrame computePanelFrame({
     size.height,
   );
 
-  final rect = Rect.lerp(grown, _nudgeInto(grown, bounds), clamped)!;
+  final open = Rect.lerp(grown, _nudgeInto(grown, bounds), clamped)!;
 
-  final emergence = _visibleFraction(rect, bounds);
+  final collapsedBox = origin & collapsedSize;
+  final emergence = _emergence(collapsedBox, viewport, stashedPeek);
+  final rect = emergence >= 1 || clamped > 0
+      ? open
+      : Rect.lerp(
+          _tabIn(collapsedBox, stashedSize, viewport),
+          open,
+          emergence,
+        )!;
 
   return PanelFrame(
     rect: rect,
     collapsedOrigin: _alignIn(rect, collapsedSize, anchor),
     expandedOrigin: _alignIn(rect, expandedSize, anchor),
+    handleOrigin: _handleIn(
+      rect,
+      handleSizeFor(stashedSize, stashedPeek),
+      viewport,
+    ),
     collapsedOpacity: (1 - kPanelCollapsedFade.transform(clamped)) * emergence,
     expandedOpacity: kPanelExpandedFade.transform(clamped) * emergence,
+    handleOpacity: (1 - emergence) * (1 - clamped),
+    emergence: emergence,
     expansion: clamped,
   );
 }
 
-/// How much of [rect]'s width sits inside [bounds], from `0` to `1`.
+/// The part of a [tab]-sized parked panel that stays on screen.
+Size handleSizeFor(Size tab, double stashedPeek) =>
+    Size(math.min(stashedPeek, tab.width), tab.height);
+
+/// Puts a [handle]-sized box on whichever side of [rect] faces the screen.
+Offset _handleIn(Rect rect, Size handle, Rect viewport) => Offset(
+  rect.left < viewport.left ? rect.right - handle.width : rect.left,
+  rect.center.dy - handle.height / 2,
+);
+
+/// The tab a parked panel shows, sized [tab] inside [box].
 ///
-/// Reaches `1` while a little of the panel is still off screen, so content is
-/// fully legible before the panel finishes arriving.
-double _visibleFraction(Rect rect, Rect bounds) {
-  if (rect.width <= 0) return 1;
-  final overlap =
-      math.min(rect.right, bounds.right) - math.max(rect.left, bounds.left);
-  return (overlap / rect.width / 0.75).clamp(0.0, 1.0);
+/// Aligned to whichever side of [box] faces the screen, so shrinking the panel
+/// into a tab trims what was going off the edge rather than the visible sliver.
+Rect _tabIn(Rect box, Size tab, Rect viewport) => Rect.fromLTWH(
+  box.left < viewport.left ? box.right - tab.width : box.left,
+  box.center.dy - tab.height / 2,
+  tab.width,
+  tab.height,
+);
+
+/// How far the panel has been pulled clear of a parked position, `0` to `1`.
+///
+/// `0` is parked — exactly [stashedPeek] showing — and `1` is fully on screen.
+/// Because it is continuous, the handle can cross-fade into the panel's own
+/// content as the finger pulls rather than swapping at a threshold.
+double _emergence(Rect rect, Rect viewport, double stashedPeek) {
+  final travel = rect.width - stashedPeek;
+  if (travel <= 0) return 1;
+  final hidden =
+      math.max(0, viewport.left - rect.left) +
+      math.max(0, rect.right - viewport.right);
+  return (1 - hidden / travel).clamp(0.0, 1.0);
 }
 
 /// Places a child of [child] size inside [rect], aligned to [anchor].

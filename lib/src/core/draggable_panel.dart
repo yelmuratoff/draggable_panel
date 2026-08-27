@@ -1,8 +1,10 @@
 import 'package:draggable_panel/src/controller/draggable_panel_controller.dart';
 import 'package:draggable_panel/src/core/draggable_panel_scope.dart';
+import 'package:draggable_panel/src/core/panel_edge_handle.dart';
 import 'package:draggable_panel/src/core/panel_host.dart';
 import 'package:draggable_panel/src/core/panel_semantics.dart';
 import 'package:draggable_panel/src/model/panel_behavior.dart';
+import 'package:draggable_panel/src/model/panel_edge.dart';
 import 'package:draggable_panel/src/model/panel_placement.dart';
 import 'package:draggable_panel/src/model/panel_status.dart';
 import 'package:draggable_panel/src/motion/panel_motion_spec.dart';
@@ -13,6 +15,10 @@ import 'package:flutter/widgets.dart';
 /// Builds one of the panel's two faces.
 typedef PanelChildBuilder =
     Widget Function(BuildContext context, PanelStatus status);
+
+/// Builds the grab affordance shown on a panel parked against [edge].
+typedef PanelHandleBuilder =
+    Widget Function(BuildContext context, PanelEdge edge);
 
 /// A floating panel that behaves like a system Picture-in-Picture window.
 ///
@@ -46,6 +52,7 @@ final class DraggablePanel extends StatefulWidget {
     this.child,
     this.controller,
     this.theme,
+    this.handleBuilder,
     this.behavior = const PanelBehavior(),
     this.semantics = const PanelSemantics(),
     this.onStatusChanged,
@@ -69,6 +76,13 @@ final class DraggablePanel extends StatefulWidget {
   /// Call-site tokens, laid over any [DraggablePanelThemeData] in
   /// [ThemeData.extensions] and the built-in defaults.
   final DraggablePanelThemeData? theme;
+
+  /// Builds the grab affordance on the sliver a parked panel leaves showing.
+  ///
+  /// It cross-fades into [collapsedBuilder]'s content as the panel is pulled
+  /// out, so the two never swap abruptly. Defaults to a [PanelEdgeHandle]
+  /// tinted by `DraggablePanelThemeData.handleColor`.
+  final PanelHandleBuilder? handleBuilder;
 
   /// Which interactions the panel accepts.
   final PanelBehavior behavior;
@@ -164,6 +178,14 @@ class _DraggablePanelState extends State<DraggablePanel> {
               semantics: widget.semantics,
               collapsed: widget.collapsedBuilder(context, _controller.value),
               expanded: widget.expandedBuilder(context, _controller.value),
+              handle:
+                  widget.handleBuilder ??
+                  (context, edge) => PanelEdgeHandle(
+                    color: style.handleColor,
+                    pointsTowardStart: !edge.resolvesToLeft(
+                      Directionality.of(context),
+                    ),
+                  ),
             ),
           ),
         ],

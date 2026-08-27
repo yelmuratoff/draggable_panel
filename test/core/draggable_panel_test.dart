@@ -1,4 +1,6 @@
 import 'package:draggable_panel/draggable_panel.dart';
+import 'package:draggable_panel/src/core/panel_surface.dart';
+import 'package:draggable_panel/src/core/render_panel_surface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -62,6 +64,11 @@ Future<DraggablePanelController> _pumpPanel(
 
 Rect _panelRect(WidgetTester tester) =>
     tester.getRect(find.byKey(_collapsedKey));
+
+/// The rect the panel surface actually painted, tab included.
+Rect _paintedRect(WidgetTester tester) => tester
+    .renderObject<RenderPanelSurface>(find.byType(PanelSurface))
+    .paintedRect;
 
 void main() {
   group('layout', () {
@@ -255,7 +262,10 @@ void main() {
 
   group('dragging', () {
     testWidgets('a drag moves the panel and snaps to a corner', (tester) async {
-      final controller = await _pumpPanel(tester);
+      final controller = await _pumpPanel(
+        tester,
+        behavior: const PanelBehavior(snapPolicy: PanelSnapPolicy.corners),
+      );
       expect(
         controller.placement,
         const PanelPlacement.corner(PanelCorner.bottomEnd),
@@ -279,6 +289,37 @@ void main() {
       expect(controller.phase, PanelPhase.collapsed);
     });
 
+    testWidgets('by default it settles against a side at any height', (
+      tester,
+    ) async {
+      await _pumpPanel(tester);
+      final start = _panelRect(tester);
+
+      final gesture = await tester.startGesture(start.center);
+      for (var frame = 1; frame <= 8; frame++) {
+        await gesture.moveBy(
+          const Offset(-40, -30),
+          timeStamp: Duration(milliseconds: 16 * frame),
+        );
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await gesture.up();
+      await tester.pump();
+
+      final rect = _panelRect(tester);
+      expect(rect.right, closeTo(784, 1), reason: 'flush against the side');
+      expect(
+        rect.center.dy,
+        lessThan(start.center.dy - 100),
+        reason: 'and at the height it was left, not herded into a corner',
+      );
+      expect(
+        rect.bottom,
+        lessThan(584),
+        reason: 'not snapped back down to the bottom corner',
+      );
+    });
+
     testWidgets('the panel tracks the finger during the drag', (tester) async {
       await _pumpPanel(tester);
       final start = _panelRect(tester);
@@ -299,7 +340,11 @@ void main() {
       tester,
     ) async {
       final seen = <PanelPlacement>[];
-      await _pumpPanel(tester, onPlacementChanged: seen.add);
+      await _pumpPanel(
+        tester,
+        behavior: const PanelBehavior(snapPolicy: PanelSnapPolicy.corners),
+        onPlacementChanged: seen.add,
+      );
 
       final gesture = await tester.startGesture(_panelRect(tester).center);
       for (var frame = 1; frame <= 8; frame++) {
@@ -362,7 +407,7 @@ void main() {
       await tester.pump();
       expect(controller.phase, PanelPhase.stashed);
 
-      final peek = _panelRect(tester);
+      final peek = _paintedRect(tester);
       await tester.tapAt(Offset(peek.left + 4, peek.center.dy));
       await tester.pump();
 
@@ -471,6 +516,62 @@ void main() {
 
       expect(controller.phase, PanelPhase.stashed);
       expect(_panelRect(tester).right, greaterThan(800));
+    });
+
+    testWidgets('the sliver carries a grab affordance', (tester) async {
+      final controller = stashedController();
+      addTearDown(controller.dispose);
+      await _pumpPanel(tester, controller: controller);
+
+      final handle = tester.getRect(find.byType(PanelEdgeHandle));
+      expect(
+        handle.size,
+        const Size(26, 72),
+        reason: 'the handle fills only the sliver that stays on screen',
+      );
+      expect(handle.left, closeTo(_paintedRect(tester).left, 0.5));
+      expect(handle.right, closeTo(800, 0.5));
+    });
+
+    testWidgets('a custom handleBuilder replaces the default', (tester) async {
+      final controller = stashedController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DraggablePanel(
+            controller: controller,
+            theme: DraggablePanelThemeData(motion: PanelMotionSpec.instant()),
+            handleBuilder: (context, edge) =>
+                Text(edge.name, key: const Key('custom-handle')),
+            collapsedBuilder: (context, status) => const SizedBox.shrink(),
+            expandedBuilder: (context, status) => const SizedBox.shrink(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(PanelEdgeHandle), findsNothing);
+      expect(find.byKey(const Key('custom-handle')), findsOneWidget);
+      expect(find.text('end'), findsOneWidget);
+    });
+
+    testWidgets('exactly the peek shows, no more', (tester) async {
+      final controller = stashedController();
+      addTearDown(controller.dispose);
+      await _pumpPanel(
+        tester,
+        controller: controller,
+        theme: const DraggablePanelThemeData(
+          stashedPeek: 14,
+          margin: EdgeInsets.all(24),
+        ),
+      );
+
+      expect(
+        800 - _paintedRect(tester).left,
+        closeTo(14, 0.5),
+        reason: 'the resting margin must not widen the parked sliver',
+      );
     });
 
     testWidgets('the tab keeps its height, it does not sink to a corner', (

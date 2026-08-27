@@ -6,7 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 /// Which piece of panel content a child provides.
-enum PanelSlot { collapsed, expanded }
+enum PanelSlot { collapsed, expanded, handle }
 
 /// Paints the panel as one surface that grows between its two contents.
 ///
@@ -26,6 +26,7 @@ final class RenderPanelSurface extends RenderBox
     required Size collapsedSize,
     required EdgeInsets bounds,
     required bool isDragging,
+    required bool isStashed,
     required bool reduceMotion,
     required double opacity,
   }) : _repaint = repaint,
@@ -34,6 +35,7 @@ final class RenderPanelSurface extends RenderBox
        _collapsedSize = collapsedSize,
        _bounds = bounds,
        _isDragging = isDragging,
+       _isStashed = isStashed,
        _reduceMotion = reduceMotion,
        _opacity = opacity;
 
@@ -50,6 +52,7 @@ final class RenderPanelSurface extends RenderBox
   Size _collapsedSize;
   EdgeInsets _bounds;
   bool _isDragging;
+  bool _isStashed;
   bool _reduceMotion;
   double _opacity;
 
@@ -59,6 +62,7 @@ final class RenderPanelSurface extends RenderBox
   final LayerHandle<ClipPathLayer> _clipLayer = LayerHandle<ClipPathLayer>();
   final LayerHandle<OpacityLayer> _collapsedLayer = LayerHandle<OpacityLayer>();
   final LayerHandle<OpacityLayer> _expandedLayer = LayerHandle<OpacityLayer>();
+  final LayerHandle<OpacityLayer> _handleLayer = LayerHandle<OpacityLayer>();
   final LayerHandle<BackdropFilterLayer> _backdropLayer =
       LayerHandle<BackdropFilterLayer>();
 
@@ -82,7 +86,10 @@ final class RenderPanelSurface extends RenderBox
 
   set style(PanelStyle value) {
     if (_style == value) return;
-    final resize = _style.expandedExtent != value.expandedExtent;
+    final resize =
+        _style.expandedExtent != value.expandedExtent ||
+        _style.stashedPeek != value.stashedPeek ||
+        _style.stashedSize != value.stashedSize;
     _style = value;
     if (resize) {
       markNeedsLayout();
@@ -100,6 +107,11 @@ final class RenderPanelSurface extends RenderBox
 
   set isDragging(bool value) =>
       _setPaintField(value, _isDragging, () => _isDragging = value);
+
+  bool get isStashed => _isStashed;
+
+  set isStashed(bool value) =>
+      _setPaintField(value, _isStashed, () => _isStashed = value);
 
   double get opacity => _opacity;
 
@@ -151,6 +163,7 @@ final class RenderPanelSurface extends RenderBox
     _backdropLayer.layer = null;
     _collapsedLayer.layer = null;
     _expandedLayer.layer = null;
+    _handleLayer.layer = null;
     super.dispose();
   }
 
@@ -173,11 +186,15 @@ final class RenderPanelSurface extends RenderBox
   /// The rect the panel must stay within, in this render object's coordinates.
   Rect get _freeRect => _bounds.deflateRect(Offset.zero & size);
 
+  /// The handle fills the tab a parked panel shows.
+  Size get _handleSize => handleSizeFor(_style.stashedSize, _style.stashedPeek);
+
   @override
   void performLayout() {
     childForSlot(
       PanelSlot.collapsed,
     )?.layout(BoxConstraints.tight(_collapsedSize));
+    childForSlot(PanelSlot.handle)?.layout(BoxConstraints.tight(_handleSize));
 
     final expanded = childForSlot(PanelSlot.expanded);
     if (expanded == null) {
@@ -204,8 +221,11 @@ final class RenderPanelSurface extends RenderBox
     origin: originOf(),
     collapsedSize: _collapsedSize,
     expandedSize: _expandedSize,
+    stashedSize: _style.stashedSize,
     anchor: _anchor,
     bounds: _freeRect,
+    viewport: Offset.zero & size,
+    stashedPeek: _style.stashedPeek,
     expansion: expansionOf(),
     reduceMotion: _reduceMotion,
   );
@@ -218,6 +238,7 @@ final class RenderPanelSurface extends RenderBox
       _backdropLayer.layer = null;
       _collapsedLayer.layer = null;
       _expandedLayer.layer = null;
+      _handleLayer.layer = null;
       return;
     }
 
@@ -245,6 +266,7 @@ final class RenderPanelSurface extends RenderBox
     final elevation = _style.elevationAt(
       frame.expansion,
       isDragging: _isDragging,
+      isStashed: _isStashed,
     );
     if (elevation <= 0) return;
 
@@ -276,6 +298,13 @@ final class RenderPanelSurface extends RenderBox
       offset + frame.collapsedOrigin,
       frame.collapsedOpacity * _opacity,
       _collapsedLayer.layer,
+    );
+    _handleLayer.layer = _paintSlot(
+      context,
+      childForSlot(PanelSlot.handle),
+      offset + frame.handleOrigin,
+      frame.handleOpacity * _opacity,
+      _handleLayer.layer,
     );
   }
 
@@ -377,9 +406,13 @@ final class RenderPanelSurface extends RenderBox
   @override
   void applyPaintTransform(RenderBox child, Matrix4 transform) {
     final frame = _frame();
-    final origin = identical(child, childForSlot(PanelSlot.collapsed))
-        ? frame.collapsedOrigin
-        : frame.expandedOrigin;
+    final origin = switch (child) {
+      _ when identical(child, childForSlot(PanelSlot.collapsed)) =>
+        frame.collapsedOrigin,
+      _ when identical(child, childForSlot(PanelSlot.handle)) =>
+        frame.handleOrigin,
+      _ => frame.expandedOrigin,
+    };
     transform.translateByDouble(origin.dx, origin.dy, 0, 1);
   }
 
@@ -387,5 +420,6 @@ final class RenderPanelSurface extends RenderBox
   Iterable<RenderBox> get children => <RenderBox>[
     if (childForSlot(PanelSlot.expanded) case final expanded?) expanded,
     if (childForSlot(PanelSlot.collapsed) case final collapsed?) collapsed,
+    if (childForSlot(PanelSlot.handle) case final handle?) handle,
   ];
 }

@@ -42,7 +42,7 @@ void main() {
       final style = await _resolve(tester);
 
       expect(style.elevation, 6);
-      expect(style.stashedPeek, 16);
+      expect(style.stashedPeek, 26);
       expect(style.expandedExtent, isA<ContentExtent>());
     });
 
@@ -72,7 +72,7 @@ void main() {
       );
 
       expect(style.elevation, 10);
-      expect(style.stashedPeek, 16);
+      expect(style.stashedPeek, 26);
     });
 
     testWidgets('a call-site theme wins over the app-wide extension', (
@@ -185,14 +185,35 @@ void main() {
   });
 
   group('interpolation', () {
+    /// The widest corner the shape rounds a [box] by, read off its outline.
+    double cornerInsetOf(ShapeBorder shape, Rect box) {
+      final path = shape.getOuterPath(box);
+      var inset = 0.0;
+      while (inset < box.height / 2 &&
+          !path.contains(Offset(box.left + 0.5, box.top + inset))) {
+        inset += 0.5;
+      }
+      return inset;
+    }
+
     testWidgets('shapeAt grows the corner radius with the panel', (
       tester,
     ) async {
       final style = await _resolve(tester);
+      const box = Rect.fromLTWH(0, 0, 64, 64);
 
-      expect(style.shapeAt(0), style.collapsedShape);
-      expect(style.shapeAt(1), style.shape);
-      expect(style.shapeAt(0.5), isNot(style.collapsedShape));
+      expect(
+        cornerInsetOf(style.shapeAt(0), box),
+        closeTo(cornerInsetOf(style.collapsedShape, box), 0.5),
+      );
+      expect(
+        cornerInsetOf(style.shapeAt(1), box),
+        closeTo(cornerInsetOf(style.shape, box), 0.5),
+      );
+      expect(
+        cornerInsetOf(style.shapeAt(1), box),
+        greaterThan(cornerInsetOf(style.shapeAt(0), box)),
+      );
     });
 
     testWidgets('elevationAt lifts while dragging, whatever the expansion', (

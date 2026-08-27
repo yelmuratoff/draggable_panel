@@ -33,6 +33,9 @@ build/
 .env
 .DS_Store
 
+# Golden comparison artefacts, rewritten on every failing run
+test/golden/failures/
+
 # Code generation
 **/*.g.dart
 **/*.gr.dart
