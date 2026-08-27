@@ -596,6 +596,26 @@ void main() {
       expect(pageTaps, 1, reason: 'the page still got its own tap');
     });
 
+    testWidgets('it parks at the side it was dragged to, not the one it '
+        'came from', (tester) async {
+      final controller = stashedController();
+      addTearDown(controller.dispose);
+      await _pumpPanel(tester, controller: controller);
+      expect(controller.placement, isA<StashedPlacement>());
+
+      await dragBy(tester, const Offset(-90, 0));
+      expect(controller.phase, PanelPhase.collapsed);
+      expect(_paintedRect(tester).center.dx, lessThan(400));
+
+      await tester.tapAt(const Offset(700, 300));
+      await tester.pump();
+
+      expect(
+        controller.placement,
+        isA<StashedPlacement>().having((p) => p.edge, 'edge', PanelEdge.start),
+      );
+    });
+
     testWidgets('touching the panel itself does not park it', (tester) async {
       final controller = await _pumpPanel(tester);
 

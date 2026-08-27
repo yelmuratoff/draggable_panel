@@ -144,7 +144,9 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
       margin: widget.style.margin,
       avoidKeyboard: widget.behavior.avoidKeyboard,
     );
-    widget.controller.behavior = widget.behavior;
+    widget.controller
+      ..behavior = widget.behavior
+      ..textDirection = next.direction;
 
     final changed = _viewport != next;
     _viewport = next;

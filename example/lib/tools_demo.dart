@@ -35,31 +35,33 @@ class _ToolsDemoState extends State<ToolsDemo> {
       color: Theme.of(context).colorScheme.onSurface,
     ),
     theme: const DraggablePanelThemeData(collapsedSize: Size(56, 56)),
+    title: 'Developer tools',
+    onClose: _controller.collapse,
     actions: [
       PanelAction(
         icon: Icons.article_outlined,
-        tooltip: 'Logs',
+        label: 'Logs',
         badge: const PanelBadge(label: '3'),
         onPressed: () => _run('Logs'),
       ),
       PanelAction(
         icon: Icons.speed_outlined,
-        tooltip: 'Performance',
+        label: 'Performance',
         onPressed: () => _run('Performance'),
       ),
       PanelAction(
         icon: Icons.palette_outlined,
-        tooltip: 'Theme',
+        label: 'Theme',
         onPressed: () => _run('Theme'),
       ),
       PanelAction(
         icon: Icons.storage_outlined,
-        tooltip: 'Storage',
+        label: 'Storage',
         onPressed: () => _run('Storage'),
       ),
       PanelAction(
         icon: Icons.wifi_outlined,
-        tooltip: 'Network',
+        label: 'Network',
         onPressed: () => _run('Network'),
       ),
     ],

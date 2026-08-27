@@ -84,6 +84,18 @@ final class DraggablePanelController extends ChangeNotifier
   @internal
   set behavior(PanelBehavior value) => _behavior = value;
 
+  /// The attached panel's reading direction, mirrored from the widget.
+  ///
+  /// A free placement stores a physical alignment, so turning one into a
+  /// directional [PanelEdge] needs to know which side is the start. Defaults to
+  /// [TextDirection.ltr] while no panel is attached.
+  TextDirection get textDirection => _textDirection;
+
+  @internal
+  set textDirection(TextDirection value) => _textDirection = value;
+
+  TextDirection _textDirection = TextDirection.ltr;
+
   /// Grows the panel to its expanded size.
   ///
   /// A stashed panel returns to the nearest corner first and expands once it
@@ -170,8 +182,17 @@ final class DraggablePanelController extends ChangeNotifier
     CornerPlacement(:final corner) =>
       corner.isStart ? PanelEdge.start : PanelEdge.end,
     StashedPlacement(:final edge) => edge,
-    FreePlacement() => PanelEdge.end,
+    FreePlacement(:final alignment) => _edgeFacing(
+      alignment.resolve(_textDirection).x,
+    ),
   };
+
+  /// The edge on the side [x] points at, where `x` is physical.
+  PanelEdge _edgeFacing(double x) {
+    final onLeft = x < 0;
+    final startIsLeft = _textDirection == TextDirection.ltr;
+    return onLeft == startIsLeft ? PanelEdge.start : PanelEdge.end;
+  }
 
   double _verticalAlignment() => switch (placement) {
     CornerPlacement(:final corner) => corner.isTop ? -1.0 : 1.0,

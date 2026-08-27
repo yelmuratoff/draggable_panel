@@ -28,6 +28,7 @@ final class PanelAction {
   const PanelAction({
     required this.icon,
     required this.onPressed,
+    this.label,
     this.tooltip,
     this.badge,
     this.color,
@@ -35,6 +36,12 @@ final class PanelAction {
   });
 
   final IconData icon;
+
+  /// Short caption shown under the icon.
+  ///
+  /// Without one the grid is a row of unlabelled glyphs, which is only
+  /// readable to someone who already knows what they do.
+  final String? label;
 
   /// Invoked when the action is chosen.
   final VoidCallback onPressed;

@@ -1,6 +1,6 @@
 ## 4.0.0
 
-A rewrite. The panel is now a floating Picture-in-Picture window: drag it
+A rewrite. The panel is now a floating window: drag it
 anywhere, release it and it springs to the nearest corner by projected velocity,
 flick it past an edge to park it off-screen, tap it to grow in place into a full
 panel. Material 3 visuals, Apple-grade motion.
@@ -55,6 +55,22 @@ Added
 - A parked panel draws its own grab affordance on the tab: a curve leaning the
   way it comes out. Retint it with `handleColor`, resize the curve on
   `PanelEdgeHandle`, or replace the whole thing with `handleBuilder`.
+- `PanelAction.label` — a caption under each icon, so the grid is readable by
+  someone who has not memorised the glyphs. Tuned by `actionLabelStyle`,
+  `actionLabelSpacing`, `actionLabelMaxLines` and `actionLabelMaxWidth`, the
+  last of which bounds a grid column so one long label cannot stretch the panel.
+- `actionIconSize` — the glyph inside a tile, separate from `actionSize` because
+  the tile is the tap target and has a 48-pixel floor while the glyph does not.
+- `DraggableActionPanel.title` and `onClose` put a header above the grid, giving
+  the panel a visible way out instead of only a tap on the page.
+- Grid columns are equal shares of the row, so they line up between rows and a
+  full row leaves no slack at its trailing end. The grid never claims more
+  columns than it has actions, and the panel's width follows: two actions make a
+  two-column panel, not a mostly empty four.
+- Content taller than the panel's height cap scrolls instead of overflowing.
+- `actionBuilder`, `buttonBuilder`, `headerBuilder` and `expandedBuilder` on the
+  preset, plus `ActionCell`, `ActionButtonRow`, `ActionPanelHeader` and
+  `ActionPanelContent` exported, so any part can be replaced or reused.
 - `idleStashDelay` — a collapsed panel parks itself after five seconds
   untouched. Null keeps it out until it is put away by hand; an expanded panel
   never parks on its own, since someone is reading it.
@@ -65,6 +81,9 @@ Added
   collapsed face both hold still against the screen while the panel slides out
   from under them, so the handle leaves through the edge exactly as the face
   arrives, and neither is ever a translucent ghost of the other.
+- A panel dragged to the other side now parks on that side. `stash()` without an
+  edge read a free placement as the end edge whatever the panel's alignment, so
+  one pulled across to the left flew back to the right.
 - Pulling a parked panel out is one-to-one from the first pixel. The rubber
   band used to resist straight to the resting bounds, which yanked a parked
   panel inwards the moment a drag registered, and the platform pan slop was

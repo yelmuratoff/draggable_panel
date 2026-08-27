@@ -45,6 +45,20 @@ void main() {
     await shoot(tester, '05-released');
   });
 
+  testWidgets('the expanded action grid', (tester) async {
+    app.main();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Developer tools'));
+    await tester.pumpAndSettle();
+    await tester.tapAt(tester.getCenter(find.byType(PanelEdgeHandle)));
+    await tester.pumpAndSettle();
+    await tester.tapAt(tester.getCenter(find.byIcon(Icons.build_outlined)));
+    await tester.pumpAndSettle();
+
+    await binding.takeScreenshot('09-expanded-grid');
+  });
+
   testWidgets('touching the page puts a drawn-out panel away', (tester) async {
     app.main();
     await tester.pumpAndSettle();

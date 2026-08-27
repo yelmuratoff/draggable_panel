@@ -34,11 +34,17 @@ final class DraggableActionPanel extends StatelessWidget {
     this.child,
     this.controller,
     this.icon = Icons.apps,
+    this.title,
+    this.onClose,
     this.theme,
     this.actionTheme,
     this.behavior = const PanelBehavior(),
     this.semantics = const PanelSemantics(),
     this.collapsedBuilder,
+    this.headerBuilder,
+    this.actionBuilder,
+    this.buttonBuilder,
+    this.expandedBuilder,
     this.onStatusChanged,
     this.onPlacementChanged,
   });
@@ -55,6 +61,13 @@ final class DraggableActionPanel extends StatelessWidget {
   /// Icon shown while collapsed. Ignored when [collapsedBuilder] is given.
   final IconData icon;
 
+  /// Title shown in the header. A header appears when this, [onClose], or
+  /// [headerBuilder] is set.
+  final String? title;
+
+  /// Invoked by the header's close control.
+  final VoidCallback? onClose;
+
   final DraggablePanelThemeData? theme;
   final DraggableActionPanelThemeData? actionTheme;
   final PanelBehavior behavior;
@@ -62,6 +75,18 @@ final class DraggableActionPanel extends StatelessWidget {
 
   /// Replaces the collapsed face entirely.
   final PanelChildBuilder? collapsedBuilder;
+
+  /// Replaces the header row.
+  final WidgetBuilder? headerBuilder;
+
+  /// Replaces one grid cell, keeping the grid's own layout.
+  final PanelActionBuilder? actionBuilder;
+
+  /// Replaces one button row.
+  final PanelActionButtonBuilder? buttonBuilder;
+
+  /// Replaces the expanded face entirely, ignoring every other content field.
+  final PanelChildBuilder? expandedBuilder;
 
   final ValueChanged<PanelStatus>? onStatusChanged;
   final ValueChanged<PanelPlacement>? onPlacementChanged;
@@ -79,11 +104,18 @@ final class DraggableActionPanel extends StatelessWidget {
         (context, status) => Center(
           child: Icon(icon, color: Theme.of(context).colorScheme.onSurface),
         ),
-    expandedBuilder: (context, status) => ActionPanelContent(
-      actions: actions,
-      buttons: buttons,
-      theme: DraggableActionPanelThemeData.resolve(context, actionTheme),
-    ),
+    expandedBuilder:
+        expandedBuilder ??
+        (context, status) => ActionPanelContent(
+          actions: actions,
+          buttons: buttons,
+          title: title,
+          onClose: onClose,
+          headerBuilder: headerBuilder,
+          actionBuilder: actionBuilder,
+          buttonBuilder: buttonBuilder,
+          theme: DraggableActionPanelThemeData.resolve(context, actionTheme),
+        ),
     child: child,
   );
 }

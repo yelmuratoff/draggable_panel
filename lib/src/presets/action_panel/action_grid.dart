@@ -2,72 +2,196 @@ import 'package:draggable_panel/src/presets/action_panel/action_panel_theme_data
 import 'package:draggable_panel/src/presets/action_panel/panel_action.dart';
 import 'package:flutter/material.dart';
 
-/// The expanded content of a `DraggableActionPanel`: a grid of icon actions
-/// above a column of labelled buttons.
+/// Builds one action's cell, replacing [ActionCell].
+typedef PanelActionBuilder =
+    Widget Function(BuildContext context, PanelAction action);
+
+/// Builds one button's row, replacing [ActionButtonRow].
+typedef PanelActionButtonBuilder =
+    Widget Function(BuildContext context, PanelActionButton button);
+
+/// The expanded content of a `DraggableActionPanel`: an optional header, a grid
+/// of icon actions, and a column of labelled buttons.
 final class ActionPanelContent extends StatelessWidget {
   const ActionPanelContent({
     required this.actions,
     required this.buttons,
     required this.theme,
     super.key,
+    this.title,
+    this.onClose,
+    this.headerBuilder,
+    this.actionBuilder,
+    this.buttonBuilder,
   });
 
   final List<PanelAction> actions;
   final List<PanelActionButton> buttons;
   final DraggableActionPanelThemeData theme;
 
-  /// Balances the grid so the last row is not left nearly empty — five actions
-  /// across a four-wide grid read better as `3 + 2` than as `4 + 1`.
+  final String? title;
+  final VoidCallback? onClose;
+
+  final WidgetBuilder? headerBuilder;
+  final PanelActionBuilder? actionBuilder;
+  final PanelActionButtonBuilder? buttonBuilder;
+
+  /// How many columns the grid uses.
+  ///
+  /// Never more than there are actions, so a panel holding two of them is two
+  /// cells wide rather than a mostly empty four.
   int get _columns {
-    final maxColumns = theme.maxColumns ?? 4;
-    if (actions.length <= maxColumns) return actions.length;
-    final rows = (actions.length / maxColumns).ceil();
+    final ceiling = theme.maxColumns ?? 4;
+    if (actions.length <= ceiling) return actions.length;
+    final rows = (actions.length / ceiling).ceil();
     return (actions.length / rows).ceil();
   }
+
+  bool get _hasHeader =>
+      headerBuilder != null || title != null || onClose != null;
 
   @override
   Widget build(BuildContext context) {
     final spacing = theme.actionSpacing ?? 8;
-    final rows = <List<PanelAction>>[];
-    for (var start = 0; start < actions.length; start += _columns) {
-      rows.add(
-        actions.sublist(start, (start + _columns).clamp(0, actions.length)),
-      );
-    }
+    final columns = _columns;
 
     return Padding(
       padding: theme.contentPadding ?? const EdgeInsets.all(12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final row in rows) ...[
-            if (row != rows.first) SizedBox(height: spacing),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                for (final action in row) ...[
-                  if (action != row.first) SizedBox(width: spacing),
-                  ActionCell(action: action, theme: theme),
-                ],
+      // CrossAxisAlignment.stretch gives children the full offered width.
+      child: IntrinsicWidth(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_hasHeader) ...[
+                headerBuilder?.call(context) ??
+                    ActionPanelHeader(
+                      title: title,
+                      onClose: onClose,
+                      theme: theme,
+                    ),
+                SizedBox(height: theme.headerSpacing ?? 12),
               ],
-            ),
-          ],
-          if (actions.isNotEmpty && buttons.isNotEmpty)
-            SizedBox(height: theme.sectionSpacing ?? 12),
-          for (final button in buttons) ...[
-            if (button != buttons.first)
-              SizedBox(height: theme.buttonSpacing ?? 8),
-            ActionButtonRow(button: button, theme: theme),
-          ],
-        ],
+              for (var start = 0; start < actions.length; start += columns) ...[
+                if (start > 0) SizedBox(height: spacing),
+                _GridRow(
+                  row: actions.sublist(
+                    start,
+                    (start + columns).clamp(0, actions.length),
+                  ),
+                  columns: columns,
+                  spacing: spacing,
+                  theme: theme,
+                  actionBuilder: actionBuilder,
+                ),
+              ],
+              if (actions.isNotEmpty && buttons.isNotEmpty)
+                SizedBox(height: theme.sectionSpacing ?? 12),
+              for (final button in buttons) ...[
+                if (button != buttons.first)
+                  SizedBox(height: theme.buttonSpacing ?? 8),
+                buttonBuilder?.call(context, button) ??
+                    ActionButtonRow(button: button, theme: theme),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-/// One icon action, with its optional badge.
+/// One grid row, split into [columns] equal shares.
+///
+/// Every cell takes the same fraction of the row whether or not the row is
+/// full, so columns line up down the grid and a full row leaves no gap at its
+/// trailing end.
+final class _GridRow extends StatelessWidget {
+  const _GridRow({
+    required this.row,
+    required this.columns,
+    required this.spacing,
+    required this.theme,
+    required this.actionBuilder,
+  });
+
+  final List<PanelAction> row;
+  final int columns;
+  final double spacing;
+  final DraggableActionPanelThemeData theme;
+  final PanelActionBuilder? actionBuilder;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      for (final action in row) ...[
+        if (action != row.first) SizedBox(width: spacing),
+        Expanded(
+          child: Center(
+            child:
+                actionBuilder?.call(context, action) ??
+                ActionCell(action: action, theme: theme),
+          ),
+        ),
+      ],
+      if (row.length < columns) ...[
+        SizedBox(width: spacing),
+        Spacer(flex: columns - row.length),
+      ],
+    ],
+  );
+}
+
+/// The title row above the grid, with an optional close control.
+final class ActionPanelHeader extends StatelessWidget {
+  const ActionPanelHeader({
+    required this.theme,
+    super.key,
+    this.title,
+    this.onClose,
+  });
+
+  final DraggableActionPanelThemeData theme;
+  final String? title;
+  final VoidCallback? onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        if (title case final title?)
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style:
+                  theme.headerStyle ??
+                  Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(color: scheme.onSurface),
+            ),
+          )
+        else
+          const Spacer(),
+        if (onClose case final onClose?)
+          IconButton(
+            onPressed: onClose,
+            visualDensity: VisualDensity.compact,
+            iconSize: 20,
+            color: scheme.onSurfaceVariant,
+            tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+            icon: const Icon(Icons.close_rounded),
+          ),
+      ],
+    );
+  }
+}
+
+/// One icon action: a tile, its optional badge, and its optional caption.
 final class ActionCell extends StatelessWidget {
   const ActionCell({required this.action, required this.theme, super.key});
 
@@ -76,45 +200,77 @@ final class ActionCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final size = theme.actionSize ?? 48;
-    final shape =
-        theme.actionShape ??
-        const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(14)),
-        );
     final foreground =
         action.foregroundColor ??
         theme.actionForegroundColor ??
-        Theme.of(context).colorScheme.onSecondaryContainer;
+        scheme.onSurfaceVariant;
 
-    Widget cell = SizedBox(
-      width: size,
-      height: size,
+    Widget glyph = Icon(
+      action.icon,
+      color: foreground,
+      size: theme.actionIconSize ?? size * 0.5,
+    );
+    if (action.badge case final badge?) {
+      glyph = Badge(
+        label: badge.label == null ? null : Text(badge.label!),
+        backgroundColor: badge.color ?? theme.badgeColor,
+        child: glyph,
+      );
+    }
+
+    final tile = SizedBox.square(
+      dimension: size,
       child: Material(
         color:
             action.color ??
             theme.actionBackgroundColor ??
-            Theme.of(context).colorScheme.secondaryContainer,
-        shape: shape,
+            scheme.surfaceContainerLowest,
+        shape:
+            theme.actionShape ??
+            const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+            ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: action.onPressed,
-          child: Icon(action.icon, color: foreground, size: size * 0.5),
+          child: Center(child: glyph),
         ),
       ),
     );
 
-    if (action.badge case final badge?) {
-      cell = Badge(
-        label: badge.label == null ? null : Text(badge.label!),
-        backgroundColor: badge.color ?? theme.badgeColor,
-        child: cell,
-      );
-    }
-
     return Tooltip(
-      message: action.tooltip ?? '',
-      child: Semantics(button: true, label: action.tooltip, child: cell),
+      message: action.tooltip ?? action.label ?? '',
+      child: Semantics(
+        button: true,
+        label: action.tooltip ?? action.label,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            tile,
+            if (action.label case final label?) ...[
+              SizedBox(height: theme.actionLabelSpacing ?? 6),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: theme.actionLabelMaxWidth ?? size * 2,
+                ),
+                child: Text(
+                  label,
+                  maxLines: theme.actionLabelMaxLines ?? 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style:
+                      theme.actionLabelStyle ??
+                      Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(color: foreground),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

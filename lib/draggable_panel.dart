@@ -15,6 +15,14 @@ export 'src/model/panel_placement.dart';
 export 'src/model/panel_status.dart';
 export 'src/model/panel_viewport.dart';
 export 'src/motion/panel_motion_spec.dart' show PanelMotionSpec;
+export 'src/presets/action_panel/action_grid.dart'
+    show
+        ActionButtonRow,
+        ActionCell,
+        ActionPanelContent,
+        ActionPanelHeader,
+        PanelActionBuilder,
+        PanelActionButtonBuilder;
 export 'src/presets/action_panel/action_panel_theme_data.dart';
 export 'src/presets/action_panel/draggable_action_panel.dart';
 export 'src/presets/action_panel/panel_action.dart';
