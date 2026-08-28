@@ -93,6 +93,7 @@ Future<_Harness> _pumpSurface(
   Alignment anchor = Alignment.bottomRight,
   Size collapsedSize = const Size(64, 64),
   ShapeBorder? collapsedShape,
+  double stashedOpacity = 1,
 }) async {
   final harness = _Harness();
   addTearDown(harness.dispose);
@@ -109,6 +110,7 @@ Future<_Harness> _pumpSurface(
               DraggablePanelThemeData(
                 collapsedSize: collapsedSize,
                 collapsedShape: collapsedShape,
+                stashedOpacity: stashedOpacity,
               ),
             ),
             originOf: () => harness.driver.value,
@@ -143,6 +145,48 @@ RenderPanelSurface _surface(WidgetTester tester) =>
     tester.renderObject<RenderPanelSurface>(find.byType(PanelSurface));
 
 void main() {
+  group('parked fade', () {
+    const viewportWidth = 800.0;
+    const panelWidth = 64.0;
+    const stashedPeek = 26.0;
+    const fullyOnScreen = viewportWidth - panelWidth;
+    const fullyParked = viewportWidth - stashedPeek;
+
+    testWidgets('reaches stashedOpacity only once fully parked', (
+      tester,
+    ) async {
+      final harness = await _pumpSurface(tester, stashedOpacity: 0.5);
+
+      harness.driver.drive(const Offset(fullyOnScreen, 400));
+      await tester.pump();
+      expect(_surface(tester).paintOpacity, 1);
+
+      harness.driver.drive(const Offset(fullyParked, 400));
+      await tester.pump();
+      expect(_surface(tester).paintOpacity, closeTo(0.5, 0.01));
+    });
+
+    testWidgets('crosses the middle on the way instead of stepping', (
+      tester,
+    ) async {
+      final harness = await _pumpSurface(tester, stashedOpacity: 0.5);
+      const travel = fullyParked - fullyOnScreen;
+
+      final sampled = <double>[];
+      for (var step = 0; step <= 4; step++) {
+        harness.driver.drive(Offset(fullyOnScreen + travel * step / 4, 400));
+        await tester.pump();
+        sampled.add(_surface(tester).paintOpacity);
+      }
+
+      expect(sampled.first, 1);
+      expect(sampled.last, closeTo(0.5, 0.01));
+      for (var i = 1; i < sampled.length; i++) {
+        expect(sampled[i], lessThan(sampled[i - 1]));
+      }
+    });
+  });
+
   group('painting', () {
     testWidgets('the collapsed panel sits at the driver position', (
       tester,

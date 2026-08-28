@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show lerpDouble;
 
 import 'package:draggable_panel/src/motion/panel_frame.dart';
 import 'package:draggable_panel/src/theme/panel_style.dart';
@@ -58,6 +59,7 @@ final class RenderPanelSurface extends RenderBox
 
   Size _expandedSize = Size.zero;
   Rect _paintedRect = Rect.zero;
+  double _paintOpacity = 1;
 
   final LayerHandle<ClipPathLayer> _clipLayer = LayerHandle<ClipPathLayer>();
   final LayerHandle<OpacityLayer> _collapsedLayer = LayerHandle<OpacityLayer>();
@@ -116,6 +118,13 @@ final class RenderPanelSurface extends RenderBox
 
   set isStashed(bool value) =>
       _setPaintField(value, _isStashed, () => _isStashed = value);
+
+  /// The alpha the panel was last painted at: [opacity] folded together with
+  /// the parked fade.
+  ///
+  /// Separate from [opacity], which is visibility alone — a parked panel is
+  /// drawn back into the page but still takes a tap.
+  double get paintOpacity => _paintOpacity;
 
   double get opacity => _opacity;
 
@@ -251,6 +260,8 @@ final class RenderPanelSurface extends RenderBox
 
     final frame = _frame();
     _paintedRect = frame.rect;
+    _paintOpacity =
+        _opacity * lerpDouble(_style.stashedOpacity, 1, frame.emergence)!;
 
     final shape = _style.shapeAt(frame.expansion, emergence: frame.emergence);
     final outline = _outlineOf(shape, frame.rect.shift(offset));
@@ -289,13 +300,13 @@ final class RenderPanelSurface extends RenderBox
           textDirection: _style.textDirection,
         );
 
-    if (_opacity >= 1) {
+    if (_paintOpacity >= 1) {
       paintBorder(context, offset);
       return null;
     }
     return context.pushOpacity(
       offset,
-      (_opacity * 255).round(),
+      (_paintOpacity * 255).round(),
       paintBorder,
       oldLayer: _borderLayer.layer,
     );
@@ -311,7 +322,7 @@ final class RenderPanelSurface extends RenderBox
 
     context.canvas.drawShadow(
       outline,
-      _style.shadowColor.withValues(alpha: _opacity),
+      _style.shadowColor.withValues(alpha: _paintOpacity),
       elevation,
       false,
     );
@@ -329,21 +340,21 @@ final class RenderPanelSurface extends RenderBox
       context,
       childForSlot(PanelSlot.expanded),
       offset + frame.expandedOrigin,
-      frame.expandedOpacity * _opacity,
+      frame.expandedOpacity * _paintOpacity,
       _expandedLayer.layer,
     );
     _collapsedLayer.layer = _paintSlot(
       context,
       childForSlot(PanelSlot.collapsed),
       offset + frame.collapsedOrigin,
-      frame.collapsedOpacity * _opacity,
+      frame.collapsedOpacity * _paintOpacity,
       _collapsedLayer.layer,
     );
     _handleLayer.layer = _paintSlot(
       context,
       childForSlot(PanelSlot.handle),
       offset + frame.handleOrigin,
-      frame.handleOpacity * _opacity,
+      frame.handleOpacity * _paintOpacity,
       _handleLayer.layer,
     );
   }
@@ -360,7 +371,7 @@ final class RenderPanelSurface extends RenderBox
   ) {
     final fill = Paint()
       ..color = _style.surfaceColor.withValues(
-        alpha: _style.surfaceColor.a * _opacity,
+        alpha: _style.surfaceColor.a * _paintOpacity,
       );
 
     void paintFill(PaintingContext innerContext, Offset innerOffset) {

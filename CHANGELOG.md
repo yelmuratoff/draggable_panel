@@ -1,3 +1,14 @@
+## 4.0.0-beta.4
+
+Fixed
+
+- `stashedOpacity` stepped rather than faded. It was read off the panel's phase,
+  which flips in one frame, while the rect, the shape, and the handle all
+  cross-fade along the continuous emergence — so a panel set to fade as it
+  parked slid smoothly and then blinked to its parked alpha at the end. The
+  surface now folds the parked fade in along that same emergence, leaving the
+  phase to carry visibility alone. A panel left at the default `1` is unchanged.
+
 ## 4.0.0-beta.3
 
 Fixed

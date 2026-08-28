@@ -666,11 +666,11 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
   Widget _surfaceContent(Widget child) =>
       Material(type: MaterialType.transparency, child: child);
 
-  double _opacityFor(PanelPhase phase) => switch (phase) {
-    PanelPhase.hidden => 0,
-    PanelPhase.stashed => widget.style.stashedOpacity,
-    _ => 1,
-  };
+  /// Visibility alone. `stashedOpacity` is deliberately absent: a phase is a
+  /// step, and stepping the alpha while the panel is still sliding into the
+  /// edge reads as a flicker. The surface folds the parked fade in along the
+  /// frame's emergence instead.
+  double _opacityFor(PanelPhase phase) => phase == PanelPhase.hidden ? 0 : 1;
 
   /// The viewport's usable rect, expressed as insets from this widget's box.
   EdgeInsets _boundsInsets() {
