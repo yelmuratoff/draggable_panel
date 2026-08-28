@@ -181,10 +181,10 @@ final panel = DraggablePanelController(
 );
 
 panel.expand();
-panel.collapse();
+panel.collapse();    // parks instead, when `collapsible: false`
 panel.toggle();
 panel.stash();       // park off the nearest edge
-panel.unstash();
+panel.unstash();     // opens instead, when `collapsible: false`
 panel.moveTo(const PanelPlacement.corner(PanelCorner.bottomStart));
 panel.hide();
 panel.show();
@@ -214,6 +214,7 @@ DraggablePanel(
     draggable: true,
     tapToExpand: true,
     stashable: true,             // push it against an edge to park it there
+    collapsible: true,           // false drops the small window between the two
     dismissible: false,          // PiP uses an explicit close, not a fling-away
     collapseOnTapOutside: true,
     stashOnTapOutside: true,     // touching the page puts a collapsed panel away
@@ -226,10 +227,19 @@ DraggablePanel(
 )
 ```
 
+`stashable` and `collapsible` are the two optional stages covered above, and
+both switch their stage off *everywhere* rather than on one gesture.
+
 `stashable: false` switches parking off outright — the panel then stays where it
 was left, and no idle timer, tap on the page, drag against an edge, keyboard
 dismissal, screen-reader action, or `controller.stash()` will put it away.
 Parking is on by default.
+
+`collapsible: false` does the same to the small window: pulling the tab out
+opens the panel, and `controller.collapse()`, a tap on the page, `Esc`, the
+screen reader's dismiss action and the preset's close control all park it
+instead. The two cannot both be off — that is an assertion error, since the
+panel would have no closed stage left.
 
 ## Theming
 
