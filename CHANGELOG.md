@@ -1,3 +1,38 @@
+## 4.0.0-beta.6
+
+Added
+
+- Swiping an open panel sideways parks it, exactly as swiping the collapsed
+  window does. The panel closes and travels in one gesture: the position spring
+  carries it into the edge while the morph spring runs it back down to its tab,
+  so there is no "collapse, then slide" seam. `stash()` and
+  `moveTo(PanelPlacement.stashed(…))` now accept an expanded panel for the same
+  reason — what a park leaves behind is a tab, so an open panel closes on the
+  way. The tab lands at the height the collapsed face already occupied, so
+  pulling it back out returns the panel where it lived.
+- `PanelBehavior.collapsible` makes the collapsed window an optional *stage*,
+  the pair of the existing `stashable`. Turn it off and the panel has two
+  stages instead of three: it grows while it slides out of a park rather than
+  resting as a small window first, and every way of closing it parks it again.
+  The rule lives in one place — every journey between resting places now runs
+  through a single function in the state machine — so `PanelPhase.collapsed`
+  becomes unreachable rather than merely unusual, which a search over every
+  reachable state asserts. Dropping `collapsible` and `stashable` together is
+  an assertion error, since the panel would have no closed stage left. The new
+  `Tab panel` demo in `example/` shows the two-stage panel.
+
+Fixed
+
+- An expanded panel could not be dragged at all. The drag deliberately changes
+  no phase, so nothing rebuilt the surface and it never learned a finger had
+  the panel — leaving the containment that holds an open panel inside its
+  bounds to cancel every pixel the drag moved. Dragging an open window now
+  tracks the finger one-to-one, with the iOS rubber band past the bounds.
+- The panel's rect stepped when an expansion finished off-screen. Growth
+  suppressed the tab shrink outright, so the instant expansion reached zero the
+  rect jumped the whole way from the collapsed box to the tab. The two now
+  blend, which is what lets a closing panel arrive at its park continuously.
+
 ## 4.0.0-beta.5
 
 Fixed

@@ -15,6 +15,7 @@ import 'package:draggable_panel/src/model/panel_status.dart';
 import 'package:draggable_panel/src/model/panel_viewport.dart';
 import 'package:draggable_panel/src/motion/morph_controller.dart';
 import 'package:draggable_panel/src/motion/offset_spring_driver.dart';
+import 'package:draggable_panel/src/motion/panel_frame.dart';
 import 'package:draggable_panel/src/motion/panel_motion_spec.dart';
 import 'package:draggable_panel/src/motion/panel_physics.dart';
 import 'package:draggable_panel/src/motion/panel_release.dart';
@@ -193,9 +194,9 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
       case PanelPhase.settling:
         _driver.settle(
           target: _originOf(status.placement),
-          velocity: _settleVelocity,
+          velocity: _takeSettleVelocity(),
         );
-        _settleVelocity = Offset.zero;
+        if (_morph.value != 0) _morph.settleTo(0);
       case PanelPhase.expanding:
         _morph.settleTo(1, pixelVelocity: _morphReleaseVelocity);
         _morphReleaseVelocity = 0;
@@ -226,17 +227,23 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
   ///
   /// An expanded panel is dragged without entering [PanelPhase.dragging]: the
   /// window keeps showing its content while it travels, exactly as a system
-  /// Picture-in-Picture window does, so the phase must not be disturbed.
+  /// Picture-in-Picture window does, so the phase must not be disturbed. Set it
+  /// through [_setMoving], which rebuilds — nothing else would.
   bool _isMoving = false;
 
   /// Where the panel sat when the current drag began.
   Offset _dragOrigin = Offset.zero;
 
+  void _setMoving({required bool moving}) {
+    if (_isMoving == moving) return;
+    setState(() => _isMoving = moving);
+  }
+
   void _onDragStart(TapDragStartDetails details) {
     if (!widget.behavior.draggable) return;
 
     _haptics.reset();
-    _isMoving = true;
+    _setMoving(moving: true);
     _carried = _driver.interrupt();
     _carriedAt = SchedulerBinding.instance.currentSystemFrameTimeStamp;
     _raw = _driver.value;
@@ -319,7 +326,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
   void _onDragEnd(TapDragEndDetails details) {
     final velocity = details.velocity.pixelsPerSecond;
     if (!_isMoving) return;
-    _isMoving = false;
+    _setMoving(moving: false);
 
     _settleVelocity = _releaseVelocity(velocity);
 
@@ -339,29 +346,46 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
     );
 
     if (widget.controller.phase.isExpanding) {
-      widget.controller.moveTo(target);
+      if (target case StashedPlacement(:final edge)) {
+        widget.controller.stash(edge);
+      } else {
+        widget.controller.moveTo(target);
+      }
       return;
     }
 
     widget.controller.dispatch(PanelDragSettled(target));
   }
 
-  /// Moves the panel when its resting placement changed without a settle phase.
+  /// Rebases the anchor for a new placement, and moves the panel there when
+  /// nothing else will.
   ///
   /// Relocating an expanded panel keeps it open, so nothing drives the spring
-  /// through [PanelPhase.settling]; this does it instead.
+  /// through [PanelPhase.settling]; this does it instead. A settle drives its
+  /// own spring, but still needs the rebase before it starts.
   void _followPlacement(PanelStatus? previous, PanelStatus status) {
     if (previous == null) return;
     if (previous.placement == status.placement) return;
-    if (status.phase == PanelPhase.settling || status.isDragging) return;
+    if (status.isDragging) return;
 
     _rebaseForAnchor(previous.placement, status.placement);
+    if (status.phase == PanelPhase.settling) return;
+
     final target = _originOf(status.placement);
+    final velocity = _takeSettleVelocity();
     if (status.phase == PanelPhase.hidden) {
       _driver.jumpTo(target);
     } else {
-      _driver.settle(target: target);
+      _driver.settle(target: target, velocity: velocity);
     }
+  }
+
+  /// Reads the velocity a release left behind, clearing it so one settle
+  /// consumes it.
+  Offset _takeSettleVelocity() {
+    final velocity = _settleVelocity;
+    _settleVelocity = Offset.zero;
+    return velocity;
   }
 
   /// Whether the throw would carry the panel entirely off the viewport.
@@ -379,7 +403,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
 
   void _onCancel() {
     if (!_isMoving) return;
-    _isMoving = false;
+    _setMoving(moving: false);
     if (widget.controller.isDragging) {
       widget.controller.dispatch(const PanelDragCancelled());
     } else {
@@ -429,7 +453,11 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
   /// difference in size the instant the placement changes — the panel jumps a
   /// window's width, then springs back over it.
   void _rebaseForAnchor(PanelPlacement from, PanelPlacement to) {
-    if (!widget.controller.phase.isExpanding) return;
+    final expansion = panelSizeProgress(
+      _morph.value,
+      reduceMotion: _spec.reduceMotion,
+    ).clamp(0.0, 1.0);
+    if (expansion <= 0) return;
 
     final expanded = _expandedSize;
     if (expanded == null) return;
@@ -438,13 +466,11 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
     final after = _anchorOf(to);
     if (before == after) return;
 
-    _driver.jumpTo(
-      _driver.value +
-          Offset(
-            (after.x - before.x) / 2 * (expanded.width - _panelSize.width),
-            (after.y - before.y) / 2 * (expanded.height - _panelSize.height),
-          ),
+    final shift = Offset(
+      (after.x - before.x) / 2 * (expanded.width - _panelSize.width),
+      (after.y - before.y) / 2 * (expanded.height - _panelSize.height),
     );
+    _driver.jumpTo(_driver.value + shift * expansion);
   }
 
   Alignment _anchor() => _anchorOf(widget.controller.placement);
@@ -629,6 +655,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
       bounds: _boundsInsets(),
       isDragging: _isMoving,
       isStashed: phase == PanelPhase.stashed,
+      isParking: widget.controller.placement is StashedPlacement,
       reduceMotion: _spec.reduceMotion,
       opacity: _opacityFor(phase),
       collapsed: RepaintBoundary(

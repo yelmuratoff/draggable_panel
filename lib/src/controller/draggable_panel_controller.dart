@@ -110,15 +110,25 @@ final class DraggablePanelController extends ChangeNotifier
   }
 
   /// Shrinks the panel back to its collapsed size.
-  void collapse() => dispatch(const PanelCollapseRequested());
+  ///
+  /// A panel without a collapsed stage ([PanelBehavior.collapsible]) parks
+  /// instead, because a park is then the only closed stage it has.
+  void collapse() {
+    if (!_behavior.collapsible) {
+      stash();
+      return;
+    }
+    dispatch(const PanelCollapseRequested());
+  }
 
   /// Expands a collapsed panel, collapses an expanded one.
-  void toggle() => dispatch(const PanelToggleRequested());
+  void toggle() => phase.isExpanding ? collapse() : expand();
 
   /// Parks the panel off-screen against [edge], keeping its vertical position.
   ///
   /// When [edge] is omitted the panel stashes towards the side it already sits
-  /// on. Does nothing when [PanelBehavior.stashable] is `false`.
+  /// on. An expanded panel closes on the way, because what a park leaves behind
+  /// is a tab. Does nothing when [PanelBehavior.stashable] is `false`.
   void stash([PanelEdge? edge]) => dispatch(
     PanelStashRequested(
       edge ?? _nearestEdge(),
@@ -148,6 +158,9 @@ final class DraggablePanelController extends ChangeNotifier
       );
 
   /// Moves the panel to [target] without changing whether it is expanded.
+  ///
+  /// A [StashedPlacement] is the exception: it parks the panel, which closes an
+  /// expanded one on the way, exactly as [stash] does.
   void moveTo(PanelPlacement target) => dispatch(PanelMoveRequested(target));
 
   /// Takes the panel off-stage, keeping its placement for the next [show].
@@ -169,7 +182,9 @@ final class DraggablePanelController extends ChangeNotifier
       _expandAfterSettling = false;
       next = panelTransition(next, const PanelExpandRequested(), _behavior);
     }
-    if (event is PanelDragStarted || event is PanelHideRequested) {
+    if (event is PanelDragStarted ||
+        event is PanelHideRequested ||
+        next.phase.isExpanding) {
       _expandAfterSettling = false;
     }
 

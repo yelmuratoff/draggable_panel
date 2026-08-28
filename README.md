@@ -50,6 +50,10 @@ Everything else falls out of where you let go:
 | against a side edge | parks there, leaving a sliver you can grab |
 | clear off screen (`dismissible`) | goes away |
 
+This holds whether the panel is a small window or open and showing content: an
+open panel pushed off the side closes as it goes, arriving at the edge as a tab,
+and comes back out at the height it was at.
+
 So parking and un-parking are not separate gestures — you just push the panel
 off the edge, or pull it back. Its content fades with how much of it is on
 screen, so a tab reveals what it holds as it emerges instead of arriving blank.
@@ -61,6 +65,34 @@ DraggablePanelController(
   initialPlacement: const PanelPlacement.stashed(PanelEdge.end),
 )
 ```
+
+## Which stages the panel has
+
+Between parked and open the panel has three resting stages, and two of them are
+optional. They are properties of the panel rather than gates on one gesture, so
+dropping one removes it from *every* route — a drag, a tap, the idle timer, a
+command — instead of only the one you were thinking of.
+
+| You want | Set |
+| --- | --- |
+| tab → small window → open | the default |
+| tab → open | `collapsible: false` |
+| small window → open, never parks | `stashable: false` |
+| no travel animation between them | `motion: PanelMotionSpec.instant()` |
+
+```dart
+DraggablePanel(
+  behavior: const PanelBehavior(collapsible: false),
+  // …
+)
+```
+
+`collapsible: false` leaves two stages: the panel grows *while* it slides out of
+the park, in one motion, and closing it — the close control, a tap outside, Esc —
+parks it again, because a park is then the only closed stage it has.
+`PanelPhase.collapsed` is never entered, which is asserted by an exhaustive
+search over every reachable state, not merely intended. Dropping both stages at
+once is a compile-time error: the panel would have nowhere to close to.
 
 The sliver draws its own grab affordance — a curve pointing the way the panel
 comes out — which cross-fades into `collapsedBuilder`'s content as you pull, so

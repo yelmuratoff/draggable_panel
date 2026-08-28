@@ -15,6 +15,7 @@ PanelFrame _frame({
   Rect bounds = _bounds,
   Rect? viewport,
   double stashedPeek = 26,
+  bool isParking = false,
   bool reduceMotion = false,
   Size collapsedSize = _collapsed,
   Size expandedSize = _expanded,
@@ -28,6 +29,7 @@ PanelFrame _frame({
   viewport: viewport ?? bounds,
   stashedPeek: stashedPeek,
   expansion: expansion,
+  isParking: isParking,
   reduceMotion: reduceMotion,
 );
 
@@ -308,6 +310,54 @@ void main() {
     test('expanding hides the handle regardless of emergence', () {
       expect(parkedBy(0).handleOpacity, 1);
       expect(_frame(expansion: 1).handleOpacity, 0);
+    });
+  });
+
+  group('closing onto a park', () {
+    // The origin a stashed placement resolves to at the end edge.
+    const parked = Offset(400 - 26, 400);
+
+    test('the containment lets an open panel through the edge', () {
+      const origin = Offset(-40, 720);
+      const unbounded = Rect.fromLTWH(-10000, -10000, 20000, 20000);
+
+      expect(
+        _frame(origin: origin, expansion: 1, isParking: true).rect,
+        _frame(origin: origin, expansion: 1, bounds: unbounded).rect,
+        reason: 'a park is free to leave the bounds, exactly as a finger is',
+      );
+    });
+
+    test('the panel reaches the tab without a step', () {
+      const steps = 50;
+      Rect at(double expansion) =>
+          _frame(origin: parked, expansion: expansion, isParking: true).rect;
+
+      var previous = at(1);
+      for (var step = 1; step <= steps; step++) {
+        final rect = at(1 - step / steps);
+
+        expect(
+          (rect.width - previous.width).abs(),
+          lessThan(_expanded.width / 20),
+          reason: 'width jumped at step $step',
+        );
+        expect(
+          (rect.left - previous.left).abs(),
+          lessThan(_expanded.width / 20),
+          reason: 'left jumped at step $step',
+        );
+        previous = rect;
+      }
+
+      expect(previous.size, const Size(35, 70));
+    });
+
+    test('the collapsed face is gone before the tab arrives', () {
+      final closing = _frame(origin: parked, expansion: 0.5, isParking: true);
+
+      expect(closing.collapsedOpacity, 0);
+      expect(closing.handleOpacity, lessThan(1));
     });
   });
 

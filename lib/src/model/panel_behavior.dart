@@ -19,12 +19,18 @@ enum PanelSnapPolicy {
 ///
 /// These are configuration, not state: they gate which transitions are legal
 /// but never change on their own.
+///
+/// [stashable] and [collapsible] are the two optional *stages* rather than
+/// gates on one gesture: turning either off removes that resting place
+/// entirely, and every route into it — a gesture, a timer, a command — lands on
+/// the next stage instead.
 @immutable
 final class PanelBehavior {
   const PanelBehavior({
     this.draggable = true,
     this.tapToExpand = true,
     this.stashable = true,
+    this.collapsible = true,
     this.dismissible = false,
     this.collapseOnTapOutside = true,
     this.stashOnTapOutside = true,
@@ -32,7 +38,11 @@ final class PanelBehavior {
     this.avoidKeyboard = true,
     this.hapticsEnabled = true,
     this.snapPolicy = PanelSnapPolicy.edges,
-  });
+  }) : assert(
+         collapsible || stashable,
+         'A panel with no collapsed stage must be stashable, because parking '
+         'is then the only closed stage it has left.',
+       );
 
   /// Whether the collapsed panel can be dragged around.
   final bool draggable;
@@ -45,6 +55,18 @@ final class PanelBehavior {
   /// A parked panel keeps its size and simply sits mostly off-screen, so
   /// dragging it back out returns exactly what was put away.
   final bool stashable;
+
+  /// Whether the panel has a collapsed resting stage — the small window it
+  /// sits in between a park and being open.
+  ///
+  /// Turn it off and the panel has two stages instead of three: it is either
+  /// parked at an edge or open. Coming out of a park it grows while it slides
+  /// out, in one motion, and closing it parks it again, because parking is
+  /// then its only closed stage. [PanelPhase.collapsed] is never entered.
+  ///
+  /// Requires [stashable], since the panel would otherwise have nowhere to
+  /// close to.
+  final bool collapsible;
 
   /// Whether flinging the panel clear of the viewport hides it.
   ///
@@ -83,6 +105,7 @@ final class PanelBehavior {
     bool? draggable,
     bool? tapToExpand,
     bool? stashable,
+    bool? collapsible,
     bool? dismissible,
     bool? collapseOnTapOutside,
     bool? stashOnTapOutside,
@@ -94,6 +117,7 @@ final class PanelBehavior {
     draggable: draggable ?? this.draggable,
     tapToExpand: tapToExpand ?? this.tapToExpand,
     stashable: stashable ?? this.stashable,
+    collapsible: collapsible ?? this.collapsible,
     dismissible: dismissible ?? this.dismissible,
     collapseOnTapOutside: collapseOnTapOutside ?? this.collapseOnTapOutside,
     stashOnTapOutside: stashOnTapOutside ?? this.stashOnTapOutside,
@@ -110,6 +134,7 @@ final class PanelBehavior {
           other.draggable == draggable &&
           other.tapToExpand == tapToExpand &&
           other.stashable == stashable &&
+          other.collapsible == collapsible &&
           other.dismissible == dismissible &&
           other.collapseOnTapOutside == collapseOnTapOutside &&
           other.stashOnTapOutside == stashOnTapOutside &&
@@ -123,6 +148,7 @@ final class PanelBehavior {
     draggable,
     tapToExpand,
     stashable,
+    collapsible,
     dismissible,
     collapseOnTapOutside,
     stashOnTapOutside,

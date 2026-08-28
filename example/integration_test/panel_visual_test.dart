@@ -64,7 +64,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tapAt(tester.getCenter(find.byType(PanelEdgeHandle)));
     await tester.pumpAndSettle();
-    await tester.tapAt(tester.getCenter(find.byIcon(Icons.zoom_out_map_rounded)));
+    await tester.tapAt(
+      tester.getCenter(find.byIcon(Icons.zoom_out_map_rounded)),
+    );
     await tester.pumpAndSettle();
 
     await binding.takeScreenshot('09-expanded-grid');
@@ -77,7 +79,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tapAt(tester.getCenter(find.byType(PanelEdgeHandle)));
     await tester.pumpAndSettle();
-    await tester.tapAt(tester.getCenter(find.byIcon(Icons.zoom_out_map_rounded)));
+    await tester.tapAt(
+      tester.getCenter(find.byIcon(Icons.zoom_out_map_rounded)),
+    );
     await tester.pumpAndSettle();
 
     final grip = tester.getCenter(find.text('Developer tools').last);

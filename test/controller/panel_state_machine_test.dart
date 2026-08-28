@@ -60,6 +60,7 @@ void main() {
         PanelToggleRequested,
         PanelHideRequested,
         PanelMoveRequested,
+        PanelStashRequested,
       };
 
       for (final event in events) {
@@ -255,14 +256,50 @@ void main() {
       );
     });
 
-    test('is refused while expanded', () {
+    test('closes an expanded panel on its way to the edge', () {
+      for (final phase in const [
+        PanelPhase.expanded,
+        PanelPhase.expanding,
+        PanelPhase.collapsing,
+      ]) {
+        final after = panelTransition(
+          _status(phase),
+          const PanelStashRequested(PanelEdge.start),
+          _behavior,
+        );
+
+        expect(after.phase, PanelPhase.settling, reason: 'stash from $phase');
+        expect(after.placement, _stashed, reason: 'stash from $phase');
+      }
+    });
+
+    test('is refused while hidden or already parked', () {
       expect(
         _phaseAfter(
-          PanelPhase.expanded,
+          PanelPhase.hidden,
           const PanelStashRequested(PanelEdge.start),
         ),
-        PanelPhase.expanded,
+        PanelPhase.hidden,
       );
+      expect(
+        _phaseAfter(
+          PanelPhase.stashed,
+          const PanelStashRequested(PanelEdge.start),
+          placement: _stashed,
+        ),
+        PanelPhase.stashed,
+      );
+    });
+
+    test('moving an expanded panel to a park closes it too', () {
+      final after = panelTransition(
+        _status(PanelPhase.expanded),
+        const PanelMoveRequested(_stashed),
+        _behavior,
+      );
+
+      expect(after.phase, PanelPhase.settling);
+      expect(after.placement, _stashed);
     });
 
     test('unstash settles to the given target', () {
@@ -283,6 +320,76 @@ void main() {
           const PanelUnstashRequested(_otherCorner),
         ),
         PanelPhase.collapsed,
+      );
+    });
+  });
+
+  group('without a collapsed stage', () {
+    const behavior = PanelBehavior(collapsible: false);
+
+    test('leaving a park opens the panel instead of settling', () {
+      expect(
+        _phaseAfter(
+          PanelPhase.stashed,
+          const PanelUnstashRequested(_otherCorner),
+          behavior: behavior,
+          placement: _stashed,
+        ),
+        PanelPhase.expanding,
+      );
+      expect(
+        _phaseAfter(
+          PanelPhase.dragging,
+          const PanelDragSettled(_otherCorner),
+          behavior: behavior,
+          placement: _stashed,
+        ),
+        PanelPhase.expanding,
+      );
+    });
+
+    test('arriving at a park still settles', () {
+      expect(
+        _phaseAfter(
+          PanelPhase.dragging,
+          const PanelDragSettled(_stashed),
+          behavior: behavior,
+          placement: _stashed,
+        ),
+        PanelPhase.settling,
+      );
+    });
+
+    test('collapsing is refused outright', () {
+      expect(
+        _phaseAfter(
+          PanelPhase.expanded,
+          const PanelCollapseRequested(),
+          behavior: behavior,
+        ),
+        PanelPhase.expanded,
+      );
+    });
+
+    test('the collapsed phase is unreachable, whatever it is sent', () {
+      final reachable = <PanelStatus>{
+        _status(PanelPhase.stashed, _stashed),
+        _status(PanelPhase.expanded),
+      };
+      final pending = [...reachable];
+
+      while (pending.isNotEmpty) {
+        final current = pending.removeLast();
+        for (final event in events) {
+          final next = panelTransition(current, event, behavior);
+          if (reachable.add(next)) pending.add(next);
+        }
+      }
+
+      expect(
+        reachable.map((status) => status.phase).toSet(),
+        isNot(contains(PanelPhase.collapsed)),
+        reason: 'searched ${reachable.length} reachable statuses',
       );
     });
   });

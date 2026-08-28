@@ -1,5 +1,6 @@
 import 'package:draggable_panel/draggable_panel.dart';
 import 'package:draggable_panel_example/mini_player_demo.dart';
+import 'package:draggable_panel_example/tab_panel_demo.dart';
 import 'package:draggable_panel_example/theming_demo.dart';
 import 'package:draggable_panel_example/tools_demo.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +36,7 @@ class _ExampleAppState extends State<ExampleApp> {
     routes: {
       '/player': (_) => const MiniPlayerDemo(),
       '/tools': (_) => const ToolsDemo(),
+      '/tab': (_) => const TabPanelDemo(),
       '/theming': (_) => const ThemingDemo(),
     },
     home: _HomeScreen(onToggleBrightness: _toggleBrightness),
@@ -72,6 +74,12 @@ class _HomeScreen extends StatelessWidget {
           icon: Icons.build_outlined,
           title: 'Developer tools',
           subtitle: 'An action grid that expands from the corner',
+        ),
+        _DemoTile(
+          route: '/tab',
+          icon: Icons.chevron_left_outlined,
+          title: 'Tab panel',
+          subtitle: 'The same grid with its collapsed stage switched off',
         ),
         _DemoTile(
           route: '/theming',

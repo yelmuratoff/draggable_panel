@@ -18,6 +18,7 @@ final class PanelSurface
     required this.bounds,
     required this.isDragging,
     required this.isStashed,
+    required this.isParking,
     required this.reduceMotion,
     required this.opacity,
     required this.collapsed,
@@ -45,6 +46,10 @@ final class PanelSurface
 
   final bool isDragging;
   final bool isStashed;
+
+  /// Whether the panel is at, or on its way to, a parked placement.
+  final bool isParking;
+
   final bool reduceMotion;
 
   /// Overall opacity, used to fade the panel out when hidden.
@@ -78,6 +83,7 @@ final class PanelSurface
         bounds: bounds,
         isDragging: isDragging,
         isStashed: isStashed,
+        isParking: isParking,
         reduceMotion: reduceMotion,
         opacity: opacity,
       );
@@ -97,6 +103,7 @@ final class PanelSurface
       ..bounds = bounds
       ..isDragging = isDragging
       ..isStashed = isStashed
+      ..isParking = isParking
       ..reduceMotion = reduceMotion
       ..opacity = opacity;
   }

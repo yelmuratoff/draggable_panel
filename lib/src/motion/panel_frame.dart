@@ -116,6 +116,10 @@ final class PanelFrame {
 /// When [reduceMotion] is set the rect steps between its two sizes instead of
 /// sweeping, while the opacities still interpolate: a cross-fade is acceptable
 /// where a translation is not.
+///
+/// [isDragging] and [isParking] each release the containment that otherwise
+/// holds an expanded panel inside [bounds] — a finger and a park are both
+/// allowed to carry it out through the edge.
 PanelFrame computePanelFrame({
   required Offset origin,
   required Size collapsedSize,
@@ -127,10 +131,11 @@ PanelFrame computePanelFrame({
   required double stashedPeek,
   required double expansion,
   bool isDragging = false,
+  bool isParking = false,
   bool reduceMotion = false,
 }) {
   final clamped = expansion.clamp(0.0, 1.0);
-  final sizeT = reduceMotion ? (expansion > 0 ? 1.0 : 0.0) : expansion;
+  final sizeT = panelSizeProgress(expansion, reduceMotion: reduceMotion);
 
   final size = Size(
     lerpDouble(collapsedSize.width, expandedSize.width, sizeT)!,
@@ -151,19 +156,16 @@ PanelFrame computePanelFrame({
     size.height,
   );
 
-  final open = isDragging
+  final open = isDragging || isParking
       ? grown
       : Rect.lerp(grown, _nudgeInto(grown, bounds), clamped)!;
 
   final collapsedBox = origin & collapsedSize;
   final emergence = _emergence(collapsedBox, viewport, stashedPeek);
-  final rect = emergence >= 1 || clamped > 0
+  final reveal = lerpDouble(emergence, 1, clamped)!;
+  final rect = reveal >= 1
       ? open
-      : Rect.lerp(
-          _tabIn(collapsedBox, stashedSize, viewport),
-          open,
-          emergence,
-        )!;
+      : Rect.lerp(_tabIn(collapsedBox, stashedSize, viewport), open, reveal)!;
 
   final towardsEdge = collapsedBox.left < viewport.left ? -1.0 : 1.0;
   final reel = Offset(towardsEdge * stashedSize.width, 0);
@@ -186,6 +188,13 @@ PanelFrame computePanelFrame({
     expansion: clamped,
   );
 }
+
+/// How much of the collapsed-to-expanded size difference the panel is showing.
+///
+/// Steps between the two ends under [reduceMotion] rather than sweeping through
+/// them, so nothing scales while a reduced-motion preference is set.
+double panelSizeProgress(double expansion, {required bool reduceMotion}) =>
+    reduceMotion ? (expansion > 0 ? 1.0 : 0.0) : expansion;
 
 /// The part of a [tab]-sized parked panel that stays on screen.
 Size handleSizeFor(Size tab, double stashedPeek) =>

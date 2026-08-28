@@ -406,6 +406,27 @@ void main() {
       expect(seen, [const PanelPlacement.corner(PanelCorner.topStart)]);
     });
 
+    testWidgets('an open panel travels with the finger', (tester) async {
+      final controller = await _pumpPanel(tester);
+      controller.expand();
+      await tester.pump();
+
+      final start = _paintedRect(tester);
+      final gesture = await tester.startGesture(start.center);
+      await gesture.moveBy(const Offset(-120, 0));
+      await tester.pump();
+
+      expect(_paintedRect(tester).left, closeTo(start.left - 120, 0.5));
+      expect(
+        _paintedRect(tester).size,
+        start.size,
+        reason: 'it travels, it does not resize',
+      );
+
+      await gesture.up();
+      await tester.pump();
+    });
+
     testWidgets('draggable false pins the panel in place', (tester) async {
       final controller = await _pumpPanel(
         tester,
@@ -486,6 +507,76 @@ void main() {
       expect(_panelRect(tester).right, greaterThan(800 - 32));
     });
 
+    testWidgets('the same sideways flick parks an open panel', (tester) async {
+      final controller = await _pumpPanel(tester);
+      controller.expand();
+      await tester.pump();
+      expect(controller.phase, PanelPhase.expanded);
+
+      final gesture = await tester.startGesture(_paintedRect(tester).center);
+      for (var frame = 1; frame <= 8; frame++) {
+        await gesture.moveBy(
+          const Offset(60, 0),
+          timeStamp: Duration(milliseconds: 8 * frame),
+        );
+        await tester.pump(const Duration(milliseconds: 8));
+      }
+      await gesture.up();
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.stashed);
+      expect(
+        _paintedRect(tester).size,
+        const Size(35, 70),
+        reason: 'it closed all the way down into its tab',
+      );
+    });
+
+    testWidgets('an open panel parks at the height it was open at', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester);
+      controller.expand();
+      await tester.pump();
+
+      final gesture = await tester.startGesture(_paintedRect(tester).center);
+      for (var frame = 1; frame <= 8; frame++) {
+        await gesture.moveBy(
+          const Offset(60, 0),
+          timeStamp: Duration(milliseconds: 8 * frame),
+        );
+        await tester.pump(const Duration(milliseconds: 8));
+      }
+      await gesture.up();
+      await tester.pump();
+
+      expect(
+        controller.placement,
+        const PanelPlacement.stashed(PanelEdge.end, verticalAlignment: 1),
+      );
+    });
+
+    testWidgets('dragging an open panel about does not park it', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester);
+      controller.expand();
+      await tester.pump();
+
+      final gesture = await tester.startGesture(_paintedRect(tester).center);
+      for (var frame = 1; frame <= 8; frame++) {
+        await gesture.moveBy(
+          const Offset(0, -30),
+          timeStamp: Duration(milliseconds: 16 * frame),
+        );
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await gesture.up();
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.expanded);
+    });
+
     testWidgets('tapping a stashed panel brings it back', (tester) async {
       final controller = await _pumpPanel(tester);
       controller.stash();
@@ -497,6 +588,74 @@ void main() {
       await tester.pump();
 
       expect(controller.phase, PanelPhase.collapsed);
+    });
+  });
+
+  group('a panel with no collapsed stage', () {
+    const behavior = PanelBehavior(collapsible: false);
+
+    testWidgets('opens straight out of its tab', (tester) async {
+      final controller = await _pumpPanel(tester, behavior: behavior);
+      controller.stash();
+      await tester.pump();
+      expect(controller.phase, PanelPhase.stashed);
+
+      final peek = _paintedRect(tester);
+      await tester.tapAt(Offset(peek.left + 4, peek.center.dy));
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.expanded);
+      expect(find.byKey(_expandedKey), findsOneWidget);
+    });
+
+    testWidgets('parks when it is closed, however it is closed', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester, behavior: behavior);
+      controller.expand();
+      await tester.pump();
+      expect(controller.phase, PanelPhase.expanded);
+
+      controller.collapse();
+      await tester.pump();
+      expect(controller.phase, PanelPhase.stashed);
+
+      controller.toggle();
+      await tester.pump();
+      expect(controller.phase, PanelPhase.expanded, reason: 'toggle opens it');
+
+      controller.toggle();
+      await tester.pump();
+      expect(controller.phase, PanelPhase.stashed, reason: 'toggle parks it');
+    });
+
+    testWidgets('a tap outside parks it rather than shrinking it', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester, behavior: behavior);
+      controller.expand();
+      await tester.pump();
+
+      await tester.tapAt(const Offset(20, 20));
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.stashed);
+    });
+
+    testWidgets('the collapsed face never becomes the resting one', (
+      tester,
+    ) async {
+      final seen = <PanelPhase>[];
+      final controller = await _pumpPanel(tester, behavior: behavior);
+      controller
+        ..addListener(() => seen.add(controller.phase))
+        ..expand()
+        ..collapse()
+        ..expand();
+      await tester.pumpAndSettle();
+
+      expect(seen, isNot(contains(PanelPhase.collapsed)));
+      expect(seen, isNot(contains(PanelPhase.collapsing)));
     });
   });
 

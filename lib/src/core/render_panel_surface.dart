@@ -28,6 +28,7 @@ final class RenderPanelSurface extends RenderBox
     required EdgeInsets bounds,
     required bool isDragging,
     required bool isStashed,
+    required bool isParking,
     required bool reduceMotion,
     required double opacity,
   }) : _repaint = repaint,
@@ -37,6 +38,7 @@ final class RenderPanelSurface extends RenderBox
        _bounds = bounds,
        _isDragging = isDragging,
        _isStashed = isStashed,
+       _isParking = isParking,
        _reduceMotion = reduceMotion,
        _opacity = opacity;
 
@@ -54,6 +56,7 @@ final class RenderPanelSurface extends RenderBox
   EdgeInsets _bounds;
   bool _isDragging;
   bool _isStashed;
+  bool _isParking;
   bool _reduceMotion;
   double _opacity;
 
@@ -118,6 +121,15 @@ final class RenderPanelSurface extends RenderBox
 
   set isStashed(bool value) =>
       _setPaintField(value, _isStashed, () => _isStashed = value);
+
+  /// Whether the panel is at, or on its way to, a parked placement.
+  ///
+  /// Distinct from [isStashed], which is the settled phase alone: an open panel
+  /// closing onto an edge is parking long before it has arrived.
+  bool get isParking => _isParking;
+
+  set isParking(bool value) =>
+      _setPaintField(value, _isParking, () => _isParking = value);
 
   /// The alpha the panel was last painted at: [opacity] folded together with
   /// the parked fade.
@@ -241,6 +253,7 @@ final class RenderPanelSurface extends RenderBox
     viewport: Offset.zero & size,
     stashedPeek: _style.stashedPeek,
     isDragging: _isDragging,
+    isParking: _isParking,
     expansion: expansionOf(),
     reduceMotion: _reduceMotion,
   );
