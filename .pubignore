@@ -1,0 +1,41 @@
+# What the published archive leaves behind.
+#
+# A .pubignore replaces .gitignore for the directory it sits in, so the
+# publish-relevant rules from .gitignore are repeated at the bottom rather than
+# inherited — dropping them here would put example/build in the archive.
+
+# Reference images for the golden tests: 3 MB of PNGs no consumer can run.
+# The rest of test/ stays, since the behaviour it names reads as documentation.
+test/golden/
+
+# Screenshots for the repository, referenced by neither README nor any pubspec.
+assets/
+
+# The example ships as source. Its platform scaffolding is regenerable by
+# `flutter create`, and its own tests belong to this repository.
+example/android/
+example/ios/
+example/linux/
+example/macos/
+example/windows/
+example/web/
+example/test/
+example/integration_test/
+example/test_driver/
+example/pubspec.lock
+
+# Repeated from .gitignore — see the note at the top.
+build/
+.dart_tool/
+.idea/
+.vscode/
+*.iml
+*.log
+*.swp
+.DS_Store
+.env
+pubspec.lock
+**/doc/api/
+.flutter-plugins
+.flutter-plugins-dependencies
+migrate_working_dir/
