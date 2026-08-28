@@ -425,6 +425,47 @@ void main() {
   });
 
   group('stashing', () {
+    testWidgets('the parked fade tracks the settle from its first frame', (
+      tester,
+    ) async {
+      final controller = DraggablePanelController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DraggablePanel(
+            controller: controller,
+            theme: const DraggablePanelThemeData(stashedOpacity: 0.4),
+            collapsedBuilder: (context, status) =>
+                const ColoredBox(key: _collapsedKey, color: Color(0xFF112233)),
+            expandedBuilder: (context, status) =>
+                const SizedBox(width: 200, height: 120),
+            child: const ColoredBox(key: _appKey, color: Color(0xFFFFFFFF)),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final surface = tester.renderObject<RenderPanelSurface>(
+        find.byType(PanelSurface),
+      );
+      expect(surface.paintOpacity, 1, reason: 'opaque while it rests');
+
+      controller.stash();
+      final sampled = <double>[];
+      for (var frame = 0; frame < 12; frame++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        sampled.add(surface.paintOpacity);
+      }
+
+      for (var i = 1; i < sampled.length; i++) {
+        expect(sampled[i], lessThanOrEqualTo(sampled[i - 1]));
+        expect(sampled[i - 1] - sampled[i], lessThan(0.2));
+      }
+      expect(sampled[2], lessThan(1), reason: 'fading while it travels');
+      expect(sampled.last, lessThan(0.6), reason: 'most of the way down');
+    });
+
     testWidgets('a hard sideways flick parks the panel off-screen', (
       tester,
     ) async {

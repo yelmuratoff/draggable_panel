@@ -37,6 +37,7 @@ final class PanelFrame {
     required this.expandedOpacity,
     required this.handleOpacity,
     required this.emergence,
+    required this.parkedFade,
     required this.expansion,
   });
 
@@ -59,6 +60,13 @@ final class PanelFrame {
   /// How far the panel has been pulled out from a parked position, `0` to `1`.
   final double emergence;
 
+  /// How far the panel has closed on a parked position, `0` to `1`.
+  ///
+  /// Opens where the panel leaves the bounds it rests in, so it covers the
+  /// whole journey rather than only the stretch spent crossing the edge.
+  /// [emergence] stays the narrower measure the geometry morphs on.
+  final double parkedFade;
+
   /// Progress clamped to `0..1`, for shape and elevation interpolation.
   final double expansion;
 
@@ -74,6 +82,7 @@ final class PanelFrame {
           other.expandedOpacity == expandedOpacity &&
           other.handleOpacity == handleOpacity &&
           other.emergence == emergence &&
+          other.parkedFade == parkedFade &&
           other.expansion == expansion;
 
   @override
@@ -86,6 +95,7 @@ final class PanelFrame {
     expandedOpacity,
     handleOpacity,
     emergence,
+    parkedFade,
     expansion,
   );
 
@@ -172,6 +182,7 @@ PanelFrame computePanelFrame({
     expandedOpacity: kPanelExpandedFade.transform(clamped),
     handleOpacity: (1 - kPanelHandleFade.transform(emergence)) * (1 - clamped),
     emergence: emergence,
+    parkedFade: _parkedFade(collapsedBox, bounds, viewport, stashedPeek),
     expansion: clamped,
   );
 }
@@ -209,6 +220,28 @@ double _emergence(Rect rect, Rect viewport, double stashedPeek) {
       math.max(0, viewport.left - rect.left) +
       math.max(0, rect.right - viewport.right);
   return (1 - hidden / travel).clamp(0.0, 1.0);
+}
+
+/// How far [rect] has closed on a parked position, `0` to `1`.
+///
+/// `0` is anywhere inside [bounds], where a panel at rest lives, and `1` is
+/// parked with exactly [stashedPeek] showing. Spans the whole journey between
+/// the two, unlike [_emergence], which only leaves `1` once the panel is
+/// already crossing the edge — the stretch a settling spring crawls through,
+/// so anything hung on it holds still while the panel travels and then changes
+/// all at once.
+double _parkedFade(Rect rect, Rect bounds, Rect viewport, double stashedPeek) {
+  final pastStart = bounds.left - rect.left;
+  final pastEnd = rect.right - bounds.right;
+  final towardsEnd = pastEnd >= pastStart;
+  final beyond = towardsEnd ? pastEnd : pastStart;
+  if (beyond <= 0) return 0;
+
+  final margin = towardsEnd
+      ? viewport.right - bounds.right
+      : bounds.left - viewport.left;
+  final span = margin + rect.width - stashedPeek;
+  return span <= 0 ? 1 : (beyond / span).clamp(0.0, 1.0);
 }
 
 /// Places a child of [child] size inside [rect], aligned to [anchor].

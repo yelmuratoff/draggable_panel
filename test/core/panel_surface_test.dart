@@ -149,34 +149,52 @@ void main() {
     const viewportWidth = 800.0;
     const panelWidth = 64.0;
     const stashedPeek = 26.0;
-    const fullyOnScreen = viewportWidth - panelWidth;
+    const margin = 16.0;
+    const atRest = viewportWidth - margin - panelWidth;
+    const touchesEdge = viewportWidth - panelWidth;
     const fullyParked = viewportWidth - stashedPeek;
 
-    testWidgets('reaches stashedOpacity only once fully parked', (
-      tester,
+    Future<double> alphaAt(
+      WidgetTester tester,
+      _Harness harness,
+      double x,
     ) async {
+      harness.driver.drive(Offset(x, 400));
+      await tester.pump();
+      return _surface(tester).paintOpacity;
+    }
+
+    testWidgets('holds full alpha anywhere the panel rests', (tester) async {
       final harness = await _pumpSurface(tester, stashedOpacity: 0.5);
 
-      harness.driver.drive(const Offset(fullyOnScreen, 400));
-      await tester.pump();
-      expect(_surface(tester).paintOpacity, 1);
-
-      harness.driver.drive(const Offset(fullyParked, 400));
-      await tester.pump();
-      expect(_surface(tester).paintOpacity, closeTo(0.5, 0.01));
+      expect(await alphaAt(tester, harness, 200), 1);
+      expect(await alphaAt(tester, harness, atRest), 1);
     });
 
-    testWidgets('crosses the middle on the way instead of stepping', (
+    testWidgets('reaches stashedOpacity once fully parked', (tester) async {
+      final harness = await _pumpSurface(tester, stashedOpacity: 0.5);
+
+      expect(await alphaAt(tester, harness, fullyParked), closeTo(0.5, 0.01));
+    });
+
+    testWidgets('is already fading before the panel reaches the edge', (
       tester,
     ) async {
       final harness = await _pumpSurface(tester, stashedOpacity: 0.5);
-      const travel = fullyParked - fullyOnScreen;
+
+      final alpha = await alphaAt(tester, harness, touchesEdge);
+
+      expect(alpha, lessThan(1));
+      expect(alpha, greaterThan(0.5));
+    });
+
+    testWidgets('falls step by step across the whole approach', (tester) async {
+      final harness = await _pumpSurface(tester, stashedOpacity: 0.5);
+      const travel = fullyParked - atRest;
 
       final sampled = <double>[];
-      for (var step = 0; step <= 4; step++) {
-        harness.driver.drive(Offset(fullyOnScreen + travel * step / 4, 400));
-        await tester.pump();
-        sampled.add(_surface(tester).paintOpacity);
+      for (var step = 0; step <= 6; step++) {
+        sampled.add(await alphaAt(tester, harness, atRest + travel * step / 6));
       }
 
       expect(sampled.first, 1);

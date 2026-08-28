@@ -261,7 +261,7 @@ final class RenderPanelSurface extends RenderBox
     final frame = _frame();
     _paintedRect = frame.rect;
     _paintOpacity =
-        _opacity * lerpDouble(_style.stashedOpacity, 1, frame.emergence)!;
+        _opacity * lerpDouble(1, _style.stashedOpacity, frame.parkedFade)!;
 
     final shape = _style.shapeAt(frame.expansion, emergence: frame.emergence);
     final outline = _outlineOf(shape, frame.rect.shift(offset));

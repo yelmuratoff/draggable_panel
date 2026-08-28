@@ -1,3 +1,15 @@
+## 4.0.0-beta.5
+
+Fixed
+
+- `stashedOpacity` changed almost entirely in the last few pixels of a park.
+  beta.4 put the fade on `emergence`, which only starts once the panel crosses
+  the screen edge — the stretch a settling spring crawls through — so the alpha
+  held at full while the panel visibly travelled and then dropped at the end.
+  `PanelFrame` now carries `parkedFade`, measured from the bounds the panel
+  rests in rather than from the edge, so the fade spans the whole journey.
+  `emergence` is unchanged and still drives the shape morph.
+
 ## 4.0.0-beta.4
 
 Fixed
