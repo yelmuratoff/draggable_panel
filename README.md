@@ -3,7 +3,7 @@
 [![pub package](https://img.shields.io/pub/v/draggable_panel.svg)](https://pub.dev/packages/draggable_panel)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A floating panel that behaves like a system Picture-in-Picture window.
+A floating panel window for Flutter.
 
 Collapsed, it is a small window you can drag anywhere. Release it and it springs
 to the nearest corner — chosen by where your momentum was *heading*, not where
@@ -18,7 +18,7 @@ No third-party dependencies.
 
 ```yaml
 dependencies:
-  draggable_panel: ^4.0.0
+  draggable_panel: ^4.0.0-beta.8
 ```
 
 Mount it above your app's content, usually through `MaterialApp.builder`:
@@ -120,7 +120,7 @@ published behaviour rather than guesswork.
 | Behaviour | How |
 | --- | --- |
 | Where a flick lands | `projected = position + (velocity / 1000) · rate / (1 − rate)`, `rate = 0.998` — the projection from Apple's *Designing Fluid Interfaces* (WWDC 2018, session 803). The snap target is the corner nearest that projected point. |
-| How it settles | A critically damped spring with a 400 ms response — the same spring Apple's PiP sample uses. Expressed as `SpringDescription.withDurationAndBounce(duration: 400ms)`, which is a bit-exact port of SwiftUI's spring model. |
+| How it settles | A critically damped spring with a 400 ms response, taken from the same session's sample code. Expressed as `SpringDescription.withDurationAndBounce(duration: 400ms)`, which is a bit-exact port of SwiftUI's spring model. |
 | Dragging past the edge | The iOS rubber band, `b(x) = (x·d·c) / (d + c·x)` with `c = 0.55`. It asymptotes at one viewport, so the panel resists rather than stopping dead. |
 | Grabbing it mid-flight | The running simulation is frozen, its velocity handed back, and folded into the next throw with a 100 ms half-life. Grab and hold kills the momentum; grab and flick compounds it. |
 | Reversing an expansion halfway | Falls out of the spring maths — the new simulation starts from the current value and velocity, so it overshoots, turns around and comes back. |
@@ -222,7 +222,7 @@ DraggablePanel(
     stashable: true,             // push it against an edge to park it there
     collapsible: true,           // false drops the small window between the two
     expandOnUnstash: false,      // true opens the panel straight out of a park
-    dismissible: false,          // PiP uses an explicit close, not a fling-away
+    dismissible: false,          // an explicit close, not a fling-away
     collapseOnTapOutside: true,
     stashOnTapOutside: true,     // touching the page puts a collapsed panel away
     idleStashDelay: Duration(seconds: 5),  // null to keep it out indefinitely

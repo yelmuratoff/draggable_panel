@@ -220,7 +220,7 @@ void main() {
   });
 
   group('kPanelSnapSpring', () {
-    test("is Apple's PiP spring: response 0.4, critically damped", () {
+    test('is the settle spring: response 0.4, critically damped', () {
       final expected = SpringDescription.withDampingRatio(
         mass: 1,
         stiffness: math.pow(2 * math.pi / 0.4, 2).toDouble(),

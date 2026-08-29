@@ -1,7 +1,7 @@
 import 'package:draggable_panel/draggable_panel.dart';
 import 'package:flutter/material.dart';
 
-/// A Picture-in-Picture mini player floating over a scrolling page.
+/// A mini player floating over a scrolling page.
 class MiniPlayerDemo extends StatefulWidget {
   const MiniPlayerDemo({super.key});
 

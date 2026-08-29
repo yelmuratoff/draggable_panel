@@ -10,8 +10,8 @@ import 'package:flutter/services.dart';
 /// follows it ends — a haptic that lags its cause reads as system lag, and
 /// firing at commit also makes it immune to the animation being interrupted.
 ///
-/// Corner snapping is deliberately silent: the system Picture-in-Picture window
-/// is, and a critically damped spring has no impact for a tap to sync with.
+/// Corner snapping is deliberately silent: a critically damped spring has no
+/// impact for a tap to sync with.
 final class PanelHaptics {
   PanelHaptics({this.minimumInterval = const Duration(milliseconds: 80)});
 

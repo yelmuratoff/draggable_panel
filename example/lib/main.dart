@@ -69,7 +69,7 @@ class _HomeScreen extends StatelessWidget {
           route: '/player',
           icon: Icons.play_circle_outline,
           title: 'Mini player',
-          subtitle: 'Picture-in-Picture window over a scrolling page',
+          subtitle: 'A floating window over a scrolling page',
         ),
         _DemoTile(
           route: '/tools',

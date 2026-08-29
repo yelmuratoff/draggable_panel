@@ -1,8 +1,8 @@
 # Migrating from 3.x to 4.0
 
 4.0 is a rewrite. The panel changed from an edge-docked rail that slid a menu
-sideways into a free-floating Picture-in-Picture window that grows in place, and
-the API changed with it.
+sideways into a free-floating window that grows in place, and the API changed
+with it.
 
 The nearest one-for-one path is `DraggableActionPanel`, the action-grid preset:
 it keeps the icons-and-buttons shape v3 had.

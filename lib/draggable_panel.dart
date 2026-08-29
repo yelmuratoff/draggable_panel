@@ -1,4 +1,4 @@
-/// A floating panel that behaves like a system Picture-in-Picture window.
+/// A floating panel window that can be dragged, parked and grown in place.
 library;
 
 export 'src/controller/draggable_panel_controller.dart';

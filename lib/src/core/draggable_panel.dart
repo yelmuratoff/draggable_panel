@@ -24,7 +24,7 @@ typedef PanelChildBuilder =
 typedef PanelHandleBuilder =
     Widget Function(BuildContext context, PanelEdge edge);
 
-/// A floating panel that behaves like a system Picture-in-Picture window.
+/// A floating panel window that can be dragged, parked and grown in place.
 ///
 /// Collapsed, it is a small window that can be dragged anywhere and springs to
 /// the nearest corner when released, chosen by where its momentum was heading.

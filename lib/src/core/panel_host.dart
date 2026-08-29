@@ -226,9 +226,9 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
   /// Whether a drag is currently moving the panel.
   ///
   /// An expanded panel is dragged without entering [PanelPhase.dragging]: the
-  /// window keeps showing its content while it travels, exactly as a system
-  /// Picture-in-Picture window does, so the phase must not be disturbed. Set it
-  /// through [_setMoving], which rebuilds — nothing else would.
+  /// window keeps showing its content while it travels, so the phase must not
+  /// be disturbed. Set it through [_setMoving], which rebuilds — nothing else
+  /// would.
   bool _isMoving = false;
 
   /// Where the panel sat when the current drag began.

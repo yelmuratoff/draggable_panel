@@ -84,8 +84,8 @@ final class PanelBehavior {
 
   /// Whether flinging the panel clear of the viewport hides it.
   ///
-  /// Off by default: system Picture-in-Picture uses an explicit close control
-  /// rather than a fling-away, because an accidental dismissal is expensive.
+  /// Off by default: a floating window is better closed through an explicit
+  /// control than a fling-away, because an accidental dismissal is expensive.
   final bool dismissible;
 
   /// Whether tapping outside an expanded panel collapses it.

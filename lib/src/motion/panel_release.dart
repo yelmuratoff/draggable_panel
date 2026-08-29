@@ -11,8 +11,7 @@ import 'package:flutter/painting.dart';
 ///
 /// The decision is made against the point the panel's momentum *projects* to,
 /// not the point the finger left it at, so a flick lands where it was aimed.
-/// This is the rule Apple's Picture-in-Picture uses and the reason a quick
-/// flick from mid-screen reaches the far corner.
+/// That is the reason a quick flick from mid-screen reaches the far corner.
 PanelPlacement resolvePanelRelease({
   required Offset topLeft,
   required Offset velocity,

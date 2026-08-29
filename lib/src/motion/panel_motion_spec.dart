@@ -2,8 +2,8 @@ import 'package:draggable_panel/src/motion/panel_physics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/physics.dart';
 
-/// Apple's Picture-in-Picture settle: a critically damped spring with a 400 ms
-/// response, taken from the sample code accompanying WWDC 2018 session 803.
+/// The settle spring: critically damped with a 400 ms response, taken from the
+/// sample code accompanying WWDC 2018 session 803.
 ///
 /// [SpringDescription.withDurationAndBounce] mirrors SwiftUI's spring model, in
 /// which `duration` is what UIKit calls `response`, so this is that spring
