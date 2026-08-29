@@ -31,6 +31,7 @@ final class PanelBehavior {
     this.tapToExpand = true,
     this.stashable = true,
     this.collapsible = true,
+    this.expandOnUnstash = false,
     this.dismissible = false,
     this.collapseOnTapOutside = true,
     this.stashOnTapOutside = true,
@@ -67,6 +68,19 @@ final class PanelBehavior {
   /// Requires [stashable], since the panel would otherwise have nowhere to
   /// close to.
   final bool collapsible;
+
+  /// Whether pulling the panel out of a park opens it, instead of stopping at
+  /// the collapsed window on the way.
+  ///
+  /// Narrower than [collapsible]: the collapsed stage stays, so the panel is
+  /// still a small window you can drag around and close back down to. Only the
+  /// journey out of a park is shortened — it grows while it slides out, in one
+  /// motion. Reach for this when a park is how the panel is put away and taking
+  /// it out always means using it; reach for `collapsible: false` when the
+  /// small window has no purpose at all.
+  ///
+  /// Implied by `collapsible: false`, and inert without [stashable].
+  final bool expandOnUnstash;
 
   /// Whether flinging the panel clear of the viewport hides it.
   ///
@@ -106,6 +120,7 @@ final class PanelBehavior {
     bool? tapToExpand,
     bool? stashable,
     bool? collapsible,
+    bool? expandOnUnstash,
     bool? dismissible,
     bool? collapseOnTapOutside,
     bool? stashOnTapOutside,
@@ -118,6 +133,7 @@ final class PanelBehavior {
     tapToExpand: tapToExpand ?? this.tapToExpand,
     stashable: stashable ?? this.stashable,
     collapsible: collapsible ?? this.collapsible,
+    expandOnUnstash: expandOnUnstash ?? this.expandOnUnstash,
     dismissible: dismissible ?? this.dismissible,
     collapseOnTapOutside: collapseOnTapOutside ?? this.collapseOnTapOutside,
     stashOnTapOutside: stashOnTapOutside ?? this.stashOnTapOutside,
@@ -135,6 +151,7 @@ final class PanelBehavior {
           other.tapToExpand == tapToExpand &&
           other.stashable == stashable &&
           other.collapsible == collapsible &&
+          other.expandOnUnstash == expandOnUnstash &&
           other.dismissible == dismissible &&
           other.collapseOnTapOutside == collapseOnTapOutside &&
           other.stashOnTapOutside == stashOnTapOutside &&
@@ -149,6 +166,7 @@ final class PanelBehavior {
     tapToExpand,
     stashable,
     collapsible,
+    expandOnUnstash,
     dismissible,
     collapseOnTapOutside,
     stashOnTapOutside,

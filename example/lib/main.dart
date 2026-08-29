@@ -1,5 +1,6 @@
 import 'package:draggable_panel/draggable_panel.dart';
 import 'package:draggable_panel_example/mini_player_demo.dart';
+import 'package:draggable_panel_example/quick_open_demo.dart';
 import 'package:draggable_panel_example/tab_panel_demo.dart';
 import 'package:draggable_panel_example/theming_demo.dart';
 import 'package:draggable_panel_example/tools_demo.dart';
@@ -36,6 +37,7 @@ class _ExampleAppState extends State<ExampleApp> {
     routes: {
       '/player': (_) => const MiniPlayerDemo(),
       '/tools': (_) => const ToolsDemo(),
+      '/quick': (_) => const QuickOpenDemo(),
       '/tab': (_) => const TabPanelDemo(),
       '/theming': (_) => const ThemingDemo(),
     },
@@ -76,10 +78,16 @@ class _HomeScreen extends StatelessWidget {
           subtitle: 'An action grid that expands from the corner',
         ),
         _DemoTile(
+          route: '/quick',
+          icon: Icons.open_in_full_outlined,
+          title: 'Quick open',
+          subtitle: 'The tab opens the grid, and the small window stays',
+        ),
+        _DemoTile(
           route: '/tab',
           icon: Icons.chevron_left_outlined,
           title: 'Tab panel',
-          subtitle: 'The same grid with its collapsed stage switched off',
+          subtitle: 'The same grid with its collapsed stage dropped entirely',
         ),
         _DemoTile(
           route: '/theming',

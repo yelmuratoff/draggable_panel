@@ -1,3 +1,23 @@
+## 4.0.0-beta.7
+
+Added
+
+- `PanelBehavior.expandOnUnstash` opens the panel on its way out of a park,
+  without removing the collapsed stage the way `collapsible: false` does. It
+  shortens one journey rather than dropping a stage: the tab grows straight
+  into the open panel, while the small window stays somewhere to close down to
+  and drag around. Reach for it when a park is how the panel is put away and
+  taking it out always means using it. The new `Quick open` demo in `example/`
+  shows it beside `Tab panel`, which drops the stage outright, so the two are
+  easy to tell apart.
+
+Changed
+
+- A `.pubignore` trims the published archive from 2 MB to 100 KB by leaving out
+  the golden reference images, the repository's screenshots, and the example's
+  platform scaffolding. The library, the example's source, and the behavioural
+  tests all still ship.
+
 ## 4.0.0-beta.6
 
 Added

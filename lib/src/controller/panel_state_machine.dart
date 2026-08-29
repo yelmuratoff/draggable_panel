@@ -26,10 +26,12 @@ PanelStatus panelTransition(
 ) => switch (event) {
   PanelDragStarted() => _dragStarted(from, behavior),
   PanelDragSettled(:final target) =>
-    from.phase == PanelPhase.dragging ? _travelTo(target, behavior) : from,
+    from.phase == PanelPhase.dragging
+        ? _travelTo(from.placement, target, behavior)
+        : from,
   PanelDragCancelled() =>
     from.phase == PanelPhase.dragging
-        ? _travelTo(from.placement, behavior)
+        ? _travelTo(from.placement, from.placement, behavior)
         : from,
   PanelSettleCompleted() => _settleCompleted(from),
   PanelMorphCompleted() => _morphCompleted(from),
@@ -44,11 +46,13 @@ PanelStatus panelTransition(
     PanelPlacement.stashed(edge, verticalAlignment: verticalAlignment),
   ),
   PanelUnstashRequested(:final target) =>
-    from.phase == PanelPhase.stashed ? _travelTo(target, behavior) : from,
+    from.phase == PanelPhase.stashed
+        ? _travelTo(from.placement, target, behavior)
+        : from,
   PanelHideRequested() => from.copyWith(phase: PanelPhase.hidden),
   PanelShowRequested() =>
     from.phase == PanelPhase.hidden
-        ? _travelTo(from.placement, behavior)
+        ? _travelTo(from.placement, from.placement, behavior)
         : from,
   PanelDismissRequested() =>
     behavior.dismissible ? from.copyWith(phase: PanelPhase.hidden) : from,
@@ -61,13 +65,29 @@ PanelStatus panelTransition(
 /// gesture: without a collapsed stage, arriving anywhere but a park means
 /// opening, so the panel enters [PanelPhase.expanding] and the morph grows it
 /// while the placement change springs it into place.
-PanelStatus _travelTo(PanelPlacement target, PanelBehavior behavior) =>
-    PanelStatus(
-      phase: behavior.collapsible || target is StashedPlacement
-          ? PanelPhase.settling
-          : PanelPhase.expanding,
-      placement: target,
-    );
+///
+/// [PanelBehavior.expandOnUnstash] asks for the same arrival, but only for the
+/// journey out of a park, leaving the collapsed stage in place everywhere else.
+PanelStatus _travelTo(
+  PanelPlacement from,
+  PanelPlacement target,
+  PanelBehavior behavior,
+) => PanelStatus(
+  phase: _opensOnArrival(from, target, behavior)
+      ? PanelPhase.expanding
+      : PanelPhase.settling,
+  placement: target,
+);
+
+bool _opensOnArrival(
+  PanelPlacement from,
+  PanelPlacement target,
+  PanelBehavior behavior,
+) {
+  if (target is StashedPlacement) return false;
+  if (!behavior.collapsible) return true;
+  return behavior.expandOnUnstash && from is StashedPlacement;
+}
 
 PanelStatus _dragStarted(PanelStatus from, PanelBehavior behavior) {
   if (!behavior.draggable) return from;
@@ -122,7 +142,7 @@ PanelStatus _moveTo(
   PanelPhase.expanded ||
   PanelPhase.collapsing => from.copyWith(placement: target),
   PanelPhase.dragging => from,
-  _ => _travelTo(target, behavior),
+  _ => _travelTo(from.placement, target, behavior),
 };
 
 PanelStatus _stash(
@@ -137,7 +157,7 @@ PanelStatus _stash(
     PanelPhase.dragging ||
     PanelPhase.expanding ||
     PanelPhase.expanded ||
-    PanelPhase.collapsing => _travelTo(target, behavior),
+    PanelPhase.collapsing => _travelTo(from.placement, target, behavior),
     PanelPhase.hidden || PanelPhase.stashed => from,
   };
 }

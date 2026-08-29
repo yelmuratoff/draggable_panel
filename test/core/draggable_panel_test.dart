@@ -591,6 +591,62 @@ void main() {
     });
   });
 
+  group('expandOnUnstash', () {
+    const behavior = PanelBehavior(expandOnUnstash: true);
+
+    testWidgets('a tap on the tab opens the panel outright', (tester) async {
+      final controller = await _pumpPanel(tester, behavior: behavior);
+      controller.stash();
+      await tester.pump();
+
+      final peek = _paintedRect(tester);
+      await tester.tapAt(Offset(peek.left + 4, peek.center.dy));
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.expanded);
+      expect(find.byKey(_expandedKey), findsOneWidget);
+    });
+
+    testWidgets('the collapsed window is still there to close down to', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester, behavior: behavior);
+      controller.stash();
+      await tester.pump();
+
+      controller.unstash();
+      await tester.pump();
+      expect(controller.phase, PanelPhase.expanded);
+
+      controller.collapse();
+      await tester.pump();
+
+      expect(
+        controller.phase,
+        PanelPhase.collapsed,
+        reason: 'unlike collapsible: false, closing does not park it',
+      );
+      expect(_paintedRect(tester).size, const Size(64, 64));
+    });
+
+    testWidgets('a drag between corners still rests collapsed', (tester) async {
+      final controller = await _pumpPanel(tester, behavior: behavior);
+
+      final gesture = await tester.startGesture(_panelRect(tester).center);
+      for (var frame = 1; frame <= 8; frame++) {
+        await gesture.moveBy(
+          const Offset(-60, -40),
+          timeStamp: Duration(milliseconds: 16 * frame),
+        );
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await gesture.up();
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.collapsed);
+    });
+  });
+
   group('a panel with no collapsed stage', () {
     const behavior = PanelBehavior(collapsible: false);
 

@@ -76,9 +76,15 @@ command — instead of only the one you were thinking of.
 | You want | Set |
 | --- | --- |
 | tab → small window → open | the default |
-| tab → open | `collapsible: false` |
+| tab → open, small window kept elsewhere | `expandOnUnstash: true` |
+| tab → open, small window gone entirely | `collapsible: false` |
 | small window → open, never parks | `stashable: false` |
 | no travel animation between them | `motion: PanelMotionSpec.instant()` |
+
+The middle two are worth telling apart. `expandOnUnstash` shortens **one
+journey** — the way out of a park — and leaves the small window as somewhere to
+close down to and drag around. `collapsible: false` removes the **stage**, so
+the window is gone from every route, including closing.
 
 ```dart
 DraggablePanel(
@@ -215,6 +221,7 @@ DraggablePanel(
     tapToExpand: true,
     stashable: true,             // push it against an edge to park it there
     collapsible: true,           // false drops the small window between the two
+    expandOnUnstash: false,      // true opens the panel straight out of a park
     dismissible: false,          // PiP uses an explicit close, not a fling-away
     collapseOnTapOutside: true,
     stashOnTapOutside: true,     // touching the page puts a collapsed panel away

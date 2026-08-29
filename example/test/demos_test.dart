@@ -1,6 +1,7 @@
 import 'package:draggable_panel/draggable_panel.dart';
 import 'package:draggable_panel_example/main.dart';
 import 'package:draggable_panel_example/mini_player_demo.dart';
+import 'package:draggable_panel_example/quick_open_demo.dart';
 import 'package:draggable_panel_example/tab_panel_demo.dart';
 import 'package:draggable_panel_example/theming_demo.dart';
 import 'package:draggable_panel_example/tools_demo.dart';
@@ -33,6 +34,7 @@ void main() {
   final demos = <String, Widget Function()>{
     'mini player': MiniPlayerDemo.new,
     'developer tools': ToolsDemo.new,
+    'quick open': QuickOpenDemo.new,
     'tab panel': TabPanelDemo.new,
     'theming playground': ThemingDemo.new,
   };
@@ -87,6 +89,7 @@ void main() {
 
       expect(find.text('Mini player'), findsOneWidget);
       expect(find.text('Developer tools'), findsOneWidget);
+      expect(find.text('Quick open'), findsOneWidget);
       expect(find.text('Tab panel'), findsOneWidget);
       expect(find.text('Theming playground'), findsOneWidget);
       expect(tester.takeException(), isNull);

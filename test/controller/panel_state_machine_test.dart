@@ -324,6 +324,65 @@ void main() {
     });
   });
 
+  group('expandOnUnstash', () {
+    const behavior = PanelBehavior(expandOnUnstash: true);
+
+    test('opens the panel on the way out of a park', () {
+      expect(
+        _phaseAfter(
+          PanelPhase.stashed,
+          const PanelUnstashRequested(_otherCorner),
+          behavior: behavior,
+          placement: _stashed,
+        ),
+        PanelPhase.expanding,
+      );
+      expect(
+        _phaseAfter(
+          PanelPhase.dragging,
+          const PanelDragSettled(_otherCorner),
+          behavior: behavior,
+          placement: _stashed,
+        ),
+        PanelPhase.expanding,
+        reason: 'dragging the tab out is the same journey',
+      );
+    });
+
+    test('shortens only that journey, leaving the stage in place', () {
+      expect(
+        _phaseAfter(
+          PanelPhase.dragging,
+          const PanelDragSettled(_otherCorner),
+          behavior: behavior,
+        ),
+        PanelPhase.settling,
+        reason: 'a move between corners still rests collapsed',
+      );
+      expect(
+        _phaseAfter(
+          PanelPhase.expanded,
+          const PanelCollapseRequested(),
+          behavior: behavior,
+        ),
+        PanelPhase.collapsing,
+        reason: 'the collapsed stage is still somewhere to close to',
+      );
+    });
+
+    test('arriving at a park still settles', () {
+      expect(
+        _phaseAfter(
+          PanelPhase.dragging,
+          const PanelDragSettled(_stashed),
+          behavior: behavior,
+          placement: _stashed,
+        ),
+        PanelPhase.settling,
+      );
+    });
+  });
+
   group('without a collapsed stage', () {
     const behavior = PanelBehavior(collapsible: false);
 
