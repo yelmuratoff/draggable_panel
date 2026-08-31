@@ -36,6 +36,22 @@ Future<DraggablePanelController> _pumpActionPanel(
   return controller;
 }
 
+/// Carries a finger [delta] from [start], in steps small enough that a
+/// scrollable inside the panel gets the chance to claim the drag.
+Future<void> _dragBy(WidgetTester tester, Offset start, Offset delta) async {
+  final gesture = await tester.startGesture(start);
+  const steps = 20;
+  for (var step = 1; step <= steps; step++) {
+    await gesture.moveTo(
+      start + delta * (step / steps),
+      timeStamp: Duration(milliseconds: 16 * step),
+    );
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+  await gesture.up();
+  await tester.pump();
+}
+
 List<PanelAction> _actions(int count, {void Function(int)? onPressed}) => [
   for (var index = 0; index < count; index++)
     PanelAction(
@@ -399,6 +415,61 @@ void main() {
         absurd,
         lessThanOrEqualTo(short + 96 * 2),
         reason: 'a column is capped at twice the tile, not at the label',
+      );
+    });
+
+    testWidgets('the header moves the panel, and the grid below it does not', (
+      tester,
+    ) async {
+      final controller = await _pumpActionPanel(
+        tester,
+        actions: _actions(60),
+        title: 'Tools',
+      );
+      controller.expand();
+      await tester.pump();
+      final placement = controller.placement;
+
+      await _dragBy(
+        tester,
+        tester.getRect(find.byType(ActionCell).first).center,
+        const Offset(-250, 0),
+      );
+      expect(
+        controller.placement,
+        placement,
+        reason: 'the grid is not a grab handle',
+      );
+
+      await _dragBy(
+        tester,
+        tester.getRect(find.byType(ActionPanelHeader)).center,
+        const Offset(-250, 0),
+      );
+      expect(controller.placement, isNot(placement));
+    });
+
+    testWidgets('the header stays put while the grid scrolls under it', (
+      tester,
+    ) async {
+      final controller = await _pumpActionPanel(
+        tester,
+        actions: _actions(60),
+        title: 'Tools',
+      );
+      controller.expand();
+      await tester.pump();
+
+      final header = tester.getRect(find.byType(ActionPanelHeader));
+      final cell = tester.getRect(find.byType(ActionCell).first);
+
+      await _dragBy(tester, cell.center, const Offset(0, -80));
+
+      expect(tester.getRect(find.byType(ActionPanelHeader)), header);
+      expect(
+        tester.getRect(find.byType(ActionCell).first).top,
+        lessThan(cell.top),
+        reason: 'the grid scrolled',
       );
     });
 

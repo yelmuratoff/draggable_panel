@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:draggable_panel/src/controller/draggable_panel_controller.dart';
 import 'package:draggable_panel/src/controller/panel_event.dart';
+import 'package:draggable_panel/src/core/panel_drag_area.dart';
 import 'package:draggable_panel/src/core/panel_haptics.dart';
 import 'package:draggable_panel/src/core/panel_semantics.dart';
 import 'package:draggable_panel/src/core/panel_surface.dart';
@@ -81,6 +82,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
   final FocusNode _focusNode = FocusNode(debugLabel: 'DraggablePanel');
 
   final PanelHaptics _haptics = PanelHaptics();
+  final PanelDragAreaRegistry _dragAreas = PanelDragAreaRegistry();
   PanelStatus? _previousStatus;
 
   PanelMotionSpec get _spec => widget.style.motion;
@@ -605,17 +607,37 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
     );
   }
 
-  /// Halves the platform slop for this panel.
+  /// Halves the platform slop, except while the panel is expanded.
   ///
   /// [DeviceGestureSettings.panSlop] derives from the touch slop at twice its
   /// value — 36 logical pixels by default, tuned for committing to a scroll
   /// axis. A parked panel has less travel than that between its tab and its
   /// resting place, so at the platform value the whole pull-out is spent before
-  /// the drag registers.
-  DeviceGestureSettings _panelGestureSettings(
-    DeviceGestureSettings? settings,
-  ) =>
-      DeviceGestureSettings(touchSlop: (settings?.touchSlop ?? kTouchSlop) / 2);
+  /// the drag registers. An expanded panel has no such shortage, and a
+  /// scrollable inside it measures against the platform touch slop, so halving
+  /// it there only takes drags meant for the content.
+  DeviceGestureSettings _panelGestureSettings(DeviceGestureSettings? settings) {
+    final platform = settings?.touchSlop ?? kTouchSlop;
+    return DeviceGestureSettings(
+      touchSlop: widget.controller.phase.isExpanding ? platform : platform / 2,
+    );
+  }
+
+  /// Whether a touch at [globalPosition] may start a panel drag.
+  ///
+  /// Content that declares its own drag areas keeps every other touch: a
+  /// scrollable inside an expanded panel then never has to win an arena against
+  /// the window it sits in.
+  ///
+  /// Only a settled panel is restricted. Content is laid out at its expanded
+  /// size from the start and revealed by a growing clip, so a drag area is at
+  /// its final place long before the panel has arrived there — restricting a
+  /// panel mid-morph would refuse the grab over the part of it you can see.
+  bool _canDragFrom(Offset globalPosition) {
+    if (widget.controller.phase != PanelPhase.expanded) return true;
+    if (_dragAreas.isEmpty) return true;
+    return _dragAreas.contains(globalPosition);
+  }
 
   Widget _buildGestures(
     DeviceGestureSettings? settings, {
@@ -626,9 +648,9 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
     return RawGestureDetector(
       behavior: HitTestBehavior.deferToChild,
       gestures: <Type, GestureRecognizerFactory>{
-        TapAndPanGestureRecognizer:
-            GestureRecognizerFactoryWithHandlers<TapAndPanGestureRecognizer>(
-              TapAndPanGestureRecognizer.new,
+        _PanelDragRecognizer:
+            GestureRecognizerFactoryWithHandlers<_PanelDragRecognizer>(
+              () => _PanelDragRecognizer(canStartFrom: _canDragFrom),
               (instance) => instance
                 // DragStartBehavior.start reports position at arena win.
                 ..dragStartBehavior = DragStartBehavior.down
@@ -666,8 +688,11 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
         ),
       ),
       expanded: RepaintBoundary(
-        child: _surfaceContent(
-          _annotate(widget.expanded, active: phase.isExpanding),
+        child: PanelDragAreaScope(
+          registry: _dragAreas,
+          child: _surfaceContent(
+            _annotate(widget.expanded, active: phase.isExpanding),
+          ),
         ),
       ),
       handle: RepaintBoundary(
@@ -700,6 +725,22 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
   /// edge reads as a flicker. The surface folds the parked fade in along the
   /// frame's emergence instead.
   double _opacityFor(PanelPhase phase) => phase == PanelPhase.hidden ? 0 : 1;
+}
+
+/// The panel's own drag, kept out of the arena outside its drag areas.
+///
+/// Declining the pointer in [isPointerAllowed] rather than rejecting the
+/// gesture later is what frees a scrollable inside the panel: with the panel's
+/// recognizer never entering the arena, the scroll starts at its own slop
+/// instead of racing one.
+final class _PanelDragRecognizer extends TapAndPanGestureRecognizer {
+  _PanelDragRecognizer({required this.canStartFrom});
+
+  final bool Function(Offset globalPosition) canStartFrom;
+
+  @override
+  bool isPointerAllowed(PointerEvent event) =>
+      canStartFrom(event.position) && super.isPointerAllowed(event);
 }
 
 /// Moves the panel one corner in a direction, from the keyboard.

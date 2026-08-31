@@ -94,6 +94,31 @@ DraggablePanelController(
 )
 ```
 
+### When the open panel holds more than it can show
+
+A scrollable inside an open panel wants the same drag the panel does: the panel
+reads it as a move, the list reads it as a scroll, and whichever crosses its slop
+first takes it — so the same swipe scrolls one time and moves the panel the next.
+
+Wrap the panel's chrome in a `PanelDragArea` to settle it. While the panel is
+open, only a touch inside a drag area moves it; everything else belongs to the
+content. A collapsed or parked panel is still dragged from anywhere, and an open
+panel that declares no drag area keeps its whole surface draggable.
+
+```dart
+expandedBuilder: (context, status) => Column(
+  children: [
+    PanelDragArea(child: MyHeader(onClose: controller.collapse)),
+    Expanded(child: ListView(children: items)),
+  ],
+),
+```
+
+Keep the area outside the scrollable it protects — one nested inside the
+`ListView` is back in the same contest. The `DraggableActionPanel` preset already
+does this: given a `title`, an `onClose` or a `headerBuilder`, its header stays
+put, drags the panel, and the grid below it scrolls.
+
 ## Which stages the panel has
 
 Between parked and open the panel has three resting stages, and two of them are

@@ -65,6 +65,116 @@ class _TabPanelDemoState extends State<TabPanelDemo> {
         label: 'Network',
         onPressed: () => _run('Network'),
       ),
+      PanelAction(
+        icon: Icons.storage_outlined,
+        label: 'Storage',
+        onPressed: () => _run('Storage'),
+      ),
+      PanelAction(
+        icon: Icons.wifi_outlined,
+        label: 'Network',
+        onPressed: () => _run('Network'),
+      ),
+      PanelAction(
+        icon: Icons.storage_outlined,
+        label: 'Storage',
+        onPressed: () => _run('Storage'),
+      ),
+      PanelAction(
+        icon: Icons.wifi_outlined,
+        label: 'Network',
+        onPressed: () => _run('Network'),
+      ),
+      PanelAction(
+        icon: Icons.storage_outlined,
+        label: 'Storage',
+        onPressed: () => _run('Storage'),
+      ),
+      PanelAction(
+        icon: Icons.wifi_outlined,
+        label: 'Network',
+        onPressed: () => _run('Network'),
+      ),
+      PanelAction(
+        icon: Icons.storage_outlined,
+        label: 'Storage',
+        onPressed: () => _run('Storage'),
+      ),
+      PanelAction(
+        icon: Icons.wifi_outlined,
+        label: 'Network',
+        onPressed: () => _run('Network'),
+      ),
+      PanelAction(
+        icon: Icons.storage_outlined,
+        label: 'Storage',
+        onPressed: () => _run('Storage'),
+      ),
+      PanelAction(
+        icon: Icons.wifi_outlined,
+        label: 'Network',
+        onPressed: () => _run('Network'),
+      ),
+      PanelAction(
+        icon: Icons.storage_outlined,
+        label: 'Storage',
+        onPressed: () => _run('Storage'),
+      ),
+      PanelAction(
+        icon: Icons.wifi_outlined,
+        label: 'Network',
+        onPressed: () => _run('Network'),
+      ),
+      PanelAction(
+        icon: Icons.storage_outlined,
+        label: 'Storage',
+        onPressed: () => _run('Storage'),
+      ),
+      PanelAction(
+        icon: Icons.wifi_outlined,
+        label: 'Network',
+        onPressed: () => _run('Network'),
+      ),
+      PanelAction(
+        icon: Icons.storage_outlined,
+        label: 'Storage',
+        onPressed: () => _run('Storage'),
+      ),
+      PanelAction(
+        icon: Icons.wifi_outlined,
+        label: 'Network',
+        onPressed: () => _run('Network'),
+      ),
+      PanelAction(
+        icon: Icons.storage_outlined,
+        label: 'Storage',
+        onPressed: () => _run('Storage'),
+      ),
+      PanelAction(
+        icon: Icons.wifi_outlined,
+        label: 'Network',
+        onPressed: () => _run('Network'),
+      ),
+      PanelAction(
+        icon: Icons.storage_outlined,
+        label: 'Storage',
+        onPressed: () => _run('Storage'),
+      ),
+      PanelAction(
+        icon: Icons.wifi_outlined,
+        label: 'Network',
+        onPressed: () => _run('Network'),
+      ),
+      PanelAction(
+        icon: Icons.storage_outlined,
+        label: 'Storage',
+        onPressed: () => _run('Storage'),
+      ),
+      PanelAction(
+        icon: Icons.wifi_outlined,
+        label: 'Network',
+        onPressed: () => _run('Network'),
+      ),
     ],
     buttons: [
       PanelActionButton(

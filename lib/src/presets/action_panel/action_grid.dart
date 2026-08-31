@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:draggable_panel/src/core/panel_drag_area.dart';
 import 'package:draggable_panel/src/presets/action_panel/action_panel_theme_data.dart';
 import 'package:draggable_panel/src/presets/action_panel/panel_action.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,12 @@ typedef PanelActionButtonBuilder =
 
 /// The expanded content of a `DraggableActionPanel`: an optional header, a grid
 /// of icon actions, and a column of labelled buttons.
+///
+/// The header stays put while the rest scrolls, and doubles as the panel's
+/// [PanelDragArea] — so a panel holding more than fits is moved by its header
+/// and scrolled by its body, rather than the two competing for one drag. A
+/// panel given no header keeps the whole surface draggable; give it a [title],
+/// an [onClose] or a [headerBuilder] to get the title-bar behaviour.
 final class ActionPanelContent extends StatelessWidget {
   const ActionPanelContent({
     required this.actions,
@@ -57,43 +64,58 @@ final class ActionPanelContent extends StatelessWidget {
       padding: theme.contentPadding ?? const EdgeInsets.all(12),
       // CrossAxisAlignment.stretch gives children the full offered width.
       child: IntrinsicWidth(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (_hasHeader) ...[
-                headerBuilder?.call(context) ??
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_hasHeader) ...[
+              PanelDragArea(
+                child:
+                    headerBuilder?.call(context) ??
                     ActionPanelHeader(
                       title: title,
                       onClose: onClose,
                       theme: theme,
                     ),
-                SizedBox(height: theme.headerSpacing ?? 12),
-              ],
-              for (var start = 0; start < actions.length; start += columns) ...[
-                if (start > 0) SizedBox(height: spacing),
-                _GridRow(
-                  row: actions.sublist(
-                    start,
-                    (start + columns).clamp(0, actions.length),
-                  ),
-                  columns: columns,
-                  spacing: spacing,
-                  theme: theme,
-                  actionBuilder: actionBuilder,
-                ),
-              ],
-              if (actions.isNotEmpty && buttons.isNotEmpty)
-                SizedBox(height: theme.sectionSpacing ?? 12),
-              for (final button in buttons) ...[
-                if (button != buttons.first)
-                  SizedBox(height: theme.buttonSpacing ?? 8),
-                buttonBuilder?.call(context, button) ??
-                    ActionButtonRow(button: button, theme: theme),
-              ],
+              ),
+              SizedBox(height: theme.headerSpacing ?? 12),
             ],
-          ),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (
+                      var start = 0;
+                      start < actions.length;
+                      start += columns
+                    ) ...[
+                      if (start > 0) SizedBox(height: spacing),
+                      _GridRow(
+                        row: actions.sublist(
+                          start,
+                          (start + columns).clamp(0, actions.length),
+                        ),
+                        columns: columns,
+                        spacing: spacing,
+                        theme: theme,
+                        actionBuilder: actionBuilder,
+                      ),
+                    ],
+                    if (actions.isNotEmpty && buttons.isNotEmpty)
+                      SizedBox(height: theme.sectionSpacing ?? 12),
+                    for (final button in buttons) ...[
+                      if (button != buttons.first)
+                        SizedBox(height: theme.buttonSpacing ?? 8),
+                      buttonBuilder?.call(context, button) ??
+                          ActionButtonRow(button: button, theme: theme),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
