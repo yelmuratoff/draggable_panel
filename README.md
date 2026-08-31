@@ -22,11 +22,8 @@ No third-party dependencies.
 
 ```yaml
 dependencies:
-  draggable_panel: 4.0.0-beta.9
+  draggable_panel: ^4.0.0
 ```
-
-Pinned rather than `^`: a caret on a pre-release only sets a floor, and would
-pull in whatever sorts above it.
 
 Mount it above your app's content, usually through `MaterialApp.builder`:
 
@@ -45,7 +42,8 @@ Three arguments and you are done. Everything else has a defensible default.
 
 The panel positions itself against the window, so give it the whole window —
 `MaterialApp.builder`, or anything else that fills the screen. Mounted inside a
-smaller box it will place itself against bounds it does not occupy.
+smaller box it will place itself against bounds it does not occupy, and say so
+once in the debug console.
 
 ## One gesture, one meaning
 

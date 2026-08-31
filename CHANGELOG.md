@@ -1,4 +1,4 @@
-## 4.0.0-beta.9
+## 4.0.0
 
 A rewrite. The panel is now a floating window: drag it anywhere, release it and
 it springs to the nearest side by projected velocity, flick it past an edge to
@@ -26,7 +26,10 @@ Breaking changes
 - Removed: `MultiValueListenableBuilder`, `TooltipSnackBar`, `DockType`,
   `PanelState`, and the already-deprecated `panelAnimDuration`,
   `dockAnimDuration` and `movementSpeed`.
-- The panel must be given the whole window; a smaller box trips an assertion.
+- The panel must be given the whole window, since that is what it resolves its
+  placement against. A smaller box still paints and still takes its gestures,
+  but reports the mistake once in debug rather than leaving it to be found by
+  eye.
 - Minimum Flutter is now 3.32 (Dart 3.8).
 
 Added

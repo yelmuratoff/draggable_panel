@@ -1,6 +1,6 @@
 name: draggable_panel
 description: A floating panel window — drag it anywhere, spring-snap to the nearest side, stash it off the edge, tap to grow it in place.
-version: 4.0.0-beta.9
+version: 4.0.0
 homepage: https://github.com/yelmuratoff/draggable_panel
 repository: https://github.com/yelmuratoff/draggable_panel
 issue_tracker: https://github.com/yelmuratoff/draggable_panel/issues
