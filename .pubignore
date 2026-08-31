@@ -8,8 +8,10 @@
 # The rest of test/ stays, since the behaviour it names reads as documentation.
 test/golden/
 
-# Screenshots for the repository, referenced by neither README nor any pubspec.
-assets/
+# assets/screenshots/ ships, because `screenshots:` in the pubspec points at it.
+# The loose PNGs beside it are 3.x leftovers showing the old docked rail.
+assets/*
+!assets/screenshots/
 
 # The example ships as source. Its platform scaffolding is regenerable by
 # `flutter create`, and its own tests belong to this repository.

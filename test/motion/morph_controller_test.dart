@@ -8,7 +8,6 @@ const _frame = Duration(milliseconds: 16);
 MorphController _morph({
   PanelMotionSpec? spec,
   double initial = 0,
-  double travelPixels = 200,
   VoidCallback? onCompleted,
 }) {
   final morph = MorphController(
@@ -16,7 +15,7 @@ MorphController _morph({
     spec: spec ?? PanelMotionSpec(),
     initial: initial,
     onCompleted: onCompleted,
-  )..travelPixels = travelPixels;
+  );
   addTearDown(() {
     morph
       ..jumpTo(morph.value)
@@ -34,47 +33,6 @@ Future<void> _settle(WidgetTester tester, MorphController morph) async {
 }
 
 void main() {
-  group('scrub', () {
-    test('dragging up expands, dragging down collapses', () {
-      final morph = _morph(initial: 0.5)..scrub(-100);
-      expect(morph.value, closeTo(1, 1e-9));
-
-      morph.scrub(100);
-      expect(morph.value, closeTo(0.5, 1e-9));
-    });
-
-    test('resists beyond the ends instead of walling off', () {
-      final morph = _morph(initial: 1)..scrub(-200);
-
-      expect(morph.value, greaterThan(1));
-      expect(morph.value, lessThan(1 + PanelMotionSpec().morphSlack));
-    });
-
-    test('resists below zero symmetrically', () {
-      final morph = _morph()..scrub(200);
-
-      expect(morph.value, lessThan(0));
-      expect(morph.value, greaterThan(-PanelMotionSpec().morphSlack));
-    });
-
-    testWidgets('takes over from a running spring with no jump', (
-      tester,
-    ) async {
-      final morph = _morph()..settleTo(1);
-      await tester.pump(_frame);
-      await tester.pump(_frame);
-
-      final mid = morph.value;
-      expect(morph.isAnimating, isTrue);
-      expect(mid, greaterThan(0));
-
-      morph.scrub(0);
-
-      expect(morph.isAnimating, isFalse);
-      expect(morph.value, mid);
-    });
-  });
-
   group('settle', () {
     testWidgets('reaches the target and reports completion once', (
       tester,
@@ -90,7 +48,7 @@ void main() {
       expect(tester.binding.hasScheduledFrame, isFalse);
     });
 
-    testWidgets('a scrub that cancels a settle reports no completion', (
+    testWidgets('a jump that cancels a settle reports no completion', (
       tester,
     ) async {
       var completed = 0;
@@ -98,13 +56,29 @@ void main() {
 
       await tester.pump(_frame);
       await tester.pump(_frame);
-      morph.scrub(0);
+      morph.jumpTo(morph.value);
       await tester.pump(_frame);
 
       expect(completed, 0);
     });
 
-    testWidgets('reversing mid-flight returns without a discontinuity', (
+    testWidgets('a jump takes over from a running spring with no jump in '
+        'value', (tester) async {
+      final morph = _morph()..settleTo(1);
+      await tester.pump(_frame);
+      await tester.pump(_frame);
+
+      final mid = morph.value;
+      expect(morph.isAnimating, isTrue);
+      expect(mid, greaterThan(0));
+
+      morph.jumpTo(mid);
+
+      expect(morph.isAnimating, isFalse);
+      expect(morph.value, mid);
+    });
+
+    testWidgets('reversing mid-flight starts from the value it had reached', (
       tester,
     ) async {
       final morph = _morph()..settleTo(1);
@@ -117,52 +91,32 @@ void main() {
 
       expect(morph.value, atReversal);
 
-      await tester.pump(_frame);
-      expect(morph.value, greaterThan(0));
-
       await _settle(tester, morph);
       expect(morph.value, closeTo(0, 1e-6));
     });
 
-    testWidgets('a throw upward keeps rising before it turns around', (
-      tester,
-    ) async {
-      final morph = _morph(initial: 0.7)..settleTo(0, pixelVelocity: -600);
+    testWidgets('reversing mid-flight carries its velocity, so it overshoots '
+        'before turning around', (tester) async {
+      final morph = _morph()..settleTo(1);
+      // Far enough in to be moving quickly towards 1.
+      await tester.pump(_frame);
+      await tester.pump(_frame);
+      await tester.pump(_frame);
 
+      final atReversal = morph.value;
+      morph.settleTo(0);
+      // The first frame after a restart evaluates the simulation at t = 0.
       await tester.pump(_frame);
       await tester.pump(_frame);
 
-      expect(morph.value, greaterThan(0.7));
+      expect(
+        morph.value,
+        greaterThan(atReversal),
+        reason: 'entry velocity should carry it past the reversal point',
+      );
 
       await _settle(tester, morph);
       expect(morph.value, closeTo(0, 1e-6));
-    });
-  });
-
-  group('settleFromRelease', () {
-    testWidgets('a slow release past the midpoint completes the expansion', (
-      tester,
-    ) async {
-      final morph = _morph(initial: 0.6)..settleFromRelease(0);
-      await _settle(tester, morph);
-
-      expect(morph.value, closeTo(1, 1e-6));
-    });
-
-    testWidgets('a slow release below the midpoint falls back', (tester) async {
-      final morph = _morph(initial: 0.4)..settleFromRelease(0);
-      await _settle(tester, morph);
-
-      expect(morph.value, closeTo(0, 1e-6));
-    });
-
-    testWidgets('a fast flick commits even when released early', (
-      tester,
-    ) async {
-      final morph = _morph(initial: 0.2)..settleFromRelease(-900);
-      await _settle(tester, morph);
-
-      expect(morph.value, closeTo(1, 1e-6));
     });
   });
 

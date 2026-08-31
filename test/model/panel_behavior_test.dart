@@ -26,5 +26,27 @@ void main() {
       expect(changed, isNot(original));
       expect(changed.copyWith(collapsible: true), original);
     });
+
+    test('copyWith switches the idle timer off, which a null cannot say', () {
+      const original = PanelBehavior();
+      expect(original.idleStashDelay, isNotNull);
+
+      expect(
+        original.copyWith(clearIdleStashDelay: true).idleStashDelay,
+        isNull,
+      );
+      expect(
+        original.copyWith(hapticsEnabled: false).idleStashDelay,
+        original.idleStashDelay,
+        reason: 'an untouched delay survives an unrelated copyWith',
+      );
+    });
+
+    test('copyWith retunes the idle delay', () {
+      const delay = Duration(seconds: 30);
+      final changed = const PanelBehavior().copyWith(idleStashDelay: delay);
+
+      expect(changed.idleStashDelay, delay);
+    });
   });
 }

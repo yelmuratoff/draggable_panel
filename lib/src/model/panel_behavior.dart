@@ -115,6 +115,11 @@ final class PanelBehavior {
   /// Where the panel settles after a drag.
   final PanelSnapPolicy snapPolicy;
 
+  /// Returns a copy with the given fields replaced.
+  ///
+  /// [idleStashDelay] is the one field whose `null` is a value rather than
+  /// "leave it alone", so passing null here keeps the current delay. Pass
+  /// `clearIdleStashDelay: true` to switch the idle timer off instead.
   PanelBehavior copyWith({
     bool? draggable,
     bool? tapToExpand,
@@ -125,6 +130,7 @@ final class PanelBehavior {
     bool? collapseOnTapOutside,
     bool? stashOnTapOutside,
     Duration? idleStashDelay,
+    bool clearIdleStashDelay = false,
     bool? avoidKeyboard,
     bool? hapticsEnabled,
     PanelSnapPolicy? snapPolicy,
@@ -137,7 +143,9 @@ final class PanelBehavior {
     dismissible: dismissible ?? this.dismissible,
     collapseOnTapOutside: collapseOnTapOutside ?? this.collapseOnTapOutside,
     stashOnTapOutside: stashOnTapOutside ?? this.stashOnTapOutside,
-    idleStashDelay: idleStashDelay ?? this.idleStashDelay,
+    idleStashDelay: clearIdleStashDelay
+        ? null
+        : idleStashDelay ?? this.idleStashDelay,
     avoidKeyboard: avoidKeyboard ?? this.avoidKeyboard,
     hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
     snapPolicy: snapPolicy ?? this.snapPolicy,

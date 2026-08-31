@@ -25,7 +25,8 @@ final class RenderPanelSurface extends RenderBox
     required this.expansionOf,
     required Alignment anchor,
     required Size collapsedSize,
-    required EdgeInsets bounds,
+    required Rect bounds,
+    required Size viewportSize,
     required bool isDragging,
     required bool isStashed,
     required bool isParking,
@@ -36,6 +37,7 @@ final class RenderPanelSurface extends RenderBox
        _anchor = anchor,
        _collapsedSize = collapsedSize,
        _bounds = bounds,
+       _viewportSize = viewportSize,
        _isDragging = isDragging,
        _isStashed = isStashed,
        _isParking = isParking,
@@ -53,7 +55,8 @@ final class RenderPanelSurface extends RenderBox
 
   Alignment _anchor;
   Size _collapsedSize;
-  EdgeInsets _bounds;
+  Rect _bounds;
+  Size _viewportSize;
   bool _isDragging;
   bool _isStashed;
   bool _isParking;
@@ -156,11 +159,25 @@ final class RenderPanelSurface extends RenderBox
     markNeedsLayout();
   }
 
-  EdgeInsets get bounds => _bounds;
+  /// The rect the panel rests within, in this render object's coordinates.
+  Rect get bounds => _bounds;
 
-  set bounds(EdgeInsets value) {
+  set bounds(Rect value) {
     if (_bounds == value) return;
     _bounds = value;
+    markNeedsLayout();
+  }
+
+  /// The window [bounds] was measured against.
+  ///
+  /// Only the debug check in [performLayout] reads it: the panel resolves its
+  /// placement against the window, so a box that is not the window would leave
+  /// it positioned against edges it does not have.
+  Size get viewportSize => _viewportSize;
+
+  set viewportSize(Size value) {
+    if (_viewportSize == value) return;
+    _viewportSize = value;
     markNeedsLayout();
   }
 
@@ -209,14 +226,18 @@ final class RenderPanelSurface extends RenderBox
   @override
   Size computeDryLayout(BoxConstraints constraints) => constraints.biggest;
 
-  /// The rect the panel must stay within, in this render object's coordinates.
-  Rect get _freeRect => _bounds.deflateRect(Offset.zero & size);
-
   /// The handle fills the tab a parked panel shows.
   Size get _handleSize => handleSizeFor(_style.stashedSize, _style.stashedPeek);
 
   @override
   void performLayout() {
+    assert(
+      size == _viewportSize,
+      'DraggablePanel was laid out at $size inside a $_viewportSize window. It '
+      'resolves placements against the window, so it must be given all of it — '
+      'mount it through MaterialApp.builder, or another parent that fills the '
+      'window.',
+    );
     childForSlot(
       PanelSlot.collapsed,
     )?.layout(BoxConstraints.tight(_collapsedSize));
@@ -228,7 +249,7 @@ final class RenderPanelSurface extends RenderBox
       return;
     }
 
-    final available = _freeRect;
+    final available = _bounds;
     final requested = _style.expandedExtent.resolve(
       available,
       expanded.getDryLayout(BoxConstraints.loose(available.size)),
@@ -249,7 +270,7 @@ final class RenderPanelSurface extends RenderBox
     expandedSize: _expandedSize,
     stashedSize: _style.stashedSize,
     anchor: _anchor,
-    bounds: _freeRect,
+    bounds: _bounds,
     viewport: Offset.zero & size,
     stashedPeek: _style.stashedPeek,
     isDragging: _isDragging,

@@ -32,7 +32,6 @@ void main() {
     PanelMorphCompleted(),
     PanelExpandRequested(),
     PanelCollapseRequested(),
-    PanelToggleRequested(),
     PanelMoveRequested(_otherCorner),
     PanelStashRequested(PanelEdge.start),
     PanelUnstashRequested(_otherCorner),
@@ -57,7 +56,6 @@ void main() {
     test('expanded accepts only its documented events', () {
       const accepted = <Type>{
         PanelCollapseRequested,
-        PanelToggleRequested,
         PanelHideRequested,
         PanelMoveRequested,
         PanelStashRequested,
@@ -204,15 +202,6 @@ void main() {
       expect(_phaseAfter(PanelPhase.expanding, done), PanelPhase.expanded);
       expect(_phaseAfter(PanelPhase.collapsing, done), PanelPhase.collapsed);
       expect(_phaseAfter(PanelPhase.collapsed, done), PanelPhase.collapsed);
-    });
-
-    test('toggle picks the opposite direction', () {
-      const toggle = PanelToggleRequested();
-
-      expect(_phaseAfter(PanelPhase.collapsed, toggle), PanelPhase.expanding);
-      expect(_phaseAfter(PanelPhase.expanded, toggle), PanelPhase.collapsing);
-      expect(_phaseAfter(PanelPhase.expanding, toggle), PanelPhase.collapsing);
-      expect(_phaseAfter(PanelPhase.collapsing, toggle), PanelPhase.expanding);
     });
 
     test('a full expand and collapse cycle returns to collapsed', () {

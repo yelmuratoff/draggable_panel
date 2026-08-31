@@ -49,11 +49,6 @@ final class PanelCollapseRequested extends PanelEvent {
   const PanelCollapseRequested();
 }
 
-/// Expand if collapsed, collapse if expanded.
-final class PanelToggleRequested extends PanelEvent {
-  const PanelToggleRequested();
-}
-
 /// Move to [target] without changing whether the panel is expanded.
 final class PanelMoveRequested extends PanelEvent {
   const PanelMoveRequested(this.target);

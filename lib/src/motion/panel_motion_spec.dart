@@ -42,8 +42,6 @@ final class PanelMotionSpec {
     this.momentumHalfLife = const Duration(milliseconds: 100),
     this.contentFadeDuration = Duration.zero,
     this.stashCommit = 0.25,
-    this.morphSlack = 0.12,
-    this.expandTravelFraction = 0.35,
     this.immediate = false,
     this.reduceMotion = false,
   }) : assert(
@@ -60,7 +58,10 @@ final class PanelMotionSpec {
 
   /// Motion suppressed entirely: geometry snaps and content swaps at once.
   ///
-  /// Intended for widget tests that assert targets rather than trajectories.
+  /// Every settle then completes within a single frame, which is what widget
+  /// tests want when they assert targets rather than trajectories. It also
+  /// serves an app that wants no travel animation at all — note that it drops
+  /// the content cross-fade too, unlike [PanelMotionSpec.reduced].
   PanelMotionSpec.instant() : this(immediate: true);
 
   /// The reduced-motion variant used when [MediaQueryData.disableAnimations] is
@@ -102,16 +103,6 @@ final class PanelMotionSpec {
   /// fraction of the panel's width.
   final double stashCommit;
 
-  /// How far expansion progress may be dragged beyond its `0..1` range before
-  /// resistance holds it, so the ends feel soft rather than walled.
-  final double morphSlack;
-
-  /// How much of the available height a drag must cover to fully expand or
-  /// collapse the panel, as a fraction of the viewport bounds.
-  ///
-  /// Lower values make the panel open and close with a shorter gesture.
-  final double expandTravelFraction;
-
   /// Whether settles complete instantly instead of running a simulation.
   ///
   /// Suppresses both position and expansion animation. Intended for tests that
@@ -138,8 +129,6 @@ final class PanelMotionSpec {
     Duration? momentumHalfLife,
     Duration? contentFadeDuration,
     double? stashCommit,
-    double? morphSlack,
-    double? expandTravelFraction,
     bool? immediate,
     bool? reduceMotion,
   }) => PanelMotionSpec(
@@ -151,8 +140,6 @@ final class PanelMotionSpec {
     momentumHalfLife: momentumHalfLife ?? this.momentumHalfLife,
     contentFadeDuration: contentFadeDuration ?? this.contentFadeDuration,
     stashCommit: stashCommit ?? this.stashCommit,
-    morphSlack: morphSlack ?? this.morphSlack,
-    expandTravelFraction: expandTravelFraction ?? this.expandTravelFraction,
     immediate: immediate ?? this.immediate,
     reduceMotion: reduceMotion ?? this.reduceMotion,
   );
@@ -184,8 +171,6 @@ final class PanelMotionSpec {
           other.momentumHalfLife == momentumHalfLife &&
           other.contentFadeDuration == contentFadeDuration &&
           other.stashCommit == stashCommit &&
-          other.morphSlack == morphSlack &&
-          other.expandTravelFraction == expandTravelFraction &&
           other.immediate == immediate &&
           other.reduceMotion == reduceMotion;
 
@@ -199,8 +184,6 @@ final class PanelMotionSpec {
     momentumHalfLife,
     contentFadeDuration,
     stashCommit,
-    morphSlack,
-    expandTravelFraction,
     immediate,
     reduceMotion,
   );

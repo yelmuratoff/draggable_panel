@@ -5,6 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// The panel's default margin and collapsed width, as `defaultPanelTheme`
+/// resolves them.
+const _margin = 16.0;
+const _collapsed = 64.0;
+
 const _collapsedKey = ValueKey('collapsed');
 const _expandedKey = ValueKey('expanded');
 const _appKey = ValueKey('app');
@@ -65,6 +70,34 @@ Future<DraggablePanelController> _pumpPanel(
 
 Duration _at(int frame) => Duration(milliseconds: 16 * frame);
 
+/// Carries the panel to [target] and comes to a stop before letting go.
+///
+/// The cadence is explicit because `tester.fling` synthesises its own, and the
+/// still frames at the end matter: a release still in motion projects far past
+/// wherever the finger was, which is a different gesture entirely.
+Future<void> _dragTo(WidgetTester tester, Offset target) async {
+  final start = _paintedRect(tester).center;
+  final gesture = await tester.startGesture(start);
+  const steps = 10;
+  var frame = 0;
+
+  Future<void> moveTo(Offset position) async {
+    frame++;
+    await gesture.moveTo(position, timeStamp: _at(frame));
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+
+  for (var step = 1; step <= steps; step++) {
+    await moveTo(Offset.lerp(start, target, step / steps)!);
+  }
+  for (var still = 0; still < 6; still++) {
+    await moveTo(target);
+  }
+
+  await gesture.up();
+  await tester.pump();
+}
+
 Rect _panelRect(WidgetTester tester) =>
     tester.getRect(find.byKey(_collapsedKey));
 
@@ -75,6 +108,46 @@ Rect _paintedRect(WidgetTester tester) => tester
 
 void main() {
   group('layout', () {
+    testWidgets('a box smaller than the window is rejected, not silently '
+        'mispositioned', (tester) async {
+      final errors = <FlutterErrorDetails>[];
+      final reportError = FlutterError.onError;
+      FlutterError.onError = errors.add;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Center(
+            child: SizedBox(
+              width: 300,
+              height: 300,
+              child: DraggablePanel(
+                theme: DraggablePanelThemeData(
+                  motion: PanelMotionSpec.instant(),
+                ),
+                collapsedBuilder: (context, status) =>
+                    const ColoredBox(color: Color(0xFF112233)),
+                expandedBuilder: (context, status) =>
+                    const SizedBox(width: 200, height: 100),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      FlutterError.onError = reportError;
+
+      expect(
+        errors.map((details) => details.exception),
+        contains(
+          isA<AssertionError>().having(
+            (error) => error.message.toString(),
+            'message',
+            contains('it must be given all of it'),
+          ),
+        ),
+      );
+    });
+
     testWidgets('starts collapsed in the bottom-end corner', (tester) async {
       final controller = await _pumpPanel(tester);
 
@@ -627,6 +700,37 @@ void main() {
         reason: 'unlike collapsible: false, closing does not park it',
       );
       expect(_paintedRect(tester).size, const Size(64, 64));
+    });
+
+    testWidgets('a parked tab dragged to the far edge parks there', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester, behavior: behavior);
+      controller.stash(PanelEdge.end);
+      await tester.pump();
+      expect(controller.phase, PanelPhase.stashed);
+
+      const flushAgainstFarSide = _margin + _collapsed / 2;
+      await _dragTo(tester, const Offset(flushAgainstFarSide, 300));
+
+      expect(
+        controller.placement,
+        isA<StashedPlacement>(),
+        reason: 'moving a tab along to the other side is not asking to open it',
+      );
+      expect(controller.phase, PanelPhase.stashed);
+    });
+
+    testWidgets('a parked tab released away from the edges still opens', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester, behavior: behavior);
+      controller.stash(PanelEdge.end);
+      await tester.pump();
+
+      await _dragTo(tester, const Offset(400, 300));
+
+      expect(controller.phase, PanelPhase.expanded);
     });
 
     testWidgets('a drag between corners still rests collapsed', (tester) async {

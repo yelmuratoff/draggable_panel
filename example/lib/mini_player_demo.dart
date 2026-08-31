@@ -74,59 +74,90 @@ class _PlayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Now playing',
-                  style: Theme.of(context).textTheme.titleMedium,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Now playing',
+                    style: theme.textTheme.titleMedium,
+                  ),
                 ),
-              ),
-              IconButton(
-                onPressed: DraggablePanelScope.of(context).collapse,
-                icon: const Icon(Icons.close),
-                tooltip: 'Collapse',
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Flexible(
-            child: Container(
-              height: 96,
-              decoration: BoxDecoration(
-                color: scheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.album_outlined,
-                size: 48,
-                color: scheme.onPrimaryContainer,
-              ),
+                IconButton(
+                  onPressed: DraggablePanelScope.of(context).collapse,
+                  icon: const Icon(Icons.close),
+                  tooltip: 'Collapse',
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const IconButton(
-                onPressed: null,
-                icon: Icon(Icons.skip_previous),
-              ),
-              IconButton.filled(
-                onPressed: onTogglePlayback,
-                icon: Icon(playing ? Icons.pause : Icons.play_arrow),
-              ),
-              const IconButton(onPressed: null, icon: Icon(Icons.skip_next)),
-            ],
-          ),
-        ],
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.album_outlined,
+                    size: 48,
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Track 1',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'draggable_panel',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const IconButton(
+                  onPressed: null,
+                  icon: Icon(Icons.skip_previous),
+                ),
+                IconButton.filled(
+                  onPressed: onTogglePlayback,
+                  icon: Icon(playing ? Icons.pause : Icons.play_arrow),
+                ),
+                const IconButton(onPressed: null, icon: Icon(Icons.skip_next)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

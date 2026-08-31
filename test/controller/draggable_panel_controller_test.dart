@@ -173,6 +173,37 @@ void main() {
 
       expect(controller.phase, PanelPhase.collapsed);
     });
+
+    test('re-parking during the deferred expand cancels it, rather than '
+        'arming the next arrival', () {
+      final controller = _controller()
+        ..stash()
+        ..dispatch(const PanelSettleCompleted())
+        ..expand()
+        ..stash()
+        ..dispatch(const PanelSettleCompleted());
+
+      expect(controller.phase, PanelPhase.stashed);
+
+      controller
+        ..moveTo(_topStart)
+        ..dispatch(const PanelSettleCompleted());
+
+      expect(controller.phase, PanelPhase.collapsed);
+      expect(controller.placement, _topStart);
+    });
+
+    test('moving elsewhere during the deferred expand cancels it', () {
+      final controller = _controller()
+        ..stash()
+        ..dispatch(const PanelSettleCompleted())
+        ..expand()
+        ..moveTo(_topStart)
+        ..dispatch(const PanelSettleCompleted());
+
+      expect(controller.phase, PanelPhase.collapsed);
+      expect(controller.placement, _topStart);
+    });
   });
 
   group('notification volume', () {

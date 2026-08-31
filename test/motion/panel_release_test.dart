@@ -27,6 +27,7 @@ PanelPlacement _release(
     snapPolicy: PanelSnapPolicy.corners,
   ),
   TextDirection direction = TextDirection.ltr,
+  PanelPlacement from = const PanelPlacement.corner(PanelCorner.bottomEnd),
 }) => resolvePanelRelease(
   topLeft: topLeft,
   velocity: velocity,
@@ -34,6 +35,7 @@ PanelPlacement _release(
   viewport: _viewport(direction: direction),
   behavior: behavior,
   motion: PanelMotionSpec(),
+  from: from,
 );
 
 void main() {
@@ -215,6 +217,49 @@ void main() {
         TextDirection.ltr,
       );
       expect(alignment.x, 1);
+    });
+  });
+
+  group('a parked tab moving between edges', () {
+    const stashed = PanelPlacement.stashed(PanelEdge.end);
+
+    test('re-parks once it reaches the far side, without being shoved past '
+        'it', () {
+      for (final behavior in const [
+        PanelBehavior(expandOnUnstash: true),
+        PanelBehavior(collapsible: false),
+      ]) {
+        expect(
+          _release(const Offset(18, 400), behavior: behavior, from: stashed),
+          isA<StashedPlacement>(),
+          reason: '$behavior should park a tab that lands on the far side',
+        );
+      }
+    });
+
+    test('still opens when it is released away from either edge', () {
+      for (final behavior in const [
+        PanelBehavior(expandOnUnstash: true),
+        PanelBehavior(collapsible: false),
+      ]) {
+        expect(
+          _release(const Offset(170, 400), behavior: behavior, from: stashed),
+          isNot(isA<StashedPlacement>()),
+          reason: '$behavior should let a tab pulled clear of the edges open',
+        );
+      }
+    });
+
+    test('a panel that has a collapsed window to rest in still needs the '
+        'outward shove', () {
+      expect(
+        _release(
+          const Offset(18, 400),
+          behavior: const PanelBehavior(),
+          from: stashed,
+        ),
+        isNot(isA<StashedPlacement>()),
+      );
     });
   });
 }

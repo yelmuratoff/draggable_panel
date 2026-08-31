@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:ui';
 
 /// `UIScrollView.DecelerationRate.normal`.
@@ -94,12 +93,6 @@ abstract final class PanelPhysics {
     _overshootAxis(raw.dy, travel.top, travel.bottom),
   );
 
-  /// Clamps [raw] into [travel], centring on an axis whose range is inverted.
-  static Offset clampInto(Offset raw, Rect travel) => Offset(
-    _clampAxis(raw.dx, travel.left, travel.right),
-    _clampAxis(raw.dy, travel.top, travel.bottom),
-  );
-
   /// The entry of [candidates] closest to [probe].
   ///
   /// Throws [StateError] if [candidates] is empty.
@@ -147,10 +140,5 @@ abstract final class PanelPhysics {
     if (value < low) return value - low;
     if (value > high) return value - high;
     return 0;
-  }
-
-  static double _clampAxis(double value, double low, double high) {
-    if (high < low) return (low + high) / 2;
-    return math.min(math.max(value, low), high);
   }
 }

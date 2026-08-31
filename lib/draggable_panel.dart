@@ -27,4 +27,3 @@ export 'src/presets/action_panel/action_panel_theme_data.dart';
 export 'src/presets/action_panel/draggable_action_panel.dart';
 export 'src/presets/action_panel/panel_action.dart';
 export 'src/theme/draggable_panel_theme_data.dart';
-export 'src/theme/panel_style.dart' show PanelStyle;

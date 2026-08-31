@@ -1,3 +1,4 @@
+import 'package:draggable_panel/src/controller/panel_state_machine.dart';
 import 'package:draggable_panel/src/model/panel_behavior.dart';
 import 'package:draggable_panel/src/model/panel_corner.dart';
 import 'package:draggable_panel/src/model/panel_edge.dart';
@@ -19,6 +20,7 @@ PanelPlacement resolvePanelRelease({
   required PanelViewport viewport,
   required PanelBehavior behavior,
   required PanelMotionSpec motion,
+  required PanelPlacement from,
 }) {
   final projected = PanelPhysics.projectOffset(
     topLeft,
@@ -28,11 +30,11 @@ PanelPlacement resolvePanelRelease({
 
   final stash = _stashDecision(
     projected: projected,
-    velocity: velocity,
     panelSize: panelSize,
     viewport: viewport,
     behavior: behavior,
     motion: motion,
+    from: from,
   );
   if (stash != null) return stash;
 
@@ -43,21 +45,26 @@ PanelPlacement resolvePanelRelease({
   };
 }
 
-/// A stash needs the gesture to be clearly horizontal *and* to project the
-/// panel's centre past the edge, so one threshold covers both a slow shove and
-/// a fast flick from mid-screen.
+/// Parks the panel when its projected position leaves the resting bounds by
+/// [PanelMotionSpec.stashCommit] of its own width, so one threshold covers both
+/// a slow shove against the side and a fast flick from mid-screen.
+///
+/// A parked panel with no collapsed window to arrive in measures that threshold
+/// *inwards* instead: landing against a side can then only mean parking there.
 PanelPlacement? _stashDecision({
   required Offset projected,
-  required Offset velocity,
   required Size panelSize,
   required PanelViewport viewport,
   required PanelBehavior behavior,
   required PanelMotionSpec motion,
+  required PanelPlacement from,
 }) {
   if (!behavior.stashable) return null;
 
   final bounds = viewport.bounds;
-  final commit = panelSize.width * motion.stashCommit;
+  final reparks =
+      from is StashedPlacement && panelOpensOnArrival(from, behavior);
+  final commit = panelSize.width * motion.stashCommit * (reparks ? -1 : 1);
 
   // Measured from the resting edge outwards, so pushing the panel off the side
   // is what parks it. Comparing centres instead would need the panel dragged

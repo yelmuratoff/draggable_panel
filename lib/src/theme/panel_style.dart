@@ -11,6 +11,10 @@ import 'package:flutter/material.dart';
 /// [DraggablePanelThemeData] is the authoring surface, where a null token means
 /// "inherit". This is what the panel actually paints from, so nothing
 /// downstream has to carry a fallback.
+///
+/// Internal on purpose. [resolve] reads the ambient theme, so calling it from
+/// inside a builder would miss the `theme:` passed to the panel at its own call
+/// site and quietly return the wrong tokens.
 @immutable
 final class PanelStyle {
   const PanelStyle({

@@ -22,8 +22,9 @@ final class PanelEdgeHandle extends StatelessWidget {
 
   /// The box the curve is drawn in, centred within the handle.
   ///
-  /// Fixed rather than proportional: the curve's two ends line up only at this
-  /// width, and stretching it to the handle skews one end past the other.
+  /// The curve keeps its proportions inside whatever box it is given, so a
+  /// retuned size rescales it rather than leaving its ends where the default
+  /// box put them.
   final Size curveSize;
 
   final double strokeWidth;
@@ -42,6 +43,12 @@ final class PanelEdgeHandle extends StatelessWidget {
 }
 
 /// Draws a single shallow curve bowing towards the direction of travel.
+///
+/// The geometry is expressed as fractions of the box it is handed, written as
+/// the design's own measurements over the default `handleSize` of 20x65. A
+/// retuned `handleSize` therefore rescales the curve instead of leaving its
+/// endpoints where a 65-tall box put them — which on a shorter box would put
+/// the far end above the near one.
 final class _EdgeCurvePainter extends CustomPainter {
   const _EdgeCurvePainter({
     required this.color,
@@ -49,20 +56,28 @@ final class _EdgeCurvePainter extends CustomPainter {
     required this.strokeWidth,
   });
 
+  static const _endInsetX = 7 / 20;
+  static const _endInsetY = 14 / 65;
+  static const _bow = 3 / 20;
+
   final Color color;
   final bool pointsTowardStart;
   final double strokeWidth;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final startX = pointsTowardStart ? size.width - 7.0 : 7.0;
+    final inset = size.width * _endInsetX;
+    final bow = size.width * _bow;
+    final top = size.height * _endInsetY;
+
+    final startX = pointsTowardStart ? size.width - inset : inset;
     final controlX = size.width / 2;
-    final endX = controlX + (pointsTowardStart ? 3 : -3);
+    final endX = controlX + (pointsTowardStart ? bow : -bow);
 
     canvas.drawPath(
       Path()
-        ..moveTo(startX, 14)
-        ..quadraticBezierTo(controlX, size.height / 2, endX, size.height - 14),
+        ..moveTo(startX, top)
+        ..quadraticBezierTo(controlX, size.height / 2, endX, size.height - top),
       Paint()
         ..color = color
         ..strokeWidth = strokeWidth

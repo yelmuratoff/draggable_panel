@@ -32,7 +32,8 @@ typedef PanelHandleBuilder =
 /// it grows in place into the expanded panel, anchored at the corner it already
 /// occupies; dragged down while expanded, it shrinks back.
 ///
-/// Install it above the app's own content, typically through
+/// The panel resolves its placement against the window, so it must be given the
+/// whole window. Install it above the app's own content, typically through
 /// `MaterialApp.builder`:
 ///
 /// ```dart

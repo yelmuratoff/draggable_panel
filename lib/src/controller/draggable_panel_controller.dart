@@ -47,7 +47,13 @@ final class DraggablePanelController extends ChangeNotifier
 
   PanelStatus _status;
   PanelBehavior _behavior = const PanelBehavior();
-  bool _expandAfterSettling = false;
+
+  /// Where a pending [expand] is waiting for the panel to arrive.
+  ///
+  /// Held as the placement rather than a flag so that abandoning the journey —
+  /// re-parking it, grabbing it, moving it somewhere else — drops the request
+  /// instead of leaving it armed for whatever settles next.
+  PanelPlacement? _expandOnArrivalAt;
 
   late final DerivedNotifier<PanelPhase> _phase;
   late final DerivedNotifier<PanelPlacement> _placement;
@@ -101,8 +107,9 @@ final class DraggablePanelController extends ChangeNotifier
   /// A stashed panel returns to the nearest corner first and expands once it
   /// arrives, because growing out of the edge of the screen has nowhere to go.
   void expand() {
-    if (phase == PanelPhase.stashed) {
-      _expandAfterSettling = true;
+    final current = placement;
+    if (phase == PanelPhase.stashed && current is StashedPlacement) {
+      _expandOnArrivalAt = restingPlacementFor(current);
       unstash();
       return;
     }
@@ -159,8 +166,10 @@ final class DraggablePanelController extends ChangeNotifier
 
   /// Moves the panel to [target] without changing whether it is expanded.
   ///
-  /// A [StashedPlacement] is the exception: it parks the panel, which closes an
-  /// expanded one on the way, exactly as [stash] does.
+  /// Two exceptions. A [StashedPlacement] parks the panel, which closes an
+  /// expanded one on the way, exactly as [stash] does. And a move that leaves a
+  /// park opens the panel when the stage model says arriving means opening —
+  /// [PanelBehavior.expandOnUnstash], or no collapsed stage at all.
   void moveTo(PanelPlacement target) => dispatch(PanelMoveRequested(target));
 
   /// Takes the panel off-stage, keeping its placement for the next [show].
@@ -178,14 +187,18 @@ final class DraggablePanelController extends ChangeNotifier
     assert(ChangeNotifier.debugAssertNotDisposed(this), '');
     var next = panelTransition(_status, event, _behavior);
 
-    if (_expandAfterSettling && next.phase == PanelPhase.collapsed) {
-      _expandAfterSettling = false;
-      next = panelTransition(next, const PanelExpandRequested(), _behavior);
-    }
-    if (event is PanelDragStarted ||
-        event is PanelHideRequested ||
-        next.phase.isExpanding) {
-      _expandAfterSettling = false;
+    if (_expandOnArrivalAt case final pending?) {
+      final arrived =
+          event is PanelSettleCompleted &&
+          next.phase == PanelPhase.collapsed &&
+          next.placement == pending;
+      if (arrived) {
+        _expandOnArrivalAt = null;
+        next = panelTransition(next, const PanelExpandRequested(), _behavior);
+      } else if (next.phase != PanelPhase.settling ||
+          next.placement != pending) {
+        _expandOnArrivalAt = null;
+      }
     }
 
     if (next == _status) return;

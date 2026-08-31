@@ -65,14 +65,22 @@ final class PanelAction {
       other is PanelAction &&
           other.icon == icon &&
           other.onPressed == onPressed &&
+          other.label == label &&
           other.tooltip == tooltip &&
           other.badge == badge &&
           other.color == color &&
           other.foregroundColor == foregroundColor;
 
   @override
-  int get hashCode =>
-      Object.hash(icon, onPressed, tooltip, badge, color, foregroundColor);
+  int get hashCode => Object.hash(
+    icon,
+    onPressed,
+    label,
+    tooltip,
+    badge,
+    color,
+    foregroundColor,
+  );
 }
 
 /// One full-width labelled button below the action grid.

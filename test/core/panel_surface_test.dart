@@ -9,6 +9,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// The surface fills the window, as the panel requires; these are the test
+/// window and the resting bounds a 16-pixel margin leaves inside it.
+const _window = Size(800, 600);
+const _bounds = Rect.fromLTRB(16, 16, 784, 584);
+
 /// A mutable counter a render object can bump from `performLayout`.
 final class _Tally {
   int value = 0;
@@ -116,7 +121,8 @@ Future<_Harness> _pumpSurface(
             originOf: () => harness.driver.value,
             expansionOf: () => harness.morph.value,
             anchor: anchor,
-            bounds: const EdgeInsets.all(16),
+            bounds: _bounds,
+            viewportSize: _window,
             isDragging: false,
             isStashed: false,
             isParking: false,
@@ -371,7 +377,8 @@ void main() {
                   originOf: () => harness.driver.value,
                   expansionOf: () => harness.morph.value,
                   anchor: Alignment.bottomRight,
-                  bounds: const EdgeInsets.all(16),
+                  bounds: _bounds,
+                  viewportSize: _window,
                   isDragging: false,
                   isStashed: false,
                   isParking: false,

@@ -1,7 +1,7 @@
-## 4.0.0-beta.8
+## 4.0.0-beta.9
 
 A rewrite. The panel is now a floating window: drag it anywhere, release it and
-it springs to the nearest corner by projected velocity, flick it past an edge to
+it springs to the nearest side by projected velocity, flick it past an edge to
 park it off-screen, tap it to grow in place into a full panel. Material 3
 visuals, spring-based motion throughout.
 
@@ -10,12 +10,13 @@ Breaking changes
 - `DraggablePanel` now takes `collapsedBuilder` + `expandedBuilder` and
   arbitrary content. The icons-and-buttons shape lives on as the
   `DraggableActionPanel` preset. See `MIGRATION.md` for the full mapping.
-- `onPositionChanged(x, y)` became `onPlacementChanged(PanelPlacement)`. Pixels
-  do not survive rotation or a different device; a corner does. Stored pixel
-  positions cannot be converted and should be dropped.
+- `onPositionChanged(x, y)` became `onPlacementChanged(PanelPlacement)`. Stored
+  pixel positions cannot be converted and should be dropped.
 - Every controller method that took a screen size is gone: `forceDock`,
   `hidePanel`, `togglePanel`, `toggleMainButton`, `relayout` and
   `recomputeDockSide` were layout math leaking into a state object.
+- Interaction flags moved off the controller onto `PanelBehavior`, passed to the
+  widget.
 - `DraggablePanelTheme` became `DraggablePanelThemeData`, a `ThemeExtension`
   with nullable tokens, so a call-site override no longer clobbers an app-wide
   one. Sub-themes flattened into `DraggableActionPanelThemeData`.
@@ -25,6 +26,7 @@ Breaking changes
 - Removed: `MultiValueListenableBuilder`, `TooltipSnackBar`, `DockType`,
   `PanelState`, and the already-deprecated `panelAnimDuration`,
   `dockAnimDuration` and `movementSpeed`.
+- The panel must be given the whole window; a smaller box trips an assertion.
 - Minimum Flutter is now 3.32 (Dart 3.8).
 
 Added
@@ -32,16 +34,17 @@ Added
 - Spring physics throughout: velocity projection, a critically damped 400 ms
   settle, and the iOS rubber band. Motion is interruptible — grabbing a moving
   panel folds its momentum into the next throw, and reversing an expansion
-  halfway works.
-- Four-corner snapping and grow-in-place expansion, anchored at the corner the
-  panel already occupies.
+  halfway overshoots, turns around and comes back.
+- Grow-in-place expansion anchored at the corner the panel occupies, and a
+  `snapPolicy` choosing between sides, corners, and free placement.
 - Edge parking: push the panel against a side and it stays there as a grab-able
   tab, pull it back and it returns. Both are ordinary drags rather than separate
-  gestures, and an open panel closes on its way into the park.
+  gestures, and an open panel closes on its way into the park. A tab moved along
+  to another edge re-parks there instead of opening, so the two settings that
+  drop the collapsed window still let you just put the panel somewhere else.
 - Three resting stages, two of them optional. `stashable: false` drops the park,
   `collapsible: false` drops the small window between tab and panel, and
-  `expandOnUnstash: true` opens the panel straight out of a park while keeping
-  the window as somewhere to close down to.
+  `expandOnUnstash: true` opens the panel straight out of a park.
 - `PanelPlacement` — resolution-independent resting positions with JSON
   round-tripping, so a placement saved on a tablet restores on a phone.
 - `PanelBehavior` for interaction flags, covering idle parking, tap-outside
@@ -51,9 +54,8 @@ Added
   reduced motion, and `PanelSemantics` for localizable copy.
 - Committed-moment haptics, independent of the motion preference.
 - `DraggablePanelScope` for reaching the controller from panel content.
-- A theme token for every visual the panel paints: the three shapes and their
-  borders, the elevations, the parked tab's size and grab handle, frosted glass
-  through `surfaceFilter`, and the springs themselves.
+- A theme token for every visual the panel paints, frosted glass through
+  `surfaceFilter`, and the springs themselves.
 - The `DraggableActionPanel` preset — an action grid with captions and badges, a
   header with a close control, scrolling content, and a builder for every part.
 
@@ -64,12 +66,10 @@ Changed
   application behind the panel — all three asserted by regression tests.
 - Rotation, resize, split-screen and the keyboard re-place the panel by
   re-resolving its placement, carrying velocity, instead of teleporting it.
-- The published archive carries the library, the example's source and the tests,
-  leaving out golden images and platform scaffolding.
 
 Fixed
 
-- Panel content now sits inside a transparent `Material`, so a bare `Text` in a
+- Panel content sits inside a transparent `Material`, so a bare `Text` in a
   builder inherits the app's text style instead of rendering as oversized debug
   type, and an `InkWell` finds something to ink on.
 - Drag velocity is no longer discarded on release; a flick and a slow drop now

@@ -284,6 +284,13 @@ final class DraggablePanelThemeData
         EnumProperty<Clip>('clipBehavior', clipBehavior, defaultValue: null),
       )
       ..add(ColorProperty('surfaceColor', surfaceColor, defaultValue: null))
+      ..add(
+        DiagnosticsProperty<ImageFilter>(
+          'surfaceFilter',
+          surfaceFilter,
+          defaultValue: null,
+        ),
+      )
       ..add(ColorProperty('shadowColor', shadowColor, defaultValue: null))
       ..add(DoubleProperty('elevation', elevation, defaultValue: null))
       ..add(
@@ -297,6 +304,13 @@ final class DraggablePanelThemeData
         DoubleProperty(
           'expandedElevation',
           expandedElevation,
+          defaultValue: null,
+        ),
+      )
+      ..add(
+        DoubleProperty(
+          'stashedElevation',
+          stashedElevation,
           defaultValue: null,
         ),
       )

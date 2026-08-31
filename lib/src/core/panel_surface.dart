@@ -16,6 +16,7 @@ final class PanelSurface
     required this.expansionOf,
     required this.anchor,
     required this.bounds,
+    required this.viewportSize,
     required this.isDragging,
     required this.isStashed,
     required this.isParking,
@@ -41,8 +42,12 @@ final class PanelSurface
   /// Which corner stays pinned as the panel grows.
   final Alignment anchor;
 
-  /// Insets from this widget's own box that the panel must stay within.
-  final EdgeInsets bounds;
+  /// The rect within this widget's own box that the panel rests inside.
+  final Rect bounds;
+
+  /// The window [bounds] was measured against, which this widget is expected to
+  /// fill. Checked by an assertion at layout time.
+  final Size viewportSize;
 
   final bool isDragging;
   final bool isStashed;
@@ -81,6 +86,7 @@ final class PanelSurface
         anchor: anchor,
         collapsedSize: style.collapsedSize,
         bounds: bounds,
+        viewportSize: viewportSize,
         isDragging: isDragging,
         isStashed: isStashed,
         isParking: isParking,
@@ -101,6 +107,7 @@ final class PanelSurface
       ..anchor = anchor
       ..collapsedSize = style.collapsedSize
       ..bounds = bounds
+      ..viewportSize = viewportSize
       ..isDragging = isDragging
       ..isStashed = isStashed
       ..isParking = isParking

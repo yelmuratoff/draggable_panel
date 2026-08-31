@@ -1,4 +1,6 @@
 import 'package:draggable_panel/draggable_panel.dart';
+import 'package:draggable_panel/src/core/panel_surface.dart';
+import 'package:draggable_panel/src/core/render_panel_surface.dart';
 import 'package:draggable_panel_example/main.dart' as app;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +17,10 @@ void main() {
     await tester.pumpAndSettle();
     await binding.takeScreenshot(name);
   }
+
+  Rect paintedRect(WidgetTester tester) => tester
+      .renderObject<RenderPanelSurface>(find.byType(PanelSurface))
+      .paintedRect;
 
   testWidgets('the parked tab, and pulling it out', (tester) async {
     app.main();
@@ -137,6 +143,75 @@ void main() {
     await tester.pumpAndSettle();
     await binding.takeScreenshot('08-parked-again');
   });
+
+  /// Carries the tab to [targetX] and comes to a stop before letting go, so the
+  /// velocity tracker reports a deliberate move rather than a flick.
+  Future<void> dragTabTo(WidgetTester tester, double targetX) async {
+    final grip = tester.getCenter(find.byType(PanelEdgeHandle));
+    final gesture = await tester.startGesture(grip);
+    var frame = 0;
+
+    Future<void> moveTo(double x) async {
+      frame++;
+      await gesture.moveTo(
+        Offset(x, grip.dy),
+        timeStamp: Duration(milliseconds: 16 * frame),
+      );
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+
+    for (var step = 1; step <= 12; step++) {
+      await moveTo(grip.dx + (targetX - grip.dx) * step / 12);
+    }
+    for (var still = 0; still < 6; still++) {
+      await moveTo(targetX);
+    }
+
+    await gesture.up();
+    await tester.pumpAndSettle();
+  }
+
+  for (final demo in const ['Quick open', 'Tab panel']) {
+    testWidgets('$demo: a tab dragged to the far edge parks there', (
+      tester,
+    ) async {
+      app.main();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(demo));
+      await tester.pumpAndSettle();
+
+      final width = tester.getSize(find.byType(MaterialApp)).width;
+      await dragTabTo(tester, 8);
+      await binding.takeScreenshot('15-$demo-parked-far-edge');
+
+      final rect = paintedRect(tester);
+      expect(
+        rect.width,
+        lessThan(100),
+        reason: 'moving a tab across is not asking to open it',
+      );
+      expect(rect.center.dx, lessThan(width / 2));
+    });
+
+    testWidgets('$demo: a tab released away from the edges opens', (
+      tester,
+    ) async {
+      app.main();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(demo));
+      await tester.pumpAndSettle();
+
+      final width = tester.getSize(find.byType(MaterialApp)).width;
+      await dragTabTo(tester, width / 2);
+      await binding.takeScreenshot('16-$demo-opened-mid-screen');
+
+      expect(
+        paintedRect(tester).width,
+        greaterThan(200),
+        reason: 'pulled clear of both edges, it should have opened',
+      );
+    });
+  }
 
   testWidgets('the parked tab in dark mode', (tester) async {
     app.main();

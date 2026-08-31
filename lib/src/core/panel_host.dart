@@ -73,9 +73,12 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
   Offset _grab = Offset.zero;
   Offset _carried = Offset.zero;
   Duration _carriedAt = Duration.zero;
-  double _morphReleaseVelocity = 0;
   Offset _settleVelocity = Offset.zero;
   bool _placed = false;
+
+  /// Owned so the arrow-key actions can tell "the panel is focused" from
+  /// "something inside the panel is focused".
+  final FocusNode _focusNode = FocusNode(debugLabel: 'DraggablePanel');
 
   final PanelHaptics _haptics = PanelHaptics();
   PanelStatus? _previousStatus;
@@ -127,6 +130,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
     widget.controller.removeListener(_onStatusChanged);
     _driver.dispose();
     _morph.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -152,10 +156,6 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
 
     final changed = _viewport != next;
     _viewport = next;
-    _morph.travelPixels = math.max(
-      widget.style.collapsedSize.height,
-      next.bounds.height * _spec.expandTravelFraction,
-    );
 
     if (!_placed) {
       _placed = true;
@@ -198,11 +198,9 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
         );
         if (_morph.value != 0) _morph.settleTo(0);
       case PanelPhase.expanding:
-        _morph.settleTo(1, pixelVelocity: _morphReleaseVelocity);
-        _morphReleaseVelocity = 0;
+        _morph.settleTo(1);
       case PanelPhase.collapsing:
-        _morph.settleTo(0, pixelVelocity: _morphReleaseVelocity);
-        _morphReleaseVelocity = 0;
+        _morph.settleTo(0);
       case PanelPhase.hidden:
         _morph.jumpTo(0);
       case PanelPhase.collapsed:
@@ -343,6 +341,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
       viewport: _viewport!,
       behavior: widget.behavior,
       motion: _spec,
+      from: widget.controller.placement,
     );
 
     if (widget.controller.phase.isExpanding) {
@@ -568,12 +567,13 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
           DismissIntent: CallbackAction<DismissIntent>(
             onInvoke: (_) => _dismissByKeyboard(),
           ),
-          _PanelMoveIntent: CallbackAction<_PanelMoveIntent>(
-            onInvoke: (intent) => _moveByKeyboard(intent.direction),
+          _PanelMoveIntent: _PanelMoveAction(
+            isPanelFocused: () => _focusNode.hasPrimaryFocus,
+            onMove: _moveByKeyboard,
           ),
         },
         child: Focus(
-          debugLabel: 'DraggablePanel',
+          focusNode: _focusNode,
           child: _buildGestures(settings, assistive: assistive),
         ),
       ),
@@ -652,7 +652,8 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
       originOf: () => _driver.value,
       expansionOf: () => _morph.value,
       anchor: _anchor(),
-      bounds: _boundsInsets(),
+      bounds: _viewport!.bounds,
+      viewportSize: _viewport!.size,
       isDragging: _isMoving,
       isStashed: phase == PanelPhase.stashed,
       isParking: widget.controller.placement is StashedPlacement,
@@ -698,18 +699,6 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
   /// edge reads as a flicker. The surface folds the parked fade in along the
   /// frame's emergence instead.
   double _opacityFor(PanelPhase phase) => phase == PanelPhase.hidden ? 0 : 1;
-
-  /// The viewport's usable rect, expressed as insets from this widget's box.
-  EdgeInsets _boundsInsets() {
-    final viewport = _viewport!;
-    final bounds = viewport.bounds;
-    return EdgeInsets.fromLTRB(
-      bounds.left,
-      bounds.top,
-      viewport.size.width - bounds.right,
-      viewport.size.height - bounds.bottom,
-    );
-  }
 }
 
 /// Moves the panel one corner in a direction, from the keyboard.
@@ -718,4 +707,25 @@ final class _PanelMoveIntent extends Intent {
   const _PanelMoveIntent(this.direction);
 
   final AxisDirection direction;
+}
+
+/// Walks the panel between corners, but only while the panel itself holds
+/// focus.
+///
+/// The shortcuts that raise [_PanelMoveIntent] wrap the panel's own content, so
+/// without this gate an arrow key pressed inside a text field, a list, or any
+/// other focusable the caller built would move the whole panel instead of doing
+/// its own job. A disabled action leaves the key unhandled, so it carries on up
+/// the focus chain to whoever should have had it.
+final class _PanelMoveAction extends Action<_PanelMoveIntent> {
+  _PanelMoveAction({required this.isPanelFocused, required this.onMove});
+
+  final ValueGetter<bool> isPanelFocused;
+  final ValueChanged<AxisDirection> onMove;
+
+  @override
+  bool get isActionEnabled => isPanelFocused();
+
+  @override
+  void invoke(_PanelMoveIntent intent) => onMove(intent.direction);
 }

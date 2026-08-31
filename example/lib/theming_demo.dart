@@ -24,7 +24,6 @@ class _ThemingDemoState extends State<ThemingDemo> {
   double _responseMs = 400;
   double _bounce = 0;
   double _elevation = 6;
-  double _travel = 0.35;
 
   DraggablePanelThemeData _themeOf(BuildContext context) =>
       DraggablePanelThemeData(
@@ -46,7 +45,6 @@ class _ThemingDemoState extends State<ThemingDemo> {
             duration: Duration(milliseconds: _responseMs.round()),
             bounce: _bounce,
           ),
-          expandTravelFraction: _travel,
         ),
       );
 
@@ -129,14 +127,6 @@ class _ThemingDemoState extends State<ThemingDemo> {
             max: 0.6,
             display: _bounce.toStringAsFixed(2),
             onChanged: (value) => setState(() => _bounce = value),
-          ),
-          _Slider(
-            label: 'Pull distance to open',
-            value: _travel,
-            min: 0.1,
-            max: 0.9,
-            display: _travel.toStringAsFixed(2),
-            onChanged: (value) => setState(() => _travel = value),
           ),
           _Slider(
             label: 'Elevation',

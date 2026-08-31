@@ -242,6 +242,52 @@ void main() {
       );
     });
 
+    testWidgets("an arrow inside the panel's own content is left alone", (
+      tester,
+    ) async {
+      final controller = DraggablePanelController();
+      addTearDown(controller.dispose);
+      final field = TextEditingController(text: 'hello world');
+      addTearDown(field.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DraggablePanel(
+            controller: controller,
+            theme: DraggablePanelThemeData(motion: PanelMotionSpec.instant()),
+            collapsedBuilder: (context, status) =>
+                const ColoredBox(key: _collapsedKey, color: Color(0xFF112233)),
+            expandedBuilder: (context, status) => SizedBox(
+              key: _expandedKey,
+              width: 280,
+              height: 200,
+              child: TextField(controller: field),
+            ),
+            child: const ColoredBox(color: Color(0xFFFFFFFF)),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      controller.expand();
+      await tester.pump();
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      field.selection = const TextSelection.collapsed(offset: 5);
+      await tester.pump();
+
+      final placement = controller.placement;
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pump();
+
+      expect(
+        field.selection.baseOffset,
+        4,
+        reason: 'the caret should move, not the panel',
+      );
+      expect(controller.placement, placement);
+    });
+
     testWidgets('escape collapses an expanded panel', (tester) async {
       final controller = await _pumpPanel(tester);
       await focusPanel(tester);

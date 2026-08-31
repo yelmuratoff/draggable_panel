@@ -1,6 +1,7 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:draggable_panel/draggable_panel.dart';
+import 'package:draggable_panel/src/theme/panel_style.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

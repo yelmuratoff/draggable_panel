@@ -28,6 +28,7 @@ class _ExampleAppState extends State<ExampleApp> {
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'draggable_panel',
+    debugShowCheckedModeBanner: false,
     theme: ThemeData(colorSchemeSeed: Colors.indigo),
     darkTheme: ThemeData(
       colorSchemeSeed: Colors.indigo,

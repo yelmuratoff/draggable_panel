@@ -1,7 +1,8 @@
 name: draggable_panel
-description: A floating panel window — drag it anywhere, spring-snap to corners, stash it off the edge, tap to grow it in place.
-version: 4.0.0-beta.8
-homepage: https://github.com/yelmuratoff/draggable_panel.git
+description: A floating panel window — drag it anywhere, spring-snap to the nearest side, stash it off the edge, tap to grow it in place.
+version: 4.0.0-beta.9
+homepage: https://github.com/yelmuratoff/draggable_panel
+repository: https://github.com/yelmuratoff/draggable_panel
 issue_tracker: https://github.com/yelmuratoff/draggable_panel/issues
 
 topics:
@@ -9,6 +10,16 @@ topics:
   - floating-panel
   - animation
   - accessibility
+
+screenshots:
+  - description: "A collapsed panel floating over the app's own scrolling page."
+    path: assets/screenshots/floating-window.png
+  - description: "The same panel tapped open, grown in place at the corner it sat in."
+    path: assets/screenshots/expanded-in-place.png
+  - description: "The DraggableActionPanel preset: an action grid over a button row."
+    path: assets/screenshots/action-grid.png
+  - description: "Pushed off the side, the panel parks as a tab you can pull back."
+    path: assets/screenshots/parked-at-the-edge.png
 
 platforms:
   android:
