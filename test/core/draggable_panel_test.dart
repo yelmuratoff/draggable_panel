@@ -108,7 +108,7 @@ Rect _paintedRect(WidgetTester tester) => tester
 
 void main() {
   group('layout', () {
-    testWidgets('a box smaller than the window is rejected, not silently '
+    testWidgets('a box smaller than the window is reported, not silently '
         'mispositioned', (tester) async {
       final errors = <FlutterErrorDetails>[];
       final reportError = FlutterError.onError;
@@ -137,15 +137,44 @@ void main() {
       FlutterError.onError = reportError;
 
       expect(
-        errors.map((details) => details.exception),
-        contains(
-          isA<AssertionError>().having(
-            (error) => error.message.toString(),
-            'message',
-            contains('it must be given all of it'),
+        errors.map((details) => details.exception.toString()),
+        contains(contains('Mount it through MaterialApp.builder')),
+      );
+      expect(
+        find.byType(DraggablePanel),
+        findsOneWidget,
+        reason: 'the report must not take the app down with it',
+      );
+    });
+
+    testWidgets('the report is made once, not on every layout', (tester) async {
+      final errors = <FlutterErrorDetails>[];
+      final reportError = FlutterError.onError;
+      FlutterError.onError = errors.add;
+
+      Widget boxed(double side) => MaterialApp(
+        home: Center(
+          child: SizedBox(
+            width: side,
+            height: side,
+            child: DraggablePanel(
+              theme: DraggablePanelThemeData(motion: PanelMotionSpec.instant()),
+              collapsedBuilder: (context, status) =>
+                  const ColoredBox(color: Color(0xFF112233)),
+              expandedBuilder: (context, status) =>
+                  const SizedBox(width: 200, height: 100),
+            ),
           ),
         ),
       );
+
+      await tester.pumpWidget(boxed(300));
+      await tester.pumpWidget(boxed(320));
+      await tester.pumpWidget(boxed(340));
+
+      FlutterError.onError = reportError;
+
+      expect(errors, hasLength(1));
     });
 
     testWidgets('starts collapsed in the bottom-end corner', (tester) async {

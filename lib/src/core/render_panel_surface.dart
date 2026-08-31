@@ -229,15 +229,49 @@ final class RenderPanelSurface extends RenderBox
   /// The handle fills the tab a parked panel shows.
   Size get _handleSize => handleSizeFor(_style.stashedSize, _style.stashedPeek);
 
+  bool _warnedAboutWindow = false;
+
+  /// Reports a panel that was handed less than the window it places itself
+  /// against, once per spell of it.
+  ///
+  /// A report rather than a failed assertion: the panel still paints and still
+  /// takes its gestures, it is only positioned against edges its box does not
+  /// have, so stopping the app would be out of proportion to the mistake.
+  bool _debugCheckFillsWindow() {
+    if (size == _viewportSize) {
+      _warnedAboutWindow = false;
+      return true;
+    }
+    if (_warnedAboutWindow) return true;
+    _warnedAboutWindow = true;
+
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        library: 'draggable_panel',
+        context: ErrorDescription('laying out a DraggablePanel'),
+        exception: FlutterError.fromParts([
+          ErrorSummary(
+            'DraggablePanel was laid out at $size inside a $_viewportSize '
+            'window.',
+          ),
+          ErrorDescription(
+            'The panel resolves its placement against the window, so a box '
+            'smaller than that leaves it resting against edges it does not '
+            'have.',
+          ),
+          ErrorHint(
+            'Mount it through MaterialApp.builder, or another parent that '
+            'fills the window.',
+          ),
+        ]),
+      ),
+    );
+    return true;
+  }
+
   @override
   void performLayout() {
-    assert(
-      size == _viewportSize,
-      'DraggablePanel was laid out at $size inside a $_viewportSize window. It '
-      'resolves placements against the window, so it must be given all of it — '
-      'mount it through MaterialApp.builder, or another parent that fills the '
-      'window.',
-    );
+    assert(_debugCheckFillsWindow(), '');
     childForSlot(
       PanelSlot.collapsed,
     )?.layout(BoxConstraints.tight(_collapsedSize));
