@@ -22,7 +22,8 @@ Breaking changes
   one. Sub-themes flattened into `DraggableActionPanelThemeData`.
 - `DraggablePanelMotion` (durations and curves) became `PanelMotionSpec`
   (springs). There is no mechanical mapping — a tween cannot carry entry
-  velocity or be redirected mid-flight.
+  velocity or be redirected mid-flight. `panelSwitchInCurve` and
+  `panelSwitchOutCurve` went with it; neither had any effect in 3.x.
 - Removed: `MultiValueListenableBuilder`, `TooltipSnackBar`, `DockType`,
   `PanelState`, and the already-deprecated `panelAnimDuration`,
   `dockAnimDuration` and `movementSpeed`.
@@ -64,11 +65,14 @@ Added
 
 Changed
 
+- Rotation, resize, split-screen and the keyboard re-place the panel by
+  re-resolving its placement, carrying velocity, instead of teleporting it.
+
+Performance
+
 - Motion is paint-only and isolated behind its own repaint boundary. A frame of
   movement costs zero widget builds, zero layouts, and no repaint of the
   application behind the panel — all three asserted by regression tests.
-- Rotation, resize, split-screen and the keyboard re-place the panel by
-  re-resolving its placement, carrying velocity, instead of teleporting it.
 
 Fixed
 
@@ -77,9 +81,9 @@ Fixed
   type, and an `InkWell` finds something to ink on.
 - Drag velocity is no longer discarded on release; a flick and a slow drop now
   differ.
-- Bounds resist instead of clamping dead.
+- Dragging past an edge stretches against a rubber band and springs back,
+  instead of the panel stopping dead against the bound mid-gesture.
 - Theme changes crossfade the panel along with the rest of the app.
-- `panelSwitchInCurve` / `panelSwitchOutCurve` were inert public API in 3.x.
 
 ## 3.0.0
 
