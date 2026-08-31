@@ -1,3 +1,22 @@
+## 4.1.0
+
+Features
+
+- PanelDragArea: marks the part of an expanded panel that drags the window,
+  so a scrollable inside it keeps its own swipes.
+
+Fixes
+
+- An expanded panel no longer halves the platform touch slop, which had it
+  taking drags meant for a scrollable inside it.
+
+Changed
+
+- The DraggableActionPanel header stays put while the grid scrolls under it,
+  and doubles as the panel's drag area.
+- With a drag area declared, a tap outside it is left to the content instead
+  of collapsing the panel.
+
 ## 4.0.0
 
 A rewrite. The panel is now a floating window: drag it anywhere, release it and
