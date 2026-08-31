@@ -1,7 +1,21 @@
-# draggable_panel
+<div align="center">
+<p align="center">
+    <a href="https://github.com/yelmuratoff/draggable_panel" align="center">
+        <img src="https://github.com/yelmuratoff/draggable_panel/blob/main/assets/draggable_panel.png?raw=true" width="400px">
+    </a>
+</p>
+</div>
 
-[![pub package](https://img.shields.io/pub/v/draggable_panel.svg)](https://pub.dev/packages/draggable_panel)
-[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <a href="https://pub.dev/packages/draggable_panel"><img src="https://img.shields.io/pub/v/draggable_panel?style=for-the-badge&label=pub&labelColor=4F378B&color=7F67BE&logo=dart&logoColor=D0BCFF" alt="Pub version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-7F67BE?style=for-the-badge&labelColor=4F378B" alt="License: MIT"></a>
+  <a href="https://github.com/yelmuratoff/draggable_panel"><img src="https://img.shields.io/github/stars/yelmuratoff/draggable_panel?style=for-the-badge&labelColor=4F378B&color=7F67BE&logo=github&logoColor=D0BCFF" alt="GitHub stars"></a>
+</p>
+<p align="center">
+  <a href="https://pub.dev/packages/draggable_panel/score"><img src="https://img.shields.io/pub/likes/draggable_panel?style=for-the-badge&labelColor=4F378B&color=7F67BE&logo=flutter&logoColor=D0BCFF" alt="Pub likes"></a>
+  <a href="https://pub.dev/packages/draggable_panel/score"><img src="https://img.shields.io/pub/points/draggable_panel?style=for-the-badge&labelColor=4F378B&color=7F67BE&logo=flutter&logoColor=D0BCFF" alt="Pub points"></a>
+  <a href="https://pub.dev/packages/draggable_panel"><img src="https://img.shields.io/pub/dm/draggable_panel?style=for-the-badge&label=downloads&labelColor=4F378B&color=7F67BE&logo=flutter&logoColor=D0BCFF" alt="Pub monthly downloads"></a>
+</p>
 
 A floating panel window for Flutter.
 
