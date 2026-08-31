@@ -81,20 +81,7 @@ bool _opensOnArrival(
   PanelPlacement from,
   PanelPlacement target,
   PanelBehavior behavior,
-) => target is! StashedPlacement && panelOpensOnArrival(from, behavior);
-
-/// Whether coming to rest anywhere but a park opens the panel, rather than
-/// leaving it as the small window.
-///
-/// True when the stage model has no collapsed window to arrive in — either
-/// because it was switched off, or because this journey leaves a park and
-/// [PanelBehavior.expandOnUnstash] shortens that one route. The release layer
-/// reads it too: with no window to rest in at a side, landing against one can
-/// only mean parking there.
-bool panelOpensOnArrival(PanelPlacement from, PanelBehavior behavior) {
-  if (!behavior.collapsible) return true;
-  return behavior.expandOnUnstash && from is StashedPlacement;
-}
+) => target is! StashedPlacement && behavior.opensOnArrivalFrom(from);
 
 PanelStatus _dragStarted(PanelStatus from, PanelBehavior behavior) {
   if (!behavior.draggable) return from;

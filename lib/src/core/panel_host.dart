@@ -342,6 +342,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
       behavior: widget.behavior,
       motion: _spec,
       from: widget.controller.placement,
+      collapsedSize: _panelSize,
     );
 
     if (widget.controller.phase.isExpanding) {

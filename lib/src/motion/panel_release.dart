@@ -1,4 +1,3 @@
-import 'package:draggable_panel/src/controller/panel_state_machine.dart';
 import 'package:draggable_panel/src/model/panel_behavior.dart';
 import 'package:draggable_panel/src/model/panel_corner.dart';
 import 'package:draggable_panel/src/model/panel_edge.dart';
@@ -21,6 +20,7 @@ PanelPlacement resolvePanelRelease({
   required PanelBehavior behavior,
   required PanelMotionSpec motion,
   required PanelPlacement from,
+  required Size collapsedSize,
 }) {
   final projected = PanelPhysics.projectOffset(
     topLeft,
@@ -31,6 +31,7 @@ PanelPlacement resolvePanelRelease({
   final stash = _stashDecision(
     projected: projected,
     panelSize: panelSize,
+    collapsedSize: collapsedSize,
     viewport: viewport,
     behavior: behavior,
     motion: motion,
@@ -51,9 +52,13 @@ PanelPlacement resolvePanelRelease({
 ///
 /// A parked panel with no collapsed window to arrive in measures that threshold
 /// *inwards* instead: landing against a side can then only mean parking there.
+/// It is taken from [collapsedSize] rather than the panel's painted width,
+/// which is still most of a screen wide while an open panel morphs shut — an
+/// inward band that size would leave nowhere to release without parking.
 PanelPlacement? _stashDecision({
   required Offset projected,
   required Size panelSize,
+  required Size collapsedSize,
   required PanelViewport viewport,
   required PanelBehavior behavior,
   required PanelMotionSpec motion,
@@ -62,9 +67,10 @@ PanelPlacement? _stashDecision({
   if (!behavior.stashable) return null;
 
   final bounds = viewport.bounds;
-  final reparks =
-      from is StashedPlacement && panelOpensOnArrival(from, behavior);
-  final commit = panelSize.width * motion.stashCommit * (reparks ? -1 : 1);
+  final reparks = from is StashedPlacement && behavior.opensOnArrivalFrom(from);
+  final commit = reparks
+      ? -collapsedSize.width * motion.stashCommit
+      : panelSize.width * motion.stashCommit;
 
   // Measured from the resting edge outwards, so pushing the panel off the side
   // is what parks it. Comparing centres instead would need the panel dragged

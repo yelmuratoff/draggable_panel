@@ -1,3 +1,4 @@
+import 'package:draggable_panel/src/model/panel_placement.dart';
 import 'package:flutter/foundation.dart';
 
 /// Where a panel is allowed to come to rest after a drag.
@@ -114,6 +115,20 @@ final class PanelBehavior {
 
   /// Where the panel settles after a drag.
   final PanelSnapPolicy snapPolicy;
+
+  /// Whether coming to rest anywhere but a park opens the panel, rather than
+  /// leaving it as the small window.
+  ///
+  /// True when the stage model has no collapsed window to arrive in — either
+  /// because [collapsible] switched it off, or because the journey leaves a
+  /// park and [expandOnUnstash] shortens that one route. The release layer
+  /// reads it too: with no window to rest in at a side, coming to rest against
+  /// one can only mean parking there.
+  @internal
+  bool opensOnArrivalFrom(PanelPlacement from) {
+    if (!collapsible) return true;
+    return expandOnUnstash && from is StashedPlacement;
+  }
 
   /// Returns a copy with the given fields replaced.
   ///

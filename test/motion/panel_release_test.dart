@@ -28,10 +28,12 @@ PanelPlacement _release(
   ),
   TextDirection direction = TextDirection.ltr,
   PanelPlacement from = const PanelPlacement.corner(PanelCorner.bottomEnd),
+  Size panelSize = _panel,
 }) => resolvePanelRelease(
   topLeft: topLeft,
   velocity: velocity,
-  panelSize: _panel,
+  panelSize: panelSize,
+  collapsedSize: _panel,
   viewport: _viewport(direction: direction),
   behavior: behavior,
   motion: PanelMotionSpec(),
@@ -248,6 +250,19 @@ void main() {
           reason: '$behavior should let a tab pulled clear of the edges open',
         );
       }
+    });
+
+    test('a panel still morphing shut keeps somewhere to be released', () {
+      expect(
+        _release(
+          const Offset(34, 400),
+          behavior: const PanelBehavior(collapsible: false),
+          from: stashed,
+          panelSize: const Size(300, 200),
+        ),
+        isNot(isA<StashedPlacement>()),
+        reason: 'the inward band is the small window, not the open panel',
+      );
     });
 
     test('a panel that has a collapsed window to rest in still needs the '
