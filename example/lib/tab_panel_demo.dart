@@ -7,6 +7,10 @@ import 'package:flutter/material.dart';
 /// as it comes out of the park rather than resting as a small window first, and
 /// every way of closing it — the header control, a tap outside, Esc — parks it
 /// again.
+///
+/// It also holds more actions than it can show, so the grid scrolls: the header
+/// the preset builds is the panel's [PanelDragArea], and moving the panel means
+/// dragging that rather than the grid.
 class TabPanelDemo extends StatefulWidget {
   const TabPanelDemo({super.key});
 
@@ -66,114 +70,79 @@ class _TabPanelDemoState extends State<TabPanelDemo> {
         onPressed: () => _run('Network'),
       ),
       PanelAction(
-        icon: Icons.storage_outlined,
-        label: 'Storage',
-        onPressed: () => _run('Storage'),
+        icon: Icons.terminal_outlined,
+        label: 'Console',
+        onPressed: () => _run('Console'),
       ),
       PanelAction(
-        icon: Icons.wifi_outlined,
-        label: 'Network',
-        onPressed: () => _run('Network'),
+        icon: Icons.account_tree_outlined,
+        label: 'Inspector',
+        onPressed: () => _run('Inspector'),
       ),
       PanelAction(
-        icon: Icons.storage_outlined,
-        label: 'Storage',
-        onPressed: () => _run('Storage'),
+        icon: Icons.cached_outlined,
+        label: 'Cache',
+        onPressed: () => _run('Cache'),
       ),
       PanelAction(
-        icon: Icons.wifi_outlined,
-        label: 'Network',
-        onPressed: () => _run('Network'),
+        icon: Icons.dataset_outlined,
+        label: 'Database',
+        onPressed: () => _run('Database'),
       ),
       PanelAction(
-        icon: Icons.storage_outlined,
-        label: 'Storage',
-        onPressed: () => _run('Storage'),
+        icon: Icons.flag_outlined,
+        label: 'Feature flags',
+        onPressed: () => _run('Feature flags'),
       ),
       PanelAction(
-        icon: Icons.wifi_outlined,
-        label: 'Network',
-        onPressed: () => _run('Network'),
+        icon: Icons.link_outlined,
+        label: 'Deep links',
+        onPressed: () => _run('Deep links'),
       ),
       PanelAction(
-        icon: Icons.storage_outlined,
-        label: 'Storage',
-        onPressed: () => _run('Storage'),
+        icon: Icons.notifications_outlined,
+        label: 'Notifications',
+        onPressed: () => _run('Notifications'),
       ),
       PanelAction(
-        icon: Icons.wifi_outlined,
-        label: 'Network',
-        onPressed: () => _run('Network'),
+        icon: Icons.lock_outlined,
+        label: 'Permissions',
+        onPressed: () => _run('Permissions'),
       ),
       PanelAction(
-        icon: Icons.storage_outlined,
-        label: 'Storage',
-        onPressed: () => _run('Storage'),
+        icon: Icons.phone_iphone_outlined,
+        label: 'Device info',
+        onPressed: () => _run('Device info'),
       ),
       PanelAction(
-        icon: Icons.wifi_outlined,
-        label: 'Network',
-        onPressed: () => _run('Network'),
+        icon: Icons.language_outlined,
+        label: 'Locale',
+        onPressed: () => _run('Locale'),
       ),
       PanelAction(
-        icon: Icons.storage_outlined,
-        label: 'Storage',
-        onPressed: () => _run('Storage'),
+        icon: Icons.insights_outlined,
+        label: 'Analytics',
+        onPressed: () => _run('Analytics'),
       ),
       PanelAction(
-        icon: Icons.wifi_outlined,
-        label: 'Network',
-        onPressed: () => _run('Network'),
+        icon: Icons.bug_report_outlined,
+        label: 'Crashes',
+        onPressed: () => _run('Crashes'),
       ),
       PanelAction(
-        icon: Icons.storage_outlined,
-        label: 'Storage',
-        onPressed: () => _run('Storage'),
+        icon: Icons.dns_outlined,
+        label: 'Environment',
+        onPressed: () => _run('Environment'),
       ),
       PanelAction(
-        icon: Icons.wifi_outlined,
-        label: 'Network',
-        onPressed: () => _run('Network'),
+        icon: Icons.accessibility_new_outlined,
+        label: 'Accessibility',
+        onPressed: () => _run('Accessibility'),
       ),
       PanelAction(
-        icon: Icons.storage_outlined,
-        label: 'Storage',
-        onPressed: () => _run('Storage'),
-      ),
-      PanelAction(
-        icon: Icons.wifi_outlined,
-        label: 'Network',
-        onPressed: () => _run('Network'),
-      ),
-      PanelAction(
-        icon: Icons.storage_outlined,
-        label: 'Storage',
-        onPressed: () => _run('Storage'),
-      ),
-      PanelAction(
-        icon: Icons.wifi_outlined,
-        label: 'Network',
-        onPressed: () => _run('Network'),
-      ),
-      PanelAction(
-        icon: Icons.storage_outlined,
-        label: 'Storage',
-        onPressed: () => _run('Storage'),
-      ),
-      PanelAction(
-        icon: Icons.wifi_outlined,
-        label: 'Network',
-        onPressed: () => _run('Network'),
-      ),
-      PanelAction(
-        icon: Icons.storage_outlined,
-        label: 'Storage',
-        onPressed: () => _run('Storage'),
-      ),
-      PanelAction(
-        icon: Icons.wifi_outlined,
-        label: 'Network',
-        onPressed: () => _run('Network'),
+        icon: Icons.history_outlined,
+        label: 'Sessions',
+        onPressed: () => _run('Sessions'),
       ),
     ],
     buttons: [
