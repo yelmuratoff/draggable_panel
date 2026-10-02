@@ -54,18 +54,33 @@ MaterialApp(
 
 Three arguments and you are done. Everything else has a defensible default.
 
-For AI-assisted integration, the package includes an
-[agent skill](skills/draggable-panel-integration/SKILL.md). Install it from your
-app after adding `draggable_panel` as a dependency:
-
-```sh
-dart run skills@ get -p draggable_panel
-```
-
 The panel positions itself against the window, so give it the whole window —
 `MaterialApp.builder`, or anything else that fills the screen. Mounted inside a
 smaller box it will place itself against bounds it does not occupy, and say so
 once in the debug console.
+
+## AI agent skill
+
+From version 4.1.1, the package ships
+[`draggable-panel-integration`](skills/draggable-panel-integration/SKILL.md),
+an agent skill for adding a panel to your Flutter app. It covers full-window
+hosting, controller ownership and disposal, scrolling inside the panel,
+collapsed and stashed stages, saving placement, theming, and the action-grid
+preset. It includes a complete Flutter example.
+
+After adding `draggable_panel` to your app's dependencies, run these commands
+from the app's root:
+
+```sh
+flutter pub get
+dart run skills@ get -p draggable_panel
+```
+
+Select `draggable-panel-integration` when prompted. The installer copies the
+skill into your agent's skills directory, such as `.agents/skills/` for Codex.
+Your agent can then use the package's integration guidance when working on the
+panel. Run the same install command after updating the package to refresh the
+skill.
 
 ## One gesture, one meaning
 
