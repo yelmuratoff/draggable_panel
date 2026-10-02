@@ -36,7 +36,7 @@ No third-party dependencies.
 
 ```yaml
 dependencies:
-  draggable_panel: ^4.1.0
+  draggable_panel: ^4.1.1
 ```
 
 Mount it above your app's content, usually through `MaterialApp.builder`:
@@ -53,6 +53,14 @@ MaterialApp(
 ```
 
 Three arguments and you are done. Everything else has a defensible default.
+
+For AI-assisted integration, the package includes an
+[agent skill](skills/draggable-panel-integration/SKILL.md). Install it from your
+app after adding `draggable_panel` as a dependency:
+
+```sh
+dart run skills@ get -p draggable_panel
+```
 
 The panel positions itself against the window, so give it the whole window —
 `MaterialApp.builder`, or anything else that fills the screen. Mounted inside a

@@ -1,3 +1,11 @@
+## 4.1.1
+
+Documentation
+
+- Ship an agent skill for integrating floating panels, including controller
+  lifecycle, scrollable content, placement persistence, and theming.
+  Install it in your app with `dart run skills@ get -p draggable_panel`.
+
 ## 4.1.0
 
 Features
