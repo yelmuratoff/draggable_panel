@@ -392,9 +392,14 @@ final class RenderPanelSurface extends RenderBox
       outline,
       _style.shadowColor.withValues(alpha: _paintOpacity),
       elevation,
-      false,
+      _isSeeThrough,
     );
   }
+
+  bool get _isSeeThrough =>
+      _paintOpacity < 1 ||
+      _style.surfaceColor.a < 1 ||
+      _style.surfaceFilter != null;
 
   void _paintContents(
     PaintingContext context,

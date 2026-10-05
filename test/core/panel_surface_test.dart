@@ -99,6 +99,7 @@ Future<_Harness> _pumpSurface(
   Size collapsedSize = const Size(64, 64),
   ShapeBorder? collapsedShape,
   double stashedOpacity = 1,
+  Color? surfaceColor,
 }) async {
   final harness = _Harness();
   addTearDown(harness.dispose);
@@ -116,6 +117,7 @@ Future<_Harness> _pumpSurface(
                 collapsedSize: collapsedSize,
                 collapsedShape: collapsedShape,
                 stashedOpacity: stashedOpacity,
+                surfaceColor: surfaceColor,
               ),
             ),
             originOf: () => harness.driver.value,
@@ -283,6 +285,35 @@ void main() {
       final rect = _surface(tester).paintedRect;
       expect(rect.width, greaterThanOrEqualTo(320));
       expect(rect.height, greaterThanOrEqualTo(240));
+    });
+
+    testWidgets('an opaque panel casts a shadow only around itself', (
+      tester,
+    ) async {
+      await _pumpSurface(tester);
+      await tester.pump();
+
+      expect(_surface(tester), paints..shadow(transparentOccluder: false));
+    });
+
+    testWidgets('a panel faded at the edge casts a shadow seen through it', (
+      tester,
+    ) async {
+      final harness = await _pumpSurface(tester, stashedOpacity: 0.5);
+      harness.driver.drive(Offset(_window.width - 26, 400));
+      await tester.pump();
+
+      expect(_surface(tester).paintOpacity, lessThan(1));
+      expect(_surface(tester), paints..shadow(transparentOccluder: true));
+    });
+
+    testWidgets('a translucent surface casts a shadow seen through it', (
+      tester,
+    ) async {
+      await _pumpSurface(tester, surfaceColor: const Color(0x80112233));
+      await tester.pump();
+
+      expect(_surface(tester), paints..shadow(transparentOccluder: true));
     });
 
     testWidgets('a hidden panel paints nothing', (tester) async {
