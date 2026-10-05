@@ -1,3 +1,11 @@
+## 4.1.2
+
+Fixes
+
+- A see-through panel (faded by `stashedOpacity`, a translucent
+  `surfaceColor`, or a `surfaceFilter`) no longer shows a lighter shape
+  where its shadow was cut out underneath.
+
 ## 4.1.1
 
 Documentation
