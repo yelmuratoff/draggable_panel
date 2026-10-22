@@ -505,14 +505,11 @@ final class RenderPanelSurface extends RenderBox
     final target = _style.minimumTapTarget;
     final height = math.max(_paintedRect.height, target.height);
     final top = _paintedRect.center.dy - height / 2;
-    if (_paintedRect.center.dx < _viewportSize.width / 2) {
+    if (_anchor.x < 0) {
       final right = math.max(_paintedRect.right, target.width);
       return Rect.fromLTRB(_paintedRect.left, top, right, top + height);
     }
-    final left = math.min(
-      _paintedRect.left,
-      _viewportSize.width - target.width,
-    );
+    final left = math.min(_paintedRect.left, size.width - target.width);
     return Rect.fromLTRB(left, top, _paintedRect.right, top + height);
   }
 
