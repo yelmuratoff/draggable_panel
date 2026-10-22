@@ -1,3 +1,15 @@
+## 4.1.3
+
+Fixes
+
+- A tap on a collapsed or parked panel that wobbles a few pixels now
+  expands or unparks it. Only the pan slop is lowered for the pull-out;
+  the tap slop stays at the platform value.
+- A parked panel takes touches across the full `minimumTapTarget`,
+  reaching inward from the edge, rather than only on its peek. It can
+  be brought back on curved-edge screens and next to the system back
+  gesture area. The peek looks the same.
+
 ## 4.1.2
 
 Fixes
