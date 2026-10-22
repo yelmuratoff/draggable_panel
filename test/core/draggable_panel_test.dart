@@ -370,6 +370,19 @@ void main() {
       expect(expanded.bottomRight, collapsed.bottomRight);
     });
 
+    testWidgets('a tap that wobbles within the platform slop still expands', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester);
+
+      final gesture = await tester.startGesture(_paintedRect(tester).center);
+      await gesture.moveBy(const Offset(-12, 0));
+      await gesture.up();
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.expanded);
+    });
+
     testWidgets('a second tap collapses it again', (tester) async {
       final controller = await _pumpPanel(tester);
 
@@ -687,6 +700,24 @@ void main() {
 
       final peek = _paintedRect(tester);
       await tester.tapAt(Offset(peek.left + 4, peek.center.dy));
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.collapsed);
+    });
+
+    testWidgets('a wobbly tap on a stashed panel still brings it back', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester);
+      controller.stash();
+      await tester.pump();
+
+      final peek = _paintedRect(tester);
+      final gesture = await tester.startGesture(
+        Offset(peek.left + 4, peek.center.dy),
+      );
+      await gesture.moveBy(const Offset(-12, 0));
+      await gesture.up();
       await tester.pump();
 
       expect(controller.phase, PanelPhase.collapsed);

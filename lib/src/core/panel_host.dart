@@ -607,7 +607,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
     );
   }
 
-  /// Halves the platform slop, except while the panel is expanded.
+  /// Halves the platform pan slop, except while the panel is expanded.
   ///
   /// [DeviceGestureSettings.panSlop] derives from the touch slop at twice its
   /// value — 36 logical pixels by default, tuned for committing to a scroll
@@ -616,11 +616,16 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
   /// the drag registers. An expanded panel has no such shortage, and a
   /// scrollable inside it measures against the platform touch slop, so halving
   /// it there only takes drags meant for the content.
+  ///
+  /// The touch slop itself stays at the platform value: it is also how far a
+  /// tap may wobble, and a touch that passes it but not the pan slop is
+  /// released as a drag rather than a tap.
   DeviceGestureSettings _panelGestureSettings(DeviceGestureSettings? settings) {
     final platform = settings?.touchSlop ?? kTouchSlop;
-    return DeviceGestureSettings(
-      touchSlop: widget.controller.phase.isExpanding ? platform : platform / 2,
-    );
+    if (widget.controller.phase.isExpanding) {
+      return DeviceGestureSettings(touchSlop: platform);
+    }
+    return _ShortPanSlopSettings(touchSlop: platform, panSlop: platform);
   }
 
   /// Whether a touch at [globalPosition] may start a panel drag.
@@ -741,6 +746,28 @@ final class _PanelDragRecognizer extends TapAndPanGestureRecognizer {
   @override
   bool isPointerAllowed(PointerEvent event) =>
       canStartFrom(event.position) && super.isPointerAllowed(event);
+}
+
+/// Gesture settings whose pan slop is set apart from the touch slop, instead
+/// of following it at twice its value.
+@immutable
+final class _ShortPanSlopSettings extends DeviceGestureSettings {
+  const _ShortPanSlopSettings({
+    required double super.touchSlop,
+    required this.panSlop,
+  });
+
+  @override
+  final double panSlop;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _ShortPanSlopSettings &&
+      other.touchSlop == touchSlop &&
+      other.panSlop == panSlop;
+
+  @override
+  int get hashCode => Object.hash(touchSlop, panSlop);
 }
 
 /// Moves the panel one corner in a direction, from the keyboard.
