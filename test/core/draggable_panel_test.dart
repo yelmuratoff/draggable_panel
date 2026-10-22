@@ -1336,14 +1336,33 @@ void main() {
     testWidgets('a tap past the tap target is left to the page', (
       tester,
     ) async {
+      var pageTaps = 0;
       final controller = stashedController();
       addTearDown(controller.dispose);
-      await _pumpPanel(tester, controller: controller);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DraggablePanel(
+            controller: controller,
+            theme: DraggablePanelThemeData(motion: PanelMotionSpec.instant()),
+            collapsedBuilder: (context, status) => const SizedBox.shrink(),
+            expandedBuilder: (context, status) => const SizedBox.shrink(),
+            child: GestureDetector(
+              onTap: () => pageTaps++,
+              child: const ColoredBox(
+                color: Color(0xFFFFFFFF),
+                child: SizedBox.expand(),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
 
       await tester.tapAt(Offset(800 - 52, _paintedRect(tester).center.dy));
       await tester.pump();
 
       expect(controller.phase, PanelPhase.stashed);
+      expect(pageTaps, 1, reason: 'the page still got its own tap');
     });
 
     testWidgets('the tab keeps its height, it does not sink to a corner', (
