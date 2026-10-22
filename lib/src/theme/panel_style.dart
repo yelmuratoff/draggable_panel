@@ -38,6 +38,7 @@ final class PanelStyle {
     required this.handleColor,
     required this.handleSize,
     required this.handleStrokeWidth,
+    required this.minimumTapTarget,
     required this.textDirection,
     required this.motion,
   });
@@ -82,6 +83,7 @@ final class PanelStyle {
       handleColor: tokens.handleColor!,
       handleSize: tokens.handleSize!,
       handleStrokeWidth: tokens.handleStrokeWidth!,
+      minimumTapTarget: floor,
       textDirection: textDirection,
       motion: tokens.motion!,
     );
@@ -120,6 +122,9 @@ final class PanelStyle {
   final Size handleSize;
 
   final double handleStrokeWidth;
+
+  /// Smallest area a touch on the collapsed or parked panel lands in.
+  final Size minimumTapTarget;
 
   /// Direction the shape, margin, and any directional border resolve against.
   final TextDirection textDirection;
@@ -179,6 +184,7 @@ final class PanelStyle {
           other.handleColor == handleColor &&
           other.handleSize == handleSize &&
           other.handleStrokeWidth == handleStrokeWidth &&
+          other.minimumTapTarget == minimumTapTarget &&
           other.textDirection == textDirection &&
           other.motion == motion;
 
@@ -204,6 +210,7 @@ final class PanelStyle {
     handleColor,
     handleSize,
     handleStrokeWidth,
+    minimumTapTarget,
     textDirection,
     motion,
   ]);

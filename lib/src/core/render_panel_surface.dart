@@ -489,8 +489,31 @@ final class RenderPanelSurface extends RenderBox
 
   @override
   bool hitTest(BoxHitTestResult result, {required Offset position}) {
-    if (_opacity <= 0 || !_paintedRect.contains(position)) return false;
+    if (_opacity <= 0 || !_touchRect.contains(position)) return false;
     return super.hitTest(result, position: position);
+  }
+
+  /// Where a touch lands on the panel.
+  ///
+  /// A parked panel shows only its peek, narrower than a fingertip and pressed
+  /// into the screen's outermost strip, where a curved edge or a system back
+  /// gesture can swallow the touch. Its touch area therefore grows inward from
+  /// that edge to the minimum tap target.
+  Rect get _touchRect {
+    if (!_isStashed) return _paintedRect;
+
+    final target = _style.minimumTapTarget;
+    final height = math.max(_paintedRect.height, target.height);
+    final top = _paintedRect.center.dy - height / 2;
+    if (_paintedRect.center.dx < _viewportSize.width / 2) {
+      final right = math.max(_paintedRect.right, target.width);
+      return Rect.fromLTRB(_paintedRect.left, top, right, top + height);
+    }
+    final left = math.min(
+      _paintedRect.left,
+      _viewportSize.width - target.width,
+    );
+    return Rect.fromLTRB(left, top, _paintedRect.right, top + height);
   }
 
   @override

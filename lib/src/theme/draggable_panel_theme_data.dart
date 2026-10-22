@@ -130,6 +130,9 @@ final class DraggablePanelThemeData
   final double? handleStrokeWidth;
 
   /// Lower bound applied to [collapsedSize] so the panel stays tappable.
+  ///
+  /// A parked panel keeps showing only [stashedPeek], but its touch area
+  /// reaches inward from the edge to this size.
   final Size? minimumTapTarget;
 
   /// Springs and thresholds governing how the panel moves.

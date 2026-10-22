@@ -1300,6 +1300,52 @@ void main() {
       );
     });
 
+    testWidgets('a tap beside the sliver, within the tap target, unparks it', (
+      tester,
+    ) async {
+      final controller = stashedController();
+      addTearDown(controller.dispose);
+      await _pumpPanel(tester, controller: controller);
+      expect(800 - _paintedRect(tester).left, closeTo(26, 0.5));
+
+      await tester.tapAt(Offset(800 - 44, _paintedRect(tester).center.dy));
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.collapsed);
+    });
+
+    testWidgets('the tap target reaches in from the start edge too', (
+      tester,
+    ) async {
+      final controller = DraggablePanelController(
+        initialPlacement: const PanelPlacement.stashed(PanelEdge.start),
+      );
+      addTearDown(controller.dispose);
+      await _pumpPanel(
+        tester,
+        controller: controller,
+        theme: const DraggablePanelThemeData(minimumTapTarget: Size(64, 64)),
+      );
+
+      await tester.tapAt(Offset(60, _paintedRect(tester).center.dy));
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.collapsed);
+    });
+
+    testWidgets('a tap past the tap target is left to the page', (
+      tester,
+    ) async {
+      final controller = stashedController();
+      addTearDown(controller.dispose);
+      await _pumpPanel(tester, controller: controller);
+
+      await tester.tapAt(Offset(800 - 52, _paintedRect(tester).center.dy));
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.stashed);
+    });
+
     testWidgets('the tab keeps its height, it does not sink to a corner', (
       tester,
     ) async {
