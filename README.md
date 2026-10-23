@@ -36,7 +36,7 @@ No third-party dependencies.
 
 ```yaml
 dependencies:
-  draggable_panel: ^4.1.2
+  draggable_panel: ^4.1.3
 ```
 
 Mount it above your app's content, usually through `MaterialApp.builder`:
