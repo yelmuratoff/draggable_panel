@@ -421,8 +421,10 @@ DraggablePanelThemeData(
 - **Custom actions per corner**, plus stash and unstash. This is what makes a
   four-corner drag model operable without dragging at all — they appear in
   VoiceOver's rotor and TalkBack's actions menu.
-- When a screen reader is driving, free dragging is disabled outright, because
-  the reader owns drag gestures.
+- Touch gestures stay on when `MediaQuery.accessibleNavigation` is set. A
+  screen reader takes raw touches for itself, and on Android the flag also
+  turns on for accessibility services that never touch the screen, such as
+  password managers.
 - **Keyboard**: `Space`/`Enter` toggles, `Escape` collapses or stashes, and the
   arrow keys walk the panel _between corners_ — through the same spring a fling
   uses, so keyboard motion is identical to touch motion.

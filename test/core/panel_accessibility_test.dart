@@ -1,4 +1,6 @@
 import 'package:draggable_panel/draggable_panel.dart';
+import 'package:draggable_panel/src/core/panel_surface.dart';
+import 'package:draggable_panel/src/core/render_panel_surface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
@@ -170,19 +172,34 @@ void main() {
   });
 
   group('assistive navigation', () {
-    testWidgets('free dragging is disabled while a screen reader drives', (
-      tester,
-    ) async {
+    testWidgets('a tap still brings a parked panel back', (tester) async {
       final controller = await _pumpPanel(tester, accessibleNavigation: true);
+      controller.stash();
+      await tester.pump();
+      expect(controller.phase, PanelPhase.stashed);
+
+      final peek = tester
+          .renderObject<RenderPanelSurface>(find.byType(PanelSurface))
+          .paintedRect;
+      await tester.tapAt(Offset(peek.left + 4, peek.center.dy));
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.collapsed);
+    });
+
+    testWidgets('a drag still moves the panel', (tester) async {
+      final controller = await _pumpPanel(tester, accessibleNavigation: true);
+      final placement = controller.placement;
       final before = tester.getRect(find.byKey(_collapsedKey));
 
       final gesture = await tester.startGesture(before.center);
       await gesture.moveBy(const Offset(-200, -200));
       await tester.pump();
       await gesture.up();
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      expect(tester.getRect(find.byKey(_collapsedKey)), before);
+      expect(controller.placement, isNot(placement));
+      expect(tester.getRect(find.byKey(_collapsedKey)), isNot(before));
       expect(controller.phase, PanelPhase.collapsed);
     });
 

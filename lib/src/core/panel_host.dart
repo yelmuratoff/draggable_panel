@@ -541,10 +541,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.maybeOf(context);
-    final settings = media?.gestureSettings;
-    // Screen readers own drag gestures, so free dragging is unusable there.
-    final assistive = media?.accessibleNavigation ?? false;
+    final settings = MediaQuery.maybeOf(context)?.gestureSettings;
 
     // Not FocusableActionDetector: its MouseRegion is opaque to hit testing.
     return Shortcuts(
@@ -575,10 +572,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
             onMove: _moveByKeyboard,
           ),
         },
-        child: Focus(
-          focusNode: _focusNode,
-          child: _buildGestures(settings, assistive: assistive),
-        ),
+        child: Focus(focusNode: _focusNode, child: _buildGestures(settings)),
       ),
     );
   }
@@ -644,32 +638,25 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
     return _dragAreas.contains(globalPosition);
   }
 
-  Widget _buildGestures(
-    DeviceGestureSettings? settings, {
-    required bool assistive,
-  }) {
-    if (assistive) return _buildSurface();
-
-    return RawGestureDetector(
-      behavior: HitTestBehavior.deferToChild,
-      gestures: <Type, GestureRecognizerFactory>{
-        _PanelDragRecognizer:
-            GestureRecognizerFactoryWithHandlers<_PanelDragRecognizer>(
-              () => _PanelDragRecognizer(canStartFrom: _canDragFrom),
-              (instance) => instance
-                // DragStartBehavior.start reports position at arena win.
-                ..dragStartBehavior = DragStartBehavior.down
-                ..gestureSettings = _panelGestureSettings(settings)
-                ..onTapUp = _onTapUp
-                ..onDragStart = _onDragStart
-                ..onDragUpdate = _onDragUpdate
-                ..onDragEnd = _onDragEnd
-                ..onCancel = _onCancel,
-            ),
-      },
-      child: _buildSurface(),
-    );
-  }
+  Widget _buildGestures(DeviceGestureSettings? settings) => RawGestureDetector(
+    behavior: HitTestBehavior.deferToChild,
+    gestures: <Type, GestureRecognizerFactory>{
+      _PanelDragRecognizer:
+          GestureRecognizerFactoryWithHandlers<_PanelDragRecognizer>(
+            () => _PanelDragRecognizer(canStartFrom: _canDragFrom),
+            (instance) => instance
+              // DragStartBehavior.start reports position at arena win.
+              ..dragStartBehavior = DragStartBehavior.down
+              ..gestureSettings = _panelGestureSettings(settings)
+              ..onTapUp = _onTapUp
+              ..onDragStart = _onDragStart
+              ..onDragUpdate = _onDragUpdate
+              ..onDragEnd = _onDragEnd
+              ..onCancel = _onCancel,
+          ),
+    },
+    child: _buildSurface(),
+  );
 
   Widget _buildSurface() {
     final phase = widget.controller.phase;
