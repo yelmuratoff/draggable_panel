@@ -1,3 +1,12 @@
+## 4.1.4
+
+Fixes
+
+- The panel answers taps and drags when `accessibleNavigation` is set.
+  Android sets it whenever any accessibility service reads the screen,
+  so on phones running one (a password manager, for example) a parked
+  panel could not be opened or moved.
+
 ## 4.1.3
 
 Fixes
