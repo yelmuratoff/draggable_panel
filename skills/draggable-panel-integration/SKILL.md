@@ -103,6 +103,10 @@ class _PanelAppState extends State<PanelApp> {
 - Use `expand()`, `collapse()`, `toggle()`, `stash()`, `unstash()`, `moveTo(...)`,
   `hide()`, and `show()` for commands. Configure `behavior` on the widget;
   controller setters marked `@internal` and `dispatch` belong to the package.
+- To keep the panel out of the way of an overlay your code draws, pass
+  `visible: false` to the widget rather than calling `hide()` and `show()` on a
+  controller someone else owns: `visible` leaves the phase alone, so their
+  `hide()` still holds afterwards.
 - From a descendant widget inside panel content, use
   `DraggablePanelScope.of(context)` to reach the controller. The contexts passed
   to `collapsedBuilder` and `expandedBuilder` can also reach this scope. A context

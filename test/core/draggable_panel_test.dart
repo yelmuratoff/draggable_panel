@@ -24,6 +24,7 @@ Future<DraggablePanelController> _pumpPanel(
   bool disableAnimations = false,
   TextDirection direction = TextDirection.ltr,
   ValueChanged<PanelPlacement>? onPlacementChanged,
+  bool visible = true,
 }) async {
   final panelController = controller ?? DraggablePanelController();
   if (controller == null) addTearDown(panelController.dispose);
@@ -47,6 +48,7 @@ Future<DraggablePanelController> _pumpPanel(
               behavior: behavior,
               theme: resolved,
               onPlacementChanged: onPlacementChanged,
+              visible: visible,
               collapsedBuilder: (context, status) => const ColoredBox(
                 key: _collapsedKey,
                 color: Color(0xFF112233),
@@ -1535,6 +1537,98 @@ void main() {
       expect(controller.phase, PanelPhase.collapsed);
       expect(_panelRect(tester).top, closeTo(16, 0.5));
       expect(_panelRect(tester).right, closeTo(784, 0.5));
+    });
+  });
+
+  group('visible', () {
+    bool hitsApp(WidgetTester tester, Offset position) {
+      final app = tester.renderObject(find.byKey(_appKey));
+      return tester
+          .hitTestOnBinding(position)
+          .path
+          .any((entry) => identical(entry.target, app));
+    }
+
+    testWidgets('an invisible panel paints nothing and keeps its phase', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester);
+      final shown = _paintedRect(tester);
+
+      await _pumpPanel(tester, controller: controller, visible: false);
+
+      expect(_paintedRect(tester), Rect.zero);
+      expect(hitsApp(tester, shown.center), isTrue);
+      expect(controller.phase, PanelPhase.collapsed);
+    });
+
+    testWidgets('an invisible panel announces nothing', (tester) async {
+      final handle = tester.ensureSemantics();
+      await _pumpPanel(tester, visible: false);
+
+      expect(find.semantics.byLabel('Floating panel'), findsNothing);
+      handle.dispose();
+    });
+
+    testWidgets('an expanded invisible panel leaves taps to the app', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester)
+        ..expand();
+      await tester.pump();
+
+      await _pumpPanel(tester, controller: controller, visible: false);
+      expect(hitsApp(tester, const Offset(40, 300)), isTrue);
+      await tester.tapAt(const Offset(40, 300));
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.expanded);
+    });
+
+    testWidgets('a tap on the app does not park an invisible panel', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester, visible: false);
+
+      await tester.tapAt(const Offset(40, 300));
+      await tester.pump();
+
+      expect(controller.phase, PanelPhase.collapsed);
+    });
+
+    testWidgets('an invisible panel is not parked for being idle', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester, visible: false);
+
+      await tester.pump(const Duration(seconds: 6));
+
+      expect(controller.phase, PanelPhase.collapsed);
+    });
+
+    testWidgets('a hide issued while invisible holds once visible again', (
+      tester,
+    ) async {
+      final controller = await _pumpPanel(tester, visible: false);
+
+      controller.hide();
+      await _pumpPanel(tester, controller: controller);
+
+      expect(controller.phase, PanelPhase.hidden);
+      expect(_paintedRect(tester), Rect.zero);
+    });
+
+    testWidgets('a panel returns as it was when visible again', (tester) async {
+      final controller = await _pumpPanel(tester)
+        ..expand();
+      await tester.pump();
+      final shown = tester.getRect(find.byKey(_expandedKey));
+
+      await _pumpPanel(tester, controller: controller, visible: false);
+      await _pumpPanel(tester, controller: controller);
+
+      expect(controller.phase, PanelPhase.expanded);
+      expect(tester.getRect(find.byKey(_expandedKey)), shown);
     });
   });
 }

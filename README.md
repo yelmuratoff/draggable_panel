@@ -280,6 +280,12 @@ channels that only fire when their own value changes — `phaseListenable` and
 
 A whole drag gesture produces about three notifications, not one per frame.
 
+`hide()` changes the panel's phase, which everyone holding the controller sees.
+To step the panel aside without touching that phase, for example while your own
+sheet covers the screen, set `visible: false` on the widget instead. The panel
+then paints nothing and takes no touches, and a `hide()` someone else issues in
+the meantime still holds when it becomes visible again.
+
 From inside your own content, reach the controller without prop-drilling:
 
 ```dart

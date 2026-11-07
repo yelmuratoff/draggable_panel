@@ -48,6 +48,7 @@ final class DraggableActionPanel extends StatelessWidget {
     this.expandedBuilder,
     this.onStatusChanged,
     this.onPlacementChanged,
+    this.visible = true,
   });
 
   /// Icon actions, laid out in a balanced grid.
@@ -98,9 +99,13 @@ final class DraggableActionPanel extends StatelessWidget {
   final ValueChanged<PanelStatus>? onStatusChanged;
   final ValueChanged<PanelPlacement>? onPlacementChanged;
 
+  /// Whether the panel shows. See [DraggablePanel.visible].
+  final bool visible;
+
   @override
   Widget build(BuildContext context) => DraggablePanel(
     controller: controller,
+    visible: visible,
     theme: theme,
     behavior: behavior,
     semantics: semantics,

@@ -43,6 +43,7 @@ final class PanelHost extends StatefulWidget {
     required this.expanded,
     required this.handle,
     required this.surfaceKey,
+    required this.visible,
     super.key,
   });
 
@@ -59,6 +60,9 @@ final class PanelHost extends StatefulWidget {
   /// Reaches the render object, so an ancestor can tell a touch on the panel
   /// from one that landed elsewhere.
   final GlobalKey surfaceKey;
+
+  /// Whether the surface shows, independent of the controller's phase.
+  final bool visible;
 
   @override
   State<PanelHost> createState() => _PanelHostState();
@@ -673,7 +677,7 @@ class _PanelHostState extends State<PanelHost> with TickerProviderStateMixin {
       isStashed: phase == PanelPhase.stashed,
       isParking: widget.controller.placement is StashedPlacement,
       reduceMotion: _spec.reduceMotion,
-      opacity: _opacityFor(phase),
+      opacity: widget.visible ? _opacityFor(phase) : 0,
       collapsed: RepaintBoundary(
         child: _surfaceContent(
           _annotate(widget.collapsed, active: !phase.isExpanding),

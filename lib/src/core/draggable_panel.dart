@@ -62,6 +62,7 @@ final class DraggablePanel extends StatefulWidget {
     this.semantics = const PanelSemantics(),
     this.onStatusChanged,
     this.onPlacementChanged,
+    this.visible = true,
   });
 
   /// The application content the panel floats above.
@@ -105,6 +106,16 @@ final class DraggablePanel extends StatefulWidget {
   /// safe to persist directly.
   final ValueChanged<PanelPlacement>? onPlacementChanged;
 
+  /// Whether the panel shows.
+  ///
+  /// An invisible panel paints nothing and takes no touches, focus, or
+  /// semantics, and it does not park itself on a tap outside or when idle. Its
+  /// [PanelStatus] is left alone, so commands such as
+  /// [DraggablePanelController.hide] issued meanwhile still hold when it shows
+  /// again. Use this to step the panel out of the way of something drawn above
+  /// the app without taking over the phase its [controller] owner set.
+  final bool visible;
+
   @override
   State<DraggablePanel> createState() => _DraggablePanelState();
 }
@@ -126,7 +137,10 @@ class _DraggablePanelState extends State<DraggablePanel> {
   @override
   void didUpdateWidget(DraggablePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.behavior != widget.behavior) _restartIdle();
+    if (oldWidget.behavior != widget.behavior ||
+        oldWidget.visible != widget.visible) {
+      _restartIdle();
+    }
     if (identical(oldWidget.controller, widget.controller)) return;
     _detach();
     _attach(widget.controller);
@@ -145,6 +159,7 @@ class _DraggablePanelState extends State<DraggablePanel> {
     _idle?.cancel();
     _idle = null;
 
+    if (!widget.visible) return;
     final delay = widget.behavior.idleStashDelay;
     if (delay == null || !widget.behavior.stashable) return;
     if (_controller.phase != PanelPhase.collapsed) return;
@@ -162,6 +177,7 @@ class _DraggablePanelState extends State<DraggablePanel> {
   void _onPointerDown(PointerDownEvent event) {
     _restartIdle();
 
+    if (!widget.visible) return;
     if (!widget.behavior.stashOnTapOutside) return;
     if (!widget.behavior.stashable) return;
     if (_controller.phase != PanelPhase.collapsed) return;
@@ -211,7 +227,7 @@ class _DraggablePanelState extends State<DraggablePanel> {
           fit: StackFit.expand,
           children: [
             if (widget.child case final child?) child,
-            if (widget.behavior.collapseOnTapOutside)
+            if (widget.visible && widget.behavior.collapseOnTapOutside)
               ListenableBuilder(
                 listenable: _controller.phaseListenable,
                 builder: (context, _) => _controller.phase.isExpanding
@@ -222,31 +238,41 @@ class _DraggablePanelState extends State<DraggablePanel> {
                     : const SizedBox.shrink(),
               ),
             // MaterialApp.builder wraps the Navigator that owns the Overlay.
-            Overlay.wrap(
-              clipBehavior: Clip.none,
-              child: ListenableBuilder(
-                listenable: _controller.phaseListenable,
-                builder: (context, _) => PanelHost(
-                  controller: _controller,
-                  behavior: widget.behavior,
-                  style: style,
-                  semantics: widget.semantics,
-                  collapsed: widget.collapsedBuilder(
-                    context,
-                    _controller.value,
-                  ),
-                  expanded: widget.expandedBuilder(context, _controller.value),
-                  handle:
-                      widget.handleBuilder ??
-                      (context, edge) => PanelEdgeHandle(
-                        color: style.handleColor,
-                        curveSize: style.handleSize,
-                        strokeWidth: style.handleStrokeWidth,
-                        pointsTowardStart: !edge.resolvesToLeft(
-                          Directionality.of(context),
-                        ),
+            ExcludeFocus(
+              excluding: !widget.visible,
+              child: ExcludeSemantics(
+                excluding: !widget.visible,
+                child: Overlay.wrap(
+                  clipBehavior: Clip.none,
+                  child: ListenableBuilder(
+                    listenable: _controller.phaseListenable,
+                    builder: (context, _) => PanelHost(
+                      visible: widget.visible,
+                      controller: _controller,
+                      behavior: widget.behavior,
+                      style: style,
+                      semantics: widget.semantics,
+                      collapsed: widget.collapsedBuilder(
+                        context,
+                        _controller.value,
                       ),
-                  surfaceKey: _surfaceKey,
+                      expanded: widget.expandedBuilder(
+                        context,
+                        _controller.value,
+                      ),
+                      handle:
+                          widget.handleBuilder ??
+                          (context, edge) => PanelEdgeHandle(
+                            color: style.handleColor,
+                            curveSize: style.handleSize,
+                            strokeWidth: style.handleStrokeWidth,
+                            pointsTowardStart: !edge.resolvesToLeft(
+                              Directionality.of(context),
+                            ),
+                          ),
+                      surfaceKey: _surfaceKey,
+                    ),
+                  ),
                 ),
               ),
             ),

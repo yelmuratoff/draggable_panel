@@ -10,9 +10,11 @@ Future<DraggablePanelController> _pumpActionPanel(
   DraggableActionPanelThemeData? actionTheme,
   String? title,
   TextScaler textScaler = TextScaler.noScaling,
+  bool visible = true,
+  DraggablePanelController? existing,
 }) async {
-  final controller = DraggablePanelController();
-  addTearDown(controller.dispose);
+  final controller = existing ?? DraggablePanelController();
+  if (existing == null) addTearDown(controller.dispose);
 
   await tester.pumpWidget(
     MaterialApp(
@@ -25,6 +27,7 @@ Future<DraggablePanelController> _pumpActionPanel(
             buttons: buttons,
             actionTheme: actionTheme,
             title: title,
+            visible: visible,
             theme: DraggablePanelThemeData(motion: PanelMotionSpec.instant()),
             child: const ColoredBox(color: Color(0xFFFFFFFF)),
           ),
@@ -62,6 +65,28 @@ List<PanelAction> _actions(int count, {void Function(int)? onPressed}) => [
 ];
 
 void main() {
+  group('visible', () {
+    testWidgets('an invisible action panel hides its actions and keeps its '
+        'phase', (tester) async {
+      final handle = tester.ensureSemantics();
+      final controller = await _pumpActionPanel(tester, actions: _actions(2))
+        ..expand();
+      await tester.pump();
+      expect(find.semantics.byLabel('Action 0'), findsOne);
+
+      await _pumpActionPanel(
+        tester,
+        actions: _actions(2),
+        visible: false,
+        existing: controller,
+      );
+
+      expect(find.semantics.byLabel('Action 0'), findsNothing);
+      expect(controller.phase, PanelPhase.expanded);
+      handle.dispose();
+    });
+  });
+
   group('grid layout', () {
     testWidgets('renders every action', (tester) async {
       final controller = await _pumpActionPanel(tester, actions: _actions(6));
