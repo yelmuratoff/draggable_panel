@@ -1,3 +1,13 @@
+## 4.2.0
+
+Features
+
+- `visible` on `DraggablePanel` and `DraggableActionPanel` steps the panel
+  aside without changing its phase. An invisible panel paints nothing, takes no
+  touches, focus or semantics, and doesn't park itself on a tap outside or when
+  idle, so a `hide()` issued by the controller's owner meanwhile still holds
+  when it shows again.
+
 ## 4.1.4
 
 Fixes
