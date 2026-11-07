@@ -499,8 +499,9 @@ await gesture.moveBy(const Offset(-70, -50),
 
 ## Requirements
 
-Flutter ≥ 3.32, Dart ≥ 3.8. That floor is what `SpringDescription.withDurationAndBounce`
-and `RoundedSuperellipseBorder` need.
+Flutter ≥ 3.35, Dart ≥ 3.8. Earlier Flutter releases lack APIs the panel uses,
+such as `Matrix4.translateByDouble` and the `@internal` annotation from
+`flutter/foundation.dart`.
 
 ## Not in 4.0
 

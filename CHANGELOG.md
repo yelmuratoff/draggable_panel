@@ -8,6 +8,11 @@ Features
   idle, so a `hide()` issued by the controller's owner meanwhile still holds
   when it shows again.
 
+Changed
+
+- Minimum Flutter is now 3.35. Earlier 4.x releases declared 3.32 but used
+  APIs that arrived later, so they did not build on 3.32.
+
 ## 4.1.4
 
 Fixes

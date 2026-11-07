@@ -322,7 +322,7 @@ void main() {
       controller.expand();
       await tester.pump();
 
-      expect(tester.getSize(find.byType(FilledButton)).height, 64);
+      expect(tester.getSize(find.bySubtype<FilledButton>()).height, 64);
     });
 
     testWidgets('a custom handleBuilder reaches the parked panel', (
