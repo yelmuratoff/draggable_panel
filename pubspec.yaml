@@ -12,6 +12,8 @@ topics:
   - accessibility
 
 screenshots:
+  - description: "The panel holding developer tools, and a mini player flicked toward an edge, where it docks as a small tab."
+    path: assets/screenshots/banner.webp
   - description: "A collapsed panel floating over the app's own scrolling page."
     path: assets/screenshots/floating-window.png
   - description: "The same panel tapped open, grown in place at the corner it sat in."
