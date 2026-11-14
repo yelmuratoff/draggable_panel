@@ -1,3 +1,18 @@
+## 5.0.0
+
+The panel moves from the framework's Material library to the standalone
+`package:material_ui`. No panel API changed, but the theme types now come from
+another library. See `MIGRATION.md`.
+
+Breaking changes
+
+- The package imports `package:material_ui` instead of
+  `package:flutter/material.dart`, which Flutter 3.50 deprecates.
+  `DraggablePanelThemeData` and `DraggableActionPanelThemeData` now extend the
+  `material_ui` `ThemeExtension`, so an app registering them in
+  `ThemeData.extensions` has to build that `ThemeData` from `material_ui` too.
+- Minimum Flutter is now 3.47, the release that introduced `material_ui`.
+
 ## 4.2.0
 
 Features
