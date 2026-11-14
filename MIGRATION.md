@@ -1,3 +1,28 @@
+# Migrating from 4.x to 5.0
+
+5.0 keeps the 4.x API. What changed is where Material comes from. The package
+now imports the standalone `package:material_ui`, which Flutter 3.47 introduced,
+instead of `package:flutter/material.dart`, which Flutter 3.50 deprecates.
+
+The class names are the same in both libraries, yet Dart treats `ThemeData`,
+`ThemeExtension` and `ColorScheme` from one as different types from the other.
+So `ThemeData(extensions: [DraggablePanelThemeData(...)])` only compiles when
+that `ThemeData` comes from `material_ui`, and your app moves with the panel:
+
+1. Raise the app's Flutter constraint to 3.47 or later.
+2. Run `flutter pub add material_ui`, then
+   `dart fix --apply --code=migrate_design_widgets`, which rewrites the
+   `package:flutter/material.dart` imports.
+3. If the app uses `GlobalMaterialLocalizations` or
+   `GlobalCupertinoLocalizations`, take them from `material_ui` and
+   `cupertino_ui` rather than from `flutter_localizations`.
+
+Flutter's own guide covers the rest, including a bridge for dependencies that
+haven't moved yet:
+[Migrate to standalone material_ui and cupertino_ui packages](https://docs.flutter.dev/release/breaking-changes/material-ui-and-cupertino-ui).
+
+An app that can't move yet can stay on 4.2.0.
+
 # Migrating from 3.x to 4.0
 
 4.0 is a rewrite. The panel changed from an edge-docked rail that slid a menu

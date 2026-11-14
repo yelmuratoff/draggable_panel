@@ -499,9 +499,10 @@ await gesture.moveBy(const Offset(-70, -50),
 
 ## Requirements
 
-Flutter ≥ 3.35, Dart ≥ 3.8. Earlier Flutter releases lack APIs the panel uses,
-such as `Matrix4.translateByDouble` and the `@internal` annotation from
-`flutter/foundation.dart`.
+Flutter ≥ 3.47. The panel builds on `package:material_ui`, which
+Flutter 3.47 introduced, so your app's theme and `ThemeData.extensions` come
+from `material_ui` too. Apps that still import `package:flutter/material.dart`
+stay on 4.x; see [MIGRATION.md](MIGRATION.md).
 
 ## Not in 4.0
 

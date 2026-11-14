@@ -1,9 +1,9 @@
 import 'package:draggable_panel/draggable_panel.dart';
 import 'package:draggable_panel/src/core/panel_surface.dart';
 import 'package:draggable_panel/src/core/render_panel_surface.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The panel's default margin and collapsed width, as `defaultPanelTheme`
 /// resolves them.

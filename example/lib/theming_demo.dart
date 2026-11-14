@@ -1,7 +1,7 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:draggable_panel/draggable_panel.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Retunes the panel's shape and springs live, so the difference is felt
 /// rather than described.
