@@ -4,7 +4,7 @@ import 'package:draggable_panel_example/quick_open_demo.dart';
 import 'package:draggable_panel_example/tab_panel_demo.dart';
 import 'package:draggable_panel_example/theming_demo.dart';
 import 'package:draggable_panel_example/tools_demo.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() => runApp(const ExampleApp());
 

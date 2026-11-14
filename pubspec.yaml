@@ -1,6 +1,6 @@
 name: draggable_panel
 description: A floating panel window — drag it anywhere, spring-snap to the nearest side, stash it off the edge, tap to grow it in place.
-version: 4.2.0
+version: 5.0.0
 homepage: https://github.com/yelmuratoff/draggable_panel
 repository: https://github.com/yelmuratoff/draggable_panel
 issue_tracker: https://github.com/yelmuratoff/draggable_panel/issues
@@ -33,11 +33,12 @@ platforms:
 
 environment:
   sdk: ^3.8.0
-  flutter: ">=3.35.0"
+  flutter: ">=3.47.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  material_ui: ^1.11.0
 
 dev_dependencies:
   flutter_test:

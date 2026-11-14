@@ -5,8 +5,8 @@ import 'package:draggable_panel_example/quick_open_demo.dart';
 import 'package:draggable_panel_example/tab_panel_demo.dart';
 import 'package:draggable_panel_example/theming_demo.dart';
 import 'package:draggable_panel_example/tools_demo.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Guards the demos against layout errors that only show up when run.
 ///

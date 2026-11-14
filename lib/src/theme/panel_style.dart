@@ -4,7 +4,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:draggable_panel/src/model/panel_extent.dart';
 import 'package:draggable_panel/src/motion/panel_motion_spec.dart';
 import 'package:draggable_panel/src/theme/draggable_panel_theme_data.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A fully resolved [DraggablePanelThemeData], with no token left to inherit.
 ///

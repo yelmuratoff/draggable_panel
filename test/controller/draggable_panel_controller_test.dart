@@ -309,7 +309,12 @@ void main() {
     test('dispatching after dispose trips an assertion', () {
       final controller = DraggablePanelController()..dispose();
 
-      expect(controller.expand, throwsA(isA<AssertionError>()));
+      // Flutter 3.50 moved ChangeNotifier into package:listen, whose disposal
+      // guard reports a StateError instead of a FlutterError.
+      expect(
+        controller.expand,
+        throwsA(anyOf(isA<AssertionError>(), isA<StateError>())),
+      );
     });
 
     test('derived listenables stop tracking after dispose', () {

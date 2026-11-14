@@ -1,5 +1,5 @@
 import 'package:draggable_panel/draggable_panel.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A mini player floating over a scrolling page.
 class MiniPlayerDemo extends StatefulWidget {

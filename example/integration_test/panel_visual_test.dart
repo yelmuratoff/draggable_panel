@@ -2,9 +2,9 @@ import 'package:draggable_panel/draggable_panel.dart';
 import 'package:draggable_panel/src/core/panel_surface.dart';
 import 'package:draggable_panel/src/core/render_panel_surface.dart';
 import 'package:draggable_panel_example/main.dart' as app;
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Drives the parked panel on a real device and photographs each step.
 ///

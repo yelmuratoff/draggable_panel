@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:draggable_panel/src/core/panel_drag_area.dart';
 import 'package:draggable_panel/src/presets/action_panel/action_panel_theme_data.dart';
 import 'package:draggable_panel/src/presets/action_panel/panel_action.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Builds one action's cell, replacing [ActionCell].
 typedef PanelActionBuilder =

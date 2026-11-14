@@ -5,9 +5,9 @@ import 'package:draggable_panel/src/motion/offset_spring_driver.dart';
 import 'package:draggable_panel/src/motion/panel_motion_spec.dart';
 import 'package:draggable_panel/src/theme/draggable_panel_theme_data.dart';
 import 'package:draggable_panel/src/theme/panel_style.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The surface fills the window, as the panel requires; these are the test
 /// window and the resting bounds a 16-pixel margin leaves inside it.

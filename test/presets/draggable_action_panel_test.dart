@@ -1,7 +1,7 @@
 import 'package:draggable_panel/draggable_panel.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 Future<DraggablePanelController> _pumpActionPanel(
   WidgetTester tester, {
