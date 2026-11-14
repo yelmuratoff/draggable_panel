@@ -26,7 +26,7 @@ off-screen with a grab tab showing. Tap it and it grows in place into a full
 panel, anchored at the corner it already occupies; tap again and it shrinks
 back, reversible mid-flight.
 
-No third-party dependencies.
+No dependencies beyond Flutter and its own `material_ui` package.
 
 | Floating                                                                           | Open                                                                  | Parked                                                                  |
 | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------- |
@@ -36,7 +36,7 @@ No third-party dependencies.
 
 ```yaml
 dependencies:
-  draggable_panel: ^4.2.0
+  draggable_panel: ^5.0.0
 ```
 
 Mount it above your app's content, usually through `MaterialApp.builder`:
