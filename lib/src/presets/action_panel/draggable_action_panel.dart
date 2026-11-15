@@ -8,7 +8,7 @@ import 'package:draggable_panel/src/presets/action_panel/action_grid.dart';
 import 'package:draggable_panel/src/presets/action_panel/action_panel_theme_data.dart';
 import 'package:draggable_panel/src/presets/action_panel/panel_action.dart';
 import 'package:draggable_panel/src/theme/draggable_panel_theme_data.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A [DraggablePanel] preset that expands into a grid of icon actions above a
 /// column of labelled buttons — the shape a debug or tools panel usually takes.

@@ -26,7 +26,7 @@ off-screen with a grab tab showing. Tap it and it grows in place into a full
 panel, anchored at the corner it already occupies; tap again and it shrinks
 back, reversible mid-flight.
 
-No third-party dependencies.
+No dependencies beyond Flutter and its own `material_ui` package.
 
 | Floating                                                                           | Open                                                                  | Parked                                                                  |
 | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------- |
@@ -36,10 +36,12 @@ No third-party dependencies.
 
 ```yaml
 dependencies:
-  draggable_panel: ^4.2.0
+  draggable_panel: ^5.0.0
+  material_ui: ^1.11.0
 ```
 
-Mount it above your app's content, usually through `MaterialApp.builder`:
+Mount it above your app's content, usually through `MaterialApp.builder`. The
+`MaterialApp` comes from `material_ui`, as in the panel itself:
 
 ```dart
 MaterialApp(
@@ -499,9 +501,10 @@ await gesture.moveBy(const Offset(-70, -50),
 
 ## Requirements
 
-Flutter ≥ 3.35, Dart ≥ 3.8. Earlier Flutter releases lack APIs the panel uses,
-such as `Matrix4.translateByDouble` and the `@internal` annotation from
-`flutter/foundation.dart`.
+Flutter ≥ 3.47. The panel builds on `package:material_ui`, which
+Flutter 3.47 introduced, so your app's theme and `ThemeData.extensions` come
+from `material_ui` too. Apps that still import `package:flutter/material.dart`
+stay on 4.x; see [MIGRATION.md](MIGRATION.md).
 
 ## Not in 4.0
 

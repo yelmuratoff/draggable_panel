@@ -1,5 +1,5 @@
 import 'package:draggable_panel/draggable_panel.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The same tools panel with only the way out of the park shortened.
 ///

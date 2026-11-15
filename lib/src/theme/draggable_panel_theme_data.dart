@@ -3,7 +3,7 @@ import 'dart:ui' show ImageFilter, lerpDouble;
 import 'package:draggable_panel/src/model/panel_extent.dart';
 import 'package:draggable_panel/src/motion/panel_motion_spec.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Visual and motion tokens for a `DraggablePanel`.
 ///

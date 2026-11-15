@@ -1,3 +1,41 @@
+# Migrating from 4.x to 5.0
+
+5.0 keeps the 4.x member names. What changed is where Material comes from. The
+package now imports the standalone `package:material_ui`, which Flutter 3.47
+introduced, instead of `package:flutter/material.dart`, which Flutter 3.50
+deprecates.
+
+The class names are the same in both libraries, yet Dart treats a type from one
+as different from the same-named type in the other. That reaches the panel's
+API in three places:
+
+- `ThemeData(extensions: [DraggablePanelThemeData(...)])` only compiles when that
+  `ThemeData` comes from `material_ui`.
+- `DraggableActionPanelThemeData.buttonStyle` and `closeButtonStyle` take a
+  `material_ui` `ButtonStyle`, so `TextButton.styleFrom(...)` has to come from
+  `material_ui` as well.
+- `DraggableActionPanelThemeData.defaults` takes a `material_ui` `ColorScheme`.
+
+The panel also looks up its theme and `MaterialLocalizations` through
+`material_ui`. An app that keeps the framework `MaterialApp` still compiles
+where it passes none of those types, but the panel ignores its theme and the
+`DraggableActionPanel` close button throws when it can't find
+`MaterialLocalizations`. So your app moves with the panel:
+
+1. Raise the app's Flutter constraint to 3.47 or later.
+2. Run `flutter pub add material_ui`, then
+   `dart fix --apply --code=migrate_design_widgets`, which rewrites the
+   `package:flutter/material.dart` imports.
+3. If the app uses `GlobalMaterialLocalizations` or
+   `GlobalCupertinoLocalizations`, take them from `material_ui` and
+   `cupertino_ui` rather than from `flutter_localizations`.
+
+Flutter's own guide covers the rest, including a bridge for dependencies that
+haven't moved yet:
+[Migrate to standalone material_ui and cupertino_ui packages](https://docs.flutter.dev/release/breaking-changes/material-ui-and-cupertino-ui).
+
+An app that can't move yet can stay on 4.2.0.
+
 # Migrating from 3.x to 4.0
 
 4.0 is a rewrite. The panel changed from an edge-docked rail that slid a menu

@@ -9,7 +9,8 @@ description: >-
 # Integrate draggable_panel
 
 Use the public API from `package:draggable_panel/draggable_panel.dart`.
-These instructions target the 4.2 floating-window API. Check the consumer's
+These instructions target the 5.0 floating-window API, built on
+`package:material_ui`. Check the consumer's
 resolved package version before adapting older integrations; use that version's
 README and public declarations for signatures outside this guide.
 
@@ -34,7 +35,7 @@ keeps the list's scroll gesture separate from moving the panel:
 
 ```dart
 import 'package:draggable_panel/draggable_panel.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() => runApp(const PanelApp());
 

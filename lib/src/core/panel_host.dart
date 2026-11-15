@@ -22,10 +22,10 @@ import 'package:draggable_panel/src/motion/panel_physics.dart';
 import 'package:draggable_panel/src/motion/panel_release.dart';
 import 'package:draggable_panel/src/theme/panel_style.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Drives one panel: owns its motion, reads its gestures, and keeps its
 /// controller and the viewport in step.

@@ -1,5 +1,5 @@
 import 'package:draggable_panel/draggable_panel.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The `DraggableActionPanel` preset: an action grid that grows from a corner.
 class ToolsDemo extends StatefulWidget {
