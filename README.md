@@ -37,9 +37,11 @@ No dependencies beyond Flutter and its own `material_ui` package.
 ```yaml
 dependencies:
   draggable_panel: ^5.0.0
+  material_ui: ^1.11.0
 ```
 
-Mount it above your app's content, usually through `MaterialApp.builder`:
+Mount it above your app's content, usually through `MaterialApp.builder`. The
+`MaterialApp` comes from `material_ui`, as in the panel itself:
 
 ```dart
 MaterialApp(
