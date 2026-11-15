@@ -1,13 +1,26 @@
 # Migrating from 4.x to 5.0
 
-5.0 keeps the 4.x API. What changed is where Material comes from. The package
-now imports the standalone `package:material_ui`, which Flutter 3.47 introduced,
-instead of `package:flutter/material.dart`, which Flutter 3.50 deprecates.
+5.0 keeps the 4.x member names. What changed is where Material comes from. The
+package now imports the standalone `package:material_ui`, which Flutter 3.47
+introduced, instead of `package:flutter/material.dart`, which Flutter 3.50
+deprecates.
 
-The class names are the same in both libraries, yet Dart treats `ThemeData`,
-`ThemeExtension` and `ColorScheme` from one as different types from the other.
-So `ThemeData(extensions: [DraggablePanelThemeData(...)])` only compiles when
-that `ThemeData` comes from `material_ui`, and your app moves with the panel:
+The class names are the same in both libraries, yet Dart treats a type from one
+as different from the same-named type in the other. That reaches the panel's
+API in three places:
+
+- `ThemeData(extensions: [DraggablePanelThemeData(...)])` only compiles when that
+  `ThemeData` comes from `material_ui`.
+- `DraggableActionPanelThemeData.buttonStyle` and `closeButtonStyle` take a
+  `material_ui` `ButtonStyle`, so `TextButton.styleFrom(...)` has to come from
+  `material_ui` as well.
+- `DraggableActionPanelThemeData.defaults` takes a `material_ui` `ColorScheme`.
+
+The panel also looks up its theme and `MaterialLocalizations` through
+`material_ui`. An app that keeps the framework `MaterialApp` still compiles
+where it passes none of those types, but the panel ignores its theme and the
+`DraggableActionPanel` close button throws when it can't find
+`MaterialLocalizations`. So your app moves with the panel:
 
 1. Raise the app's Flutter constraint to 3.47 or later.
 2. Run `flutter pub add material_ui`, then
